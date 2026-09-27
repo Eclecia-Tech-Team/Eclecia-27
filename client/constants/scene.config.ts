@@ -68,7 +68,7 @@ export const sceneConfig = {
       moon: { x: 773.5, y: 251.5, w: 437, rotate: 0 },
       minisun: { x: 773.5, y: 285.5, w: 133 },
       suncover: { x: 671, y: 348.5, w: 1672, rotate: 0 },
-      mainart: { x: 760, y: 450, w: 1500 },
+      mainart: { x: 760, y: 450, w: 1520 },
       bottom: { x: 676, y: 1431, w: 1672 }, // waiting below the frame
       // ornaments
       veena: { x: 1160, y: 1450, w: 820, rotate: -6, flipX: true },
