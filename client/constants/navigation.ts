@@ -32,7 +32,7 @@ export const SPONSORSHIP_HEADS = [
 export const TEAM_MAILTO = `mailto:${[
   ...SPONSORSHIP_HEADS.map((h) => h.email),
   "eclecia@heritageit.edu",
-].join(",")}?subject=${encodeURIComponent("Eclecia'26 · Sponsorship Enquiry")}`;
+].join(",")}?subject=${encodeURIComponent("Eclecia'27 · Sponsorship Enquiry")}`;
 
 export const SOCIAL_LINKS = {
   instagram: "https://www.instagram.com/eclecia_hitk",

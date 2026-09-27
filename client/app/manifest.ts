@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Eclecia'26 - Heritage Institute of Technology",
-    short_name: "Eclecia'26",
+    name: "Eclecia'27 - Heritage Institute of Technology",
+    short_name: "Eclecia'27",
     description:
       "The Annual Cultural Fest of Heritage Institute of Technology, Kolkata.",
     start_url: "/",

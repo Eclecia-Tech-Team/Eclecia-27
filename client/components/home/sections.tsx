@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { sceneConfig as cfg } from "@/constants/scene.config";
 import { GoldButton } from "@/components/common/GoldButton";
 import { ASSETS } from "@/constants/assets";
@@ -74,13 +80,17 @@ function Overlay({
     const avail = bounds.bottom - bounds.top - pad * 2;
     fit = Math.min(1, avail / (naturalH * extra));
     const half = (naturalH * extra * fit) / 2;
-    cy = Math.min(Math.max(rect.y, bounds.top + pad + half), bounds.bottom - pad - half);
+    cy = Math.min(
+      Math.max(rect.y, bounds.top + pad + half),
+      bounds.bottom - pad - half,
+    );
   }
 
   const cx = rect.x + rect.w / 2;
   const dx = (emerge.fromX - cx) * (1 - emerge.t);
   const dy = (emerge.fromY - cy) * (1 - emerge.t) + (cy - rect.y);
-  const sc = (cfg.textEmergeScale + (1 - cfg.textEmergeScale) * emerge.t) * fit * extra;
+  const sc =
+    (cfg.textEmergeScale + (1 - cfg.textEmergeScale) * emerge.t) * fit * extra;
   const style: CSSProperties = {
     left: rect.x,
     top: rect.y,
@@ -174,7 +184,14 @@ export type SectionProps = {
 
 // ---------- hero: wordmark ----------
 
-export function HeroSection({ opacity, emerge, rect, bounds, compact, scale }: SectionProps) {
+export function HeroSection({
+  opacity,
+  emerge,
+  rect,
+  bounds,
+  compact,
+  scale,
+}: SectionProps) {
   const c = cfg.text.hero;
   return (
     <Overlay
@@ -208,7 +225,8 @@ export function HeroSection({ opacity, emerge, rect, bounds, compact, scale }: S
             <div
               className="pointer-events-none absolute -inset-6 -inset-x-10 rounded-2xl"
               style={{
-                background: "radial-gradient(ellipse at center, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 50%, transparent 80%)",
+                background:
+                  "radial-gradient(ellipse at center, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 50%, transparent 80%)",
               }}
               aria-hidden
             />
@@ -232,7 +250,7 @@ export function HeroSection({ opacity, emerge, rect, bounds, compact, scale }: S
 
 // ---------- section 1: stats ----------
 
-// Numbers from the Eclecia'26 sponsorship brochure.
+// Numbers from the Eclecia'27 sponsorship brochure.
 const STATS = [
   { value: "3", label: "Days" },
   { value: "25+", label: "Events" },
@@ -240,7 +258,15 @@ const STATS = [
   { value: "20K+", label: "Footfall" },
 ];
 
-export function StatsSection({ opacity, emerge, rect, bounds, compact, scale, isTablet }: SectionProps) {
+export function StatsSection({
+  opacity,
+  emerge,
+  rect,
+  bounds,
+  compact,
+  scale,
+  isTablet,
+}: SectionProps) {
   const c = cfg.text.stats;
   return (
     <Overlay
@@ -256,7 +282,7 @@ export function StatsSection({ opacity, emerge, rect, bounds, compact, scale, is
       <div
         className={`flex w-full flex-col items-center ${compact ? "gap-3" : "gap-5"}`}
       >
-        <Eyebrow>Eclecia&apos;26: The annual cultural fest of HITK</Eyebrow>
+        <Eyebrow>Eclecia&apos;27: The annual cultural fest of HITK</Eyebrow>
         <Title compact={compact}>
           Where passion
           <br />
@@ -307,7 +333,12 @@ function partsUntil(iso: string): Parts {
   const ms = new Date(iso).getTime() - Date.now();
   if (Number.isNaN(ms) || ms <= 0) return null;
   const t = Math.floor(ms / 1000);
-  return { d: Math.floor(t / 86400), h: Math.floor((t % 86400) / 3600), m: Math.floor((t % 3600) / 60), s: t % 60 };
+  return {
+    d: Math.floor(t / 86400),
+    h: Math.floor((t % 86400) / 3600),
+    m: Math.floor((t % 3600) / 60),
+    s: t % 60,
+  };
 }
 
 /** Ticks once a second after mount (renders dashes on the server / first paint). */
@@ -329,7 +360,17 @@ function useCountdown(iso: string) {
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** One unit of the countdown; digits re-mount on change so they tick in. */
-function Unit({ value, label, compact, glitch }: { value: string; label: string; compact: boolean; glitch: boolean }) {
+function Unit({
+  value,
+  label,
+  compact,
+  glitch,
+}: {
+  value: string;
+  label: string;
+  compact: boolean;
+  glitch: boolean;
+}) {
   return (
     <div className="flex flex-col items-center gap-2">
       <div
@@ -340,12 +381,17 @@ function Unit({ value, label, compact, glitch }: { value: string; label: string;
         aria-label={glitch ? `${label} hidden` : `${value} ${label}`}
       >
         {value.split("").map((ch, i) => (
-          <span key={`${i}-${ch}`} className={glitch ? "inline-block" : "tick-in inline-block"}>
+          <span
+            key={`${i}-${ch}`}
+            className={glitch ? "inline-block" : "tick-in inline-block"}
+          >
             {ch}
           </span>
         ))}
       </div>
-      <span className="font-mono text-[10px] uppercase tracking-[0.35em] text-parchment/55">{label}</span>
+      <span className="font-mono text-[10px] uppercase tracking-[0.35em] text-parchment/55">
+        {label}
+      </span>
     </div>
   );
 }
@@ -384,9 +430,18 @@ function useScrambledUnits() {
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 type DayUnit = { day: string; month: string };
 
-function DatesLine({ revealed, compact }: { revealed: boolean; compact: boolean }) {
+function DatesLine({
+  revealed,
+  compact,
+}: {
+  revealed: boolean;
+  compact: boolean;
+}) {
   const masked = cfg.reveal.masked;
-  const idle: DayUnit[] = cfg.reveal.days.map(() => ({ day: masked.day, month: masked.month }));
+  const idle: DayUnit[] = cfg.reveal.days.map(() => ({
+    day: masked.day,
+    month: masked.month,
+  }));
   const [units, setUnits] = useState<DayUnit[]>(idle);
 
   useEffect(() => {
@@ -405,11 +460,15 @@ function DatesLine({ revealed, compact }: { revealed: boolean; compact: boolean 
           idle.map(() => {
             const day = masked.day
               .split("")
-              .map(() => (k++ < settle ? "X" : String(Math.floor(Math.random() * 10))))
+              .map(() =>
+                k++ < settle ? "X" : String(Math.floor(Math.random() * 10)),
+              )
               .join("");
             const month = masked.month
               .split("")
-              .map(() => (k++ < settle ? "X" : LETTERS[Math.floor(Math.random() * 26)]))
+              .map(() =>
+                k++ < settle ? "X" : LETTERS[Math.floor(Math.random() * 26)],
+              )
               .join("");
             return { day, month };
           }),
@@ -428,15 +487,22 @@ function DatesLine({ revealed, compact }: { revealed: boolean; compact: boolean 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed, masked.day, masked.month]);
 
-  const shown: DayUnit[] = revealed ? cfg.reveal.days.map((d) => ({ ...d })) : units;
+  const shown: DayUnit[] = revealed
+    ? cfg.reveal.days.map((d) => ({ ...d }))
+    : units;
   const sep = (
-    <span className={`countdown-sep font-display leading-none text-gold/60 ${compact ? "text-[36px] px-1" : "text-[60px] px-3"}`}>
+    <span
+      className={`countdown-sep font-display leading-none text-gold/60 ${compact ? "text-[36px] px-1" : "text-[60px] px-3"}`}
+    >
       ·
     </span>
   );
   return (
     <div className="flex flex-col items-center gap-3">
-      <div key={revealed ? "revealed" : "masked"} className="tick-in flex items-start justify-center">
+      <div
+        key={revealed ? "revealed" : "masked"}
+        className="tick-in flex items-start justify-center"
+      >
         {shown.map((u, i) => (
           <span key={i} className="flex items-start">
             {i > 0 && sep}
@@ -448,20 +514,30 @@ function DatesLine({ revealed, compact }: { revealed: boolean; compact: boolean 
               >
                 {u.day}
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.35em] text-parchment/55">{u.month}</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.35em] text-parchment/55">
+                {u.month}
+              </span>
             </span>
           </span>
         ))}
       </div>
       <p className="font-mono text-[11px] uppercase tracking-[0.35em] text-parchment/60">
-        {revealed ? `${cfg.reveal.year} · ${cfg.reveal.venue}` : `Three days · ${cfg.reveal.year}`}
+        {revealed
+          ? `${cfg.reveal.year} · ${cfg.reveal.venue}`
+          : `Three days · ${cfg.reveal.year}`}
       </p>
     </div>
   );
 }
 
 /** Live countdown to the fest. While unrevealed it shows a glitching, scrambled signal instead of the real numbers. */
-function Countdown({ compact, revealed }: { compact: boolean; revealed: boolean }) {
+function Countdown({
+  compact,
+  revealed,
+}: {
+  compact: boolean;
+  revealed: boolean;
+}) {
   const parts = useCountdown(cfg.reveal.festStart);
   const scrambled = useScrambledUnits();
   if (revealed && parts === null) return null; // fest started
@@ -470,14 +546,23 @@ function Countdown({ compact, revealed }: { compact: boolean; revealed: boolean 
     ? scrambled
     : parts === "pending"
       ? { d: "--", h: "--", m: "--", s: "--" }
-      : { d: pad((parts as Exclude<Parts, null>).d), h: pad((parts as Exclude<Parts, null>).h), m: pad((parts as Exclude<Parts, null>).m), s: pad((parts as Exclude<Parts, null>).s) };
+      : {
+          d: pad((parts as Exclude<Parts, null>).d),
+          h: pad((parts as Exclude<Parts, null>).h),
+          m: pad((parts as Exclude<Parts, null>).m),
+          s: pad((parts as Exclude<Parts, null>).s),
+        };
   const sep = (
-    <span className={`countdown-sep font-display leading-none text-gold/60 ${compact ? "text-[36px] px-1" : "text-[60px] px-2"}`}>
+    <span
+      className={`countdown-sep font-display leading-none text-gold/60 ${compact ? "text-[36px] px-1" : "text-[60px] px-2"}`}
+    >
       :
     </span>
   );
   return (
-    <div className={`relative flex items-start justify-center ${glitch ? "glitch-field" : ""}`}>
+    <div
+      className={`relative flex items-start justify-center ${glitch ? "glitch-field" : ""}`}
+    >
       <Unit value={v.d} label="Days" compact={compact} glitch={glitch} />
       {sep}
       <Unit value={v.h} label="Hours" compact={compact} glitch={glitch} />
@@ -489,17 +574,36 @@ function Countdown({ compact, revealed }: { compact: boolean; revealed: boolean 
   );
 }
 
-export function DatesSection({ opacity, emerge, rect, bounds, compact = false, scale }: SectionProps) {
+export function DatesSection({
+  opacity,
+  emerge,
+  rect,
+  bounds,
+  compact = false,
+  scale,
+}: SectionProps) {
   const c = cfg.text.dates;
   const revealed = cfg.reveal.revealed;
   return (
-    <Overlay opacity={opacity} emerge={emerge} rect={rect} bounds={bounds} scale={scale} align={c.align} compact={compact}>
-      <div className={`flex w-full flex-col items-center ${compact ? "gap-3" : "gap-5"}`}>
+    <Overlay
+      opacity={opacity}
+      emerge={emerge}
+      rect={rect}
+      bounds={bounds}
+      scale={scale}
+      align={c.align}
+      compact={compact}
+    >
+      <div
+        className={`flex w-full flex-col items-center ${compact ? "gap-3" : "gap-5"}`}
+      >
         <Eyebrow>Save the dates</Eyebrow>
         <Title compact={compact}>
           The eclipse
           <br />
-          <em className="font-nasyhama font-normal italic text-gold">is coming.</em>
+          <em className="font-nasyhama font-normal italic text-gold">
+            is coming.
+          </em>
         </Title>
         <Ornament compact={compact} />
       </div>
@@ -525,7 +629,14 @@ export function DatesSection({ opacity, emerge, rect, bounds, compact = false, s
 
 // ---------- finale: closing line ----------
 
-export function FinaleSection({ opacity, emerge, rect, bounds, compact, scale }: SectionProps) {
+export function FinaleSection({
+  opacity,
+  emerge,
+  rect,
+  bounds,
+  compact,
+  scale,
+}: SectionProps) {
   const c = cfg.text.finale;
   return (
     <Overlay
@@ -540,7 +651,7 @@ export function FinaleSection({ opacity, emerge, rect, bounds, compact, scale }:
       <div
         className={`flex w-full flex-col items-center ${compact ? "gap-3" : "gap-4"}`}
       >
-        <Eyebrow>Eclecia&rsquo;26</Eyebrow>
+        <Eyebrow>Eclecia&rsquo;27</Eyebrow>
         <h2
           className={`font-display font-semibold leading-tight tracking-[-0.015em] text-parchment ${
             compact
@@ -565,7 +676,14 @@ export function FinaleSection({ opacity, emerge, rect, bounds, compact, scale }:
 }
 
 /** Dusk: short "what is Eclecia" block under the centred eclipse. */
-export function DuskSection({ opacity, emerge, rect, bounds, compact, scale }: SectionProps) {
+export function DuskSection({
+  opacity,
+  emerge,
+  rect,
+  bounds,
+  compact,
+  scale,
+}: SectionProps) {
   const c = cfg.text.dusk;
   return (
     <Overlay

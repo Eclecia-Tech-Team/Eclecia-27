@@ -298,7 +298,7 @@ export function SponsorsView() {
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-6">
                 <h2 className="font-mono text-[11px] uppercase tracking-[0.35em] text-gold/70">
-                  Eclecia&rsquo;26 sponsors &amp; brand partners
+                  Eclecia&rsquo;27 sponsors &amp; brand partners
                 </h2>
                 <div className="h-px flex-1 bg-gold/20" />
               </div>
@@ -317,11 +317,11 @@ export function SponsorsView() {
               <h2 className="font-display text-[36px] font-semibold leading-[0.95] md:text-[56px]">
                 Partner with{" "}
                 <em className="font-normal italic text-gold">
-                  Eclecia&rsquo;26.
+                  Eclecia&rsquo;27.
                 </em>
               </h2>
               <p className="max-w-[56ch] text-[15px] leading-relaxed text-parchment/75 md:text-[17px]">
-                We invite leading brands to collaborate with Eclecia &rsquo;26
+                We invite leading brands to collaborate with Eclecia &rsquo;27
                 as Title, Powered By, Co-Powered By, or Associate Sponsors;
                 please review our attached brochure for detailed deliverable
                 tiers and partnership privileges.

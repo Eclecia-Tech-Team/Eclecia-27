@@ -159,7 +159,8 @@ export const sceneConfig = {
    * the poses in `layoutTablet`; anything not listed there falls back to
    * `layoutMobile`, then `layout`. Text panels behave like mobile.
    */
-  tabletQuery: "(min-width: 600px) and (max-width: 1100px) and (min-aspect-ratio: 4/5)",
+  tabletQuery:
+    "(min-width: 600px) and (max-width: 1100px) and (min-aspect-ratio: 4/5)",
   layoutTablet: {
     hero: {
       // Landscape art, pulled in and centred so both figures stay in the visible band.
@@ -370,16 +371,16 @@ export const sceneConfig = {
     /** Flip with NEXT_PUBLIC_DATES_REVEALED=true. */
     revealed: process.env.NEXT_PUBLIC_DATES_REVEALED === "true",
     /** The fest itself starts here; the countdown runs to it. */
-    festStart: "2026-10-30T10:00:00+05:30",
+    festStart: "2027-01-15T10:00:00+05:30",
     /** Shown once revealed: big day on top, month below, like the timer units. */
     days: [
-      { day: "30", month: "October" },
-      { day: "31", month: "October" },
-      { day: "01", month: "November" },
+      { day: "15", month: "January" },
+      { day: "16", month: "January" },
+      { day: "17", month: "January" },
     ],
     /** While hidden every unit shows this; the slots scramble now and then. */
     masked: { day: "XX", month: "XXX" },
-    year: "2026",
+    year: "2027",
     venue: "Heritage Institute of Technology, Kolkata",
   },
 
