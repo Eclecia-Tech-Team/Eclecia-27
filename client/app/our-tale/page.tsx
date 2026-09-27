@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ComingSoon } from "@/components/common/ComingSoon";
 
 export const metadata: Metadata = {
-  title: "Our Tale: Eclecia'26",
+  title: "Our Tale: Eclecia'27",
   description:
     "The journey, history and legacy of Eclecia at Heritage Institute of Technology.",
 };

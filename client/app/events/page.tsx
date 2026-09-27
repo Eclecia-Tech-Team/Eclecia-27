@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { ComingSoon } from "@/components/common/ComingSoon";
 
 export const metadata: Metadata = {
-  title: "Events: Eclecia'26",
-  description: "The full Eclecia'26 event line-up is on its way.",
+  title: "Events: Eclecia'27",
+  description: "The full Eclecia'27 event line-up is on its way.",
 };
 
 export default function EventsPage() {

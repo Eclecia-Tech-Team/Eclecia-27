@@ -6,7 +6,7 @@ import { GoldButton } from "@/components/common/GoldButton";
 import { ASSETS } from "@/constants/assets";
 
 export const metadata: Metadata = {
-  title: "404 - Page Not Found | Eclecia'26",
+  title: "404 - Page Not Found | Eclecia'27",
   description: "The page you are looking for does not exist.",
 };
 

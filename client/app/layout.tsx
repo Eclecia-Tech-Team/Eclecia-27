@@ -39,11 +39,12 @@ export const metadata: Metadata = {
     ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
     : null,
   title: {
-    default: "Eclecia'26: The Annual Cultural Fest of Heritage Institute of Technology",
+    default:
+      "Eclecia'27: The Annual Cultural Fest of Heritage Institute of Technology",
     template: "%s",
   },
   description:
-    "Welcome to Eclecia'26: The Annual Cultural Fest of Heritage Institute of Technology, Kolkata. Music, Dance, Drama, Art, Fashion and Literary events across 40+ colleges. Uniting talent, igniting culture.",
+    "Welcome to Eclecia'27: The Annual Cultural Fest of Heritage Institute of Technology, Kolkata. Music, Dance, Drama, Art, Fashion and Literary events across 40+ colleges. Uniting talent, igniting culture.",
   keywords: SEO_KEYWORDS,
   authors: [{ name: "Heritage Institute of Technology, Kolkata" }],
   creator: "Eclecia Tech Team",
@@ -59,7 +60,13 @@ export const metadata: Metadata = {
       { url: "/icons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [
+      {
+        url: "/icons/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
     other: [
       {
         rel: "android-chrome-192x192",
@@ -75,17 +82,18 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Eclecia'26: The Annual Cultural Fest of Heritage Institute of Technology",
+    title:
+      "Eclecia'27: The Annual Cultural Fest of Heritage Institute of Technology",
     description:
-      "Welcome to Eclecia'26: The Annual Cultural Fest of Heritage Institute of Technology, Kolkata. Music, Dance, Drama, Art, Fashion and Literary events across 40+ colleges. Uniting talent, igniting culture.",
+      "Welcome to Eclecia'27: The Annual Cultural Fest of Heritage Institute of Technology, Kolkata. Music, Dance, Drama, Art, Fashion and Literary events across 40+ colleges. Uniting talent, igniting culture.",
     url: "/",
-    siteName: "Eclecia'26",
+    siteName: "Eclecia'27",
     images: [
       {
         url: ASSETS.cloudinary.ogImage,
         width: 1200,
         height: 630,
-        alt: "Eclecia'26 - Heritage Institute of Technology",
+        alt: "Eclecia'27 - Heritage Institute of Technology",
       },
     ],
     locale: "en_US",
@@ -93,9 +101,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Eclecia'26: The Annual Cultural Fest of Heritage Institute of Technology",
+    title:
+      "Eclecia'27: The Annual Cultural Fest of Heritage Institute of Technology",
     description:
-      "The annual cultural fest of Heritage Institute of Technology, Kolkata. 30 & 31 October and 1 November 2026.",
+      "The annual cultural fest of Heritage Institute of Technology, Kolkata.",
     images: [ASSETS.cloudinary.ogImage],
   },
   robots: {
@@ -117,7 +126,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const { eventJsonLd, websiteJsonLd, organizationJsonLd } = getStructuredData(
-    process.env.NEXT_PUBLIC_SITE_URL
+    process.env.NEXT_PUBLIC_SITE_URL,
   );
 
   return (
@@ -137,7 +146,9 @@ export default function RootLayout({
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
         />
 
         {/* Hero layers first: they are the LCP; everything else streams behind them. */}
@@ -153,16 +164,8 @@ export default function RootLayout({
           href={ASSETS.cloudinary.mainart}
           fetchPriority="high"
         />
-        <link
-          rel="preload"
-          as="image"
-          href={ASSETS.cloudinary.suncover}
-        />
-        <link
-          rel="preload"
-          as="image"
-          href={ASSETS.cloudinary.blacksun2}
-        />
+        <link rel="preload" as="image" href={ASSETS.cloudinary.suncover} />
+        <link rel="preload" as="image" href={ASSETS.cloudinary.blacksun2} />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
