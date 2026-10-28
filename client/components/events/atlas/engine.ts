@@ -346,10 +346,6 @@ export function mountAtlas(root: HTMLElement): () => void {
         image(atlasArt.event(c.id, event.id), "planet-artwork", i === 0),
         image(atlasArt.shared("event-orbit"), "planet-ring front"),
       );
-      const preview = document.createElement("span");
-      preview.className = "planet-preview";
-      preview.textContent = event.name;
-      node.append(preview);
       on(node, "click", () => (i === active ? openDetail() : goTo(i)));
       $("planet-system").append(node);
       planets.push(node);
@@ -395,24 +391,51 @@ export function mountAtlas(root: HTMLElement): () => void {
     const h = innerHeight;
     const size = planetSize();
     const small = mobile();
+    // Viewport fractions: the current world rests at `rest`, the next waits
+    // at `wait` (top right), and the one after arrives from `back`, just
+    // above the screen, curving round into the wait slot like the far side
+    // of an orbit.
+    const rest = small ? [0.52, 0.335] : [0.68, 0.515];
+    const wait = small ? [0.93, 0.205] : [0.885, 0.215];
+    const back = small ? [0.6, -0.1] : [0.7, -0.12];
+    // Bezier through the bend: carry on past `wait` the way the world came.
+    const bend = [wait[0] + (wait[0] - rest[0]) * 0.5, wait[1] + (wait[1] - rest[1]) * 0.5];
+    const curve = (a: number[], q: number[], b: number[], t: number) => [
+      (1 - t) * (1 - t) * a[0] + 2 * (1 - t) * t * q[0] + t * t * b[0],
+      (1 - t) * (1 - t) * a[1] + 2 * (1 - t) * t * q[1] + t * t * b[1],
+    ];
     planets.forEach((node, i) => {
       const offset = i - progress;
       let x: number, y: number, scale: number, opacity: number;
       if (offset >= 0) {
-        const first = Math.min(offset, 1);
-        const rest = Math.max(0, offset - 1);
-        x = w * ((small ? 0.54 : 0.705) + (small ? 0.39 : 0.18) * first + 0.19 * rest);
-        y = h * ((small ? 0.335 : 0.515) - (small ? 0.13 : 0.3) * first + 0.04 * rest);
+        // Incoming: wait slot to rest in a straight glide; beyond the wait
+        // slot, round the bend and up out of the top of the screen.
+        const [fx, fy] =
+          offset <= 1
+            ? [wait[0] + (rest[0] - wait[0]) * (1 - offset), wait[1] + (rest[1] - wait[1]) * (1 - offset)]
+            : curve(wait, bend, back, Math.min(offset - 1, 1));
+        x = w * fx;
+        y = h * fy;
         scale = Math.exp(-(small ? 1.28 : 1.09) * offset);
         opacity = Math.pow(0.56, offset);
       } else {
-        const t = -offset;
-        x = w * ((small ? 0.54 : 0.705) - (small ? 0.78 : 0.79) * t);
-        y = h * ((small ? 0.335 : 0.515) + 0.66 * t);
+        // Outgoing: leaves along the line it arrived on, then bends to cross
+        // the bottom-left corner at full opacity. It ends on the far side of
+        // the corner, clear of the screen out to the ring's tips (the ring is
+        // 144% of the world's width, so it reaches 0.72 of a size each side).
+        const t = Math.min(-offset, 1);
         scale = 1 + 0.8 * t;
-        opacity = 1 - clamp(t, 0, 1);
+        const a = [w * rest[0], h * rest[1]];
+        const aim = Math.hypot(a[0], h - a[1]);
+        const clear = size * 1.8 * 0.72 + 30;
+        const end = [(-a[0] / aim) * clear, h + ((h - a[1]) / aim) * clear];
+        const dx = w * (rest[0] - wait[0]);
+        const dy = h * (rest[1] - wait[1]);
+        const reach = (Math.hypot(end[0] - a[0], end[1] - a[1]) * 0.3) / Math.hypot(dx, dy);
+        [x, y] = curve(a, [a[0] + dx * reach, a[1] + dy * reach], end, t);
+        opacity = 1;
       }
-      const visible = offset > -1.05 && offset < 2.15;
+      const visible = offset > -1.05 && offset < 2;
       node.style.visibility = visible ? "visible" : "hidden";
       node.style.pointerEvents = visible && opacity > 0.2 ? "auto" : "none";
       node.style.opacity = String(clamp(opacity, 0, 1));
@@ -661,6 +684,24 @@ export function mountAtlas(root: HTMLElement): () => void {
     scene.inert = false;
     busy = false;
   }
+
+  // Resting spots are whole worlds: when scrolling settles between two,
+  // glide to the nearer one.
+  let snapTimer = 0;
+  on(
+    window,
+    "scroll",
+    () => {
+      clearTimeout(snapTimer);
+      snapTimer = window.setTimeout(() => {
+        if (mode !== "events" || busy || !category || directory.open || detail.open) return;
+        const top = document.scrollingElement!.scrollTop;
+        const target = clamp(Math.round(top / step()), 0, category.events.length - 1) * step();
+        if (Math.abs(top - target) > 2) window.scrollTo({ top: target, behavior: reduce.matches ? "instant" : "smooth" });
+      }, 160);
+    },
+    { passive: true },
+  );
 
   function goTo(index: number) {
     if (busy || !category) return;
@@ -968,6 +1009,7 @@ export function mountAtlas(root: HTMLElement): () => void {
     controller.abort();
     cancelAnimationFrame(rafId);
     clearTimeout(wheelSnap);
+    clearTimeout(snapTimer);
     clearTimeout(loadTimeout);
     root.getAnimations({ subtree: true }).forEach((a) => a.cancel());
     solar?.destroy();
