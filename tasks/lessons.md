@@ -14,5 +14,6 @@
 
 ## Events atlas / rendering
 - Don't leave a standing `will-change: transform` on a layer you scale-animate: Chrome keeps it at the last raster scale (2x after the dive), overruns tile memory and drops tiles (blinking, rectangular holes) until reload.
+- That goes for every descendant too: when you zoom a parent, grep for `will-change: transform` on anything inside it.
 - Rectangular holes + "reload fixes it" = GPU tile/raster-scale problem, not image decode. Check will-change and zoomed layers first.
 - Debug rendering bugs from code + user's screenshot; don't open the browser to reproduce unless asked.

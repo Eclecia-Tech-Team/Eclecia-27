@@ -415,21 +415,31 @@ export function mountAtlas(root: HTMLElement): () => void {
     });
   }
 
-  // Camera zoom toward a world, stopped part-way along the full dive: zooming
-  // the whole atlas to ~6x makes Chrome rasterize it huge and paint it in
-  // visible tiles. The atlas is faded out long before it would get there.
-  function setZoom(x: number, y: number, width: number) {
-    camera.style.transformOrigin = `${x}px ${y}px`;
-    const tx = innerWidth * 0.63 - x;
-    const ty = innerHeight * 0.5 - y;
-    const full = Math.max(5.8, (Math.max(innerWidth, innerHeight) * 1.4) / width);
-    const at = (scale: number) => {
-      const k = (scale - 1) / (full - 1);
-      return `translate3d(${tx * k}px,${ty * k}px,0) scale(${scale})`;
-    };
-    camera.dataset.zoomIn = at(2);
-    camera.dataset.zoomBack = at(2);
+  // Dive keyframes for the stand-in world, as separate translate / scale /
+  // opacity tracks. It reaches the viewport centre by `arrive` and grows on a
+  // cubic ramp in log-scale, so it barely swells on the way and does most of
+  // its growing, up to filling the screen, once centred: even, not skewed.
+  function diveKeyframes(x: number, y: number, width: number): Keyframe[] {
+    const arrive = 0.5;
+    const grown = 0.85;
+    const full = clamp((Math.max(innerWidth, innerHeight) * 1.1) / width, 2.4, 6);
+    const shift = `${innerWidth * 0.5 - x}px ${innerHeight * 0.5 - y}px`;
+    const steps = 16;
+    const growth = Array.from({ length: steps + 1 }, (_, i): Keyframe => {
+      const u = i / steps;
+      return { offset: grown * u, scale: String(full ** (u * u * u)) };
+    });
+    return [
+      ...growth,
+      { offset: 0, translate: "0 0", opacity: 1, easing: "cubic-bezier(.45,0,.25,1)" },
+      { offset: arrive, translate: shift, opacity: 1, easing: "ease-in-out" },
+      { offset: grown, opacity: 0 },
+      { offset: 1, translate: shift, scale: String(full), opacity: 0 },
+    ].sort((a, b) => (a.offset as number) - (b.offset as number));
   }
+  // Orbit rails and their glow; the eclipse fades separately, with the worlds.
+  const rails = () => [...camera.querySelectorAll(".asset-orbits,.asset-trail")];
+  const eclipse = () => camera.querySelector(".asset-eclipse");
 
   // Decode a scene's images before revealing it, so nothing paints half-drawn;
   // capped so a slow image never holds the transition hostage.
@@ -456,28 +466,56 @@ export function mountAtlas(root: HTMLElement): () => void {
     scene.hidden = false;
     scene.inert = true;
     scene.style.opacity = "0";
-    setZoom(x, y, rect.width);
     focusedWorld.classList.add("selected");
+    // The dive moves a stand-in, never the atlas: moving and scaling the whole
+    // atlas (masked rails, blurred glow, blend modes) while its layers fade
+    // can't be re-rasterized fast enough and blinks. The atlas stays put and
+    // only fades; the stand-in and its oversized raster are thrown away after.
+    const lens = document.createElement("div");
+    lens.className = "atlas-lens";
+    lens.setAttribute("aria-hidden", "true");
+    lens.style.transformOrigin = `${x}px ${y}px`;
+    const standIn = focusedWorld.cloneNode(true) as HTMLElement;
+    standIn.removeAttribute("aria-label");
+    standIn.tabIndex = -1;
+    lens.append(standIn);
+    overview.append(lens);
+    focusedWorld.style.visibility = "hidden";
     const ready = decoded(sceneImages(index), 500);
     const start = performance.now();
-    const duration = instant ? 1 : 1250;
+    // One slow sequence, as fractions of `duration`: the rails, eclipse and
+    // other worlds fade out together while the chosen world drifts to centre,
+    // barely growing, then swells to fill the screen as everything fades to
+    // black; then the world's event scene fades up out of the black.
+    const duration = instant ? 1 : 2400;
+    const at = (t: number) => (reduce.matches ? 0 : duration * t);
+    const fadeOut = (el: Element | null, from: number, length: number, frames: Keyframe[] = [{ opacity: 0 }]) =>
+      el && animate(el, [{ opacity: getComputedStyle(el).opacity }, ...frames], duration * length, { delay: at(from), easing: "ease-in-out" });
     const intro = root.querySelector(".intro")!;
     const silk = root.querySelector(".foreground")!;
-    const copyFade = animate(intro, [{ opacity: 1, translate: "0 0" }, { opacity: 0, translate: "-30px 0" }], duration * 0.45);
-    const decorFade = animate(silk, [{ opacity: getComputedStyle(silk).opacity }, { opacity: 0 }], duration * 0.5);
-    categoryButtons.filter((b) => b !== focusedWorld).forEach((b) => animate(b, [{ opacity: 1 }, { opacity: 0 }], duration * 0.52));
-    animate(focusedWorld.querySelector(".world-artwork")!, [{ opacity: 1 }, { opacity: 0 }], duration * 0.55);
-    const zooming = animate(
-      camera,
-      [{ transform: "none", opacity: 1 }, { opacity: 0, offset: 0.8 }, { transform: camera.dataset.zoomIn, opacity: 0 }],
-      duration,
-    );
-    const revealing = ready.then(() =>
-      animate(scene, [{ opacity: 0, transform: "scale(.88)" }, { opacity: 1, transform: "scale(1)" }], duration * 0.65, {
-        delay: reduce.matches ? 0 : Math.max(0, duration * 0.4 - (performance.now() - start)),
-      }),
-    );
+    const sky = root.querySelector(".sky")!;
+    const copyFade = fadeOut(intro, 0, 0.35, [{ opacity: 0, translate: "-30px 0" }]);
+    const decorFade = fadeOut(silk, 0, 0.35);
+    [frontCaption, eclipse(), ...rails(), ...categoryButtons.filter((b) => b !== focusedWorld)].forEach((el) => fadeOut(el, 0, 0.35));
+    const skyFade = fadeOut(sky, 0.45, 0.4);
+    const zooming = animate(lens, diveKeyframes(x, y, rect.width), duration, { easing: "linear" });
+    const revealing = ready.then(async () => {
+      await new Promise((resolve) => setTimeout(resolve, Math.max(0, at(0.88) - (performance.now() - start))));
+      if (disposed) return;
+      await skyFade;
+      // Switch the sky to its event-scene tint while the screen is black.
+      root.dataset.mode = "events";
+      const length = instant ? 1 : 900;
+      const skyIn = animate(sky, [{ opacity: 0 }, { opacity: 1 }], length, { easing: "ease-out" });
+      await animate(scene, [{ opacity: 0, transform: "scale(.97)" }, { opacity: 1, transform: "scale(1)" }], length, {
+        easing: "cubic-bezier(.22,1,.36,1)",
+      });
+      await skyIn;
+      cancelAnimations(sky);
+    });
     await Promise.all([copyFade, decorFade, zooming, revealing]);
+    lens.remove();
+    focusedWorld.style.visibility = "";
     if (disposed) return;
     mode = "events";
     root.dataset.mode = mode;
@@ -512,10 +550,10 @@ export function mountAtlas(root: HTMLElement): () => void {
     overview.inert = false;
     categoryButtons.forEach((b) => b.classList.remove("selected"));
     cancelAnimations(camera);
-    camera.style.transform = camera.dataset.zoomBack ?? "none";
-    const duration = 1000;
-    const fade = animate(scene, [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(.85)" }], duration * 0.65);
-    const zoom = animate(camera, [{ opacity: 0, transform: camera.dataset.zoomBack ?? "none" }, { opacity: 1, transform: "none" }], duration);
+    const duration = 1300;
+    const fade = animate(scene, [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(.85)" }], duration * 0.5);
+    // Fade only: moving the atlas while its layers fade is what blinks.
+    const zoom = animate(camera, [{ opacity: 0 }, { opacity: 1 }], duration);
     // The dive's fade-out still holds the intro hidden; once the fade-in below
     // is dropped it would take over again and hide the heading and its link.
     const intro = root.querySelector(".intro")!;
@@ -538,6 +576,22 @@ export function mountAtlas(root: HTMLElement): () => void {
     // holds its faded-out artwork; clear every one, then fade in the current.
     categoryButtons.forEach((b) => cancelAnimations(b.querySelector(".world-artwork")!));
     if (focusedWorld) settling.push(animate(focusedWorld.querySelector(".world-artwork")!, [{ opacity: 0 }, { opacity: 1 }], duration));
+    // Reverse of the dive: worlds first, then the eclipse, rails and caption.
+    // The rail glow returns on its own once travel ends (.atlas-travel).
+    const railLayers = rails();
+    [...railLayers, eclipse(), frontCaption].forEach((el) => el && cancelAnimations(el));
+    railLayers
+      .filter((el) => el.classList.contains("asset-orbits"))
+      .concat(eclipse() ?? [], frontCaption)
+      .forEach((el) =>
+        settling.push(
+          animate(el, [{ opacity: 0 }, { opacity: getComputedStyle(el).opacity }], duration * 0.6, {
+            delay: reduce.matches ? 0 : duration * 0.4,
+            fill: "both",
+            easing: "ease-in-out",
+          }),
+        ),
+      );
     await Promise.all([fade, zoom]);
     if (disposed) return;
     scene.hidden = true;
@@ -577,8 +631,6 @@ export function mountAtlas(root: HTMLElement): () => void {
     focusedWorld = categoryButtons[data.indexOf(c)];
     cancelAnimations(camera);
     camera.style.transform = "none";
-    const rect = focusedWorld.querySelector(".world-art")!.getBoundingClientRect();
-    setZoom(rect.left + rect.width / 2, rect.top + rect.height / 2, rect.width);
     await decoded(sceneImages(index), 500);
     await animate(scene, [{ opacity: 0, transform: "scale(.88)" }, { opacity: 1, transform: "scale(1)" }], 650);
     if (disposed) return;

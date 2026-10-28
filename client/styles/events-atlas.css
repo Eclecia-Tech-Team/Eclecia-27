@@ -163,3 +163,9 @@ html:has(.events-atlas)::-webkit-scrollbar{display:none}
 /* Tailwind's preflight zeroes every margin, which strips the UA's margin:auto
    that centres a modal dialog; restore it so both dialogs open centred. */
 .events-atlas dialog{inset:0;margin:auto}
+/* Same trap for the worlds: a standing will-change pinned each world at the
+   dive's peak raster scale (up to 6x), so tiles dropped on every orbit turn
+   after returning. Their perspective rotateY keeps them composited anyway. */
+.events-atlas #overview .category-world .world-art{will-change:auto}
+/* Stand-in for the chosen world during the dive (see enterCategory). */
+.events-atlas .atlas-lens{position:absolute;inset:0;z-index:3;pointer-events:none}.events-atlas .atlas-lens *{pointer-events:none!important}
