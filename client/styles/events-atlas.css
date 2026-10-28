@@ -169,3 +169,15 @@ html:has(.events-atlas)::-webkit-scrollbar{display:none}
 .events-atlas #overview .category-world .world-art{will-change:auto}
 /* Stand-in for the chosen world during the dive (see enterCategory). */
 .events-atlas .atlas-lens{position:absolute;inset:0;z-index:3;pointer-events:none}.events-atlas .atlas-lens *{pointer-events:none!important}
+/* World view legibility: the event copy sits over the corona's bright arc.
+   A soft dark pool behind the block, a dimmer corona, brighter body text
+   and a larger meta line keep it readable without boxing it in. */
+.events-atlas .event-copy::before{content:'';position:absolute;inset:-22% -35% -26% -45%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgb(2 9 12/.85),rgb(2 9 12/.6) 55%,transparent)}
+.events-atlas .immersive-corona{opacity:.42}
+.events-atlas .event-copy{text-shadow:0 1px 2px #020a0f,0 2px 18px #020a0f}
+.events-atlas .category-line{color:#ddd4c1}
+.events-atlas #event-description{color:#e6dece}
+.events-atlas .event-meta{font-size:12px;color:#e3cf9c}
+.events-atlas .event-meta span+span{border-left-color:#c9a560}
+.events-atlas .event-copy .outline-button{background:#041116d9}
+@media(max-width:760px){.events-atlas .event-meta{font-size:10.5px}.events-atlas .immersive-corona{opacity:.32}}
