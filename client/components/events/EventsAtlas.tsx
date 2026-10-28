@@ -128,9 +128,8 @@ export function EventsAtlas() {
           </div>
         </dialog>
 
-        <div className="load-status" id="load-status" role="status">
-          Preparing the atlas…
-        </div>
+        {/* Only shown, with a message, if an illustration fails to load. */}
+        <div className="load-status" id="load-status" role="status" hidden />
       </div>
     </>
   );

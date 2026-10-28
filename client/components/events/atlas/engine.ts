@@ -85,6 +85,7 @@ export function mountAtlas(root: HTMLElement): () => void {
   } catch (error) {
     console.error("Atlas projection unavailable", error);
     loadStatus.textContent = "The atlas could not load. All events remain available in the directory.";
+    loadStatus.hidden = false;
   }
 
   function image(src: string, className: string, priority = false) {
@@ -476,15 +477,21 @@ export function mountAtlas(root: HTMLElement): () => void {
     // atlas (masked rails, blurred glow, blend modes) while its layers fade
     // can't be re-rasterized fast enough and blinks. The atlas stays put and
     // only fades; the stand-in and its oversized raster are thrown away after.
-    const lens = document.createElement("div");
-    lens.className = "atlas-lens";
-    lens.setAttribute("aria-hidden", "true");
-    lens.style.transformOrigin = `${x}px ${y}px`;
-    const standIn = focusedWorld.cloneNode(true) as HTMLElement;
-    standIn.removeAttribute("aria-label");
-    standIn.tabIndex = -1;
-    lens.append(standIn);
-    overview.append(lens);
+    // A deep-link load has no dive to show, and the stand-in sits outside the
+    // hidden atlas, so it would flash alone in the dark.
+    const lens = instant ? null : document.createElement("div");
+    if (lens) {
+      lens.className = "atlas-lens";
+      lens.setAttribute("aria-hidden", "true");
+      lens.style.transformOrigin = `${x}px ${y}px`;
+      const standIn = focusedWorld.cloneNode(true) as HTMLElement;
+      standIn.removeAttribute("aria-label");
+      standIn.tabIndex = -1;
+      lens.append(standIn);
+      overview.append(lens);
+    }
+    // The real world stays out of sight either way: the stand-in takes its
+    // place in a dive, and on a deep-link load it would show through the fade.
     focusedWorld.style.visibility = "hidden";
     const ready = decoded(sceneImages(index), 500);
     const start = performance.now();
@@ -503,14 +510,17 @@ export function mountAtlas(root: HTMLElement): () => void {
     const decorFade = fadeOut(silk, 0, 0.35);
     [frontCaption, eclipse(), ...rails(), ...categoryButtons.filter((b) => b !== focusedWorld)].forEach((el) => fadeOut(el, 0, 0.35));
     const skyFade = fadeOut(sky, 0.45, 0.4);
-    const zooming = animate(lens, diveKeyframes(x, y, rect.width), duration, { easing: "linear" });
+    const zooming = lens && animate(lens, diveKeyframes(x, y, rect.width), duration, { easing: "linear" });
     const revealing = ready.then(async () => {
       await new Promise((resolve) => setTimeout(resolve, Math.max(0, at(0.88) - (performance.now() - start))));
       if (disposed) return;
       await skyFade;
       // Switch the sky to its event-scene tint while the screen is black.
       root.dataset.mode = "events";
-      const length = instant ? 1 : 900;
+      // A deep-link load stays dark (data-intro hides the atlas and sky) until
+      // here, then fades the world up from black a little slower.
+      root.removeAttribute("data-intro");
+      const length = instant ? 1400 : 900;
       const skyIn = animate(sky, [{ opacity: 0 }, { opacity: 1 }], length, { easing: "ease-out" });
       await animate(scene, [{ opacity: 0, transform: "scale(.97)" }, { opacity: 1, transform: "scale(1)" }], length, {
         easing: "cubic-bezier(.22,1,.36,1)",
@@ -519,7 +529,7 @@ export function mountAtlas(root: HTMLElement): () => void {
       cancelAnimations(sky);
     });
     await Promise.all([copyFade, decorFade, zooming, revealing]);
-    lens.remove();
+    lens?.remove();
     focusedWorld.style.visibility = "";
     if (disposed) return;
     mode = "events";
@@ -536,7 +546,9 @@ export function mountAtlas(root: HTMLElement): () => void {
     updateCopy(index);
     renderPlanets();
     busy = false;
-    $("back").focus({ preventScroll: true });
+    // Not on a deep-link load: with no input yet, Chrome treats programmatic
+    // focus as keyboard focus and rings the back button on arrival.
+    if (!instant) $("back").focus({ preventScroll: true });
   }
 
   async function leaveCategory() {
@@ -944,7 +956,6 @@ export function mountAtlas(root: HTMLElement): () => void {
   const [route, eventId] = location.hash.slice(1).split("/");
   const initial = data.find((c) => c.id === route);
   if (initial) {
-    root.removeAttribute("data-intro");
     enterCategory(initial, Math.max(0, initial.events.findIndex((e) => e.id === eventId)), true);
   } else {
     Promise.all([imagesReady, loaderDone()]).then(() => {
