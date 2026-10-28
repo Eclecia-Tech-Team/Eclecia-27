@@ -5,5 +5,6 @@ export * from "./common/Header";
 export * from "./common/loader/SiteLoader";
 export * from "./common/PageFade";
 export * from "./common/TransitionLink";
+export * from "./events/EventsAtlas";
 export * from "./home/sections";
 export * from "./sponsors/SponsorsView";
