@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { GoldActionButton } from "@/components/common/GoldButton";
 import { SiteHeader } from "@/components/common/Header";
 import { ATLAS_EVENT_COUNT, atlasArt } from "@/constants/events";
 import { mountAtlas } from "./atlas/engine";
@@ -38,7 +39,7 @@ export function EventsAtlas() {
               <p className="eyebrow">THE EVENTS ATLAS</p>
               <h1>
                 Every art,
-                <br />a universe.
+                <br />a <em className="font-nasyhama font-normal italic text-gold">universe</em>.
               </h1>
               <p className="intro-note">Drag to rotate.</p>
               <button className="intro-link" id="browse-bottom">
@@ -70,9 +71,9 @@ export function EventsAtlas() {
                 <span id="event-kind" />
                 <span id="event-counter" />
               </div>
-              <button className="outline-button" id="discover">
-                Discover event <span aria-hidden>↗</span>
-              </button>
+              <GoldActionButton variant="ghost" className="atlas-cta" id="discover">
+                Discover event
+              </GoldActionButton>
             </div>
             <nav className="event-progress" id="event-progress" aria-label="Events in this category" />
             <div className="event-bottom">
@@ -122,9 +123,9 @@ export function EventsAtlas() {
             <h2 id="detail-title" />
             <p id="detail-description" />
             <p className="announcement">Competition details and registration will be announced.</p>
-            <button className="outline-button" data-close="event-detail">
-              Back to the world <span aria-hidden>↗</span>
-            </button>
+            <GoldActionButton variant="ghost" className="atlas-cta" data-close="event-detail">
+              Back to the world
+            </GoldActionButton>
           </div>
         </dialog>
 

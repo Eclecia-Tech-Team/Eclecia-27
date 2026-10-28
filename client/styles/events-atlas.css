@@ -181,3 +181,48 @@ html:has(.events-atlas)::-webkit-scrollbar{display:none}
 .events-atlas .event-meta span+span{border-left-color:#c9a560}
 .events-atlas .event-copy .outline-button{background:#041116d9}
 @media(max-width:760px){.events-atlas .event-meta{font-size:10.5px}.events-atlas .immersive-corona{opacity:.32}}
+/* Atlas CTAs use the site's GoldButton lozenge. The atlas button reset
+   (font/colour inherit) outranks Tailwind's layered utilities, so restore
+   the lozenge's type and colours here; the margin leaves room for the
+   left lotus finial so it lines up with the copy above. */
+.events-atlas button.gold-btn{font-family:var(--font-taiganja),Georgia,serif;font-weight:600;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#000;text-shadow:none}
+.events-atlas button.gold-btn[data-variant=ghost]{color:var(--gold)}
+.events-atlas button.gold-btn[data-variant=ghost]:hover{color:var(--paper)}
+.events-atlas .atlas-cta{margin:34px 0 0 14px}
+.events-atlas .event-detail .atlas-cta{margin-top:26px}
+@media(max-width:760px){.events-atlas button.gold-btn{font-size:10px;padding:10px 26px}.events-atlas .atlas-cta{margin-top:18px}}
+
+/* ---- Site type system ----
+   Matches the rest of the site: Cormorant for text (sized up, it runs
+   smaller than Georgia), Taiganja gold kickers for eyebrows, Geist Mono
+   uppercase for small labels and counters, Nasyhama italic gold for the
+   heading's accent word. */
+.events-atlas{font-family:var(--font-cormorant),Georgia,serif;font-weight:500}
+.events-atlas .eyebrow{font-family:var(--font-taiganja),var(--font-cormorant),serif;font-size:13px;letter-spacing:.35em;color:#d9a441cc}
+.events-atlas :is(.intro-note,.event-meta,#journey-label,.event-breadcrumb button,.category-kind,.world-enter,.search-label,.directory-filters button,.directory-entry small,.load-status){font-family:var(--font-geist-mono),ui-monospace,monospace;font-size:10.5px;letter-spacing:.3em;text-transform:uppercase}
+.events-atlas .intro-note{color:#ece4d299}
+.events-atlas .event-meta{font-size:11px;color:#ece4d2b8}
+.events-atlas .event-meta span+span{border-left-color:#ece4d240}
+.events-atlas .event-breadcrumb button{font-size:10.5px;color:#ece4d2cc}
+.events-atlas #journey-label{color:#ece4d299}
+.events-atlas #overview .category-kind,.events-atlas #front-caption .category-kind{font-size:10px;color:#ece4d28c;margin-top:8px}
+.events-atlas #front-caption .world-enter{font-size:9.5px;color:var(--gold)}
+.events-atlas .directory-filters button{font-size:10px}
+.events-atlas .directory-entry small{font-size:9.5px;color:#ece4d280;margin-top:9px}
+.events-atlas .category-line{font-size:21px}
+.events-atlas #event-description{font-size:19px;line-height:1.5}
+.events-atlas .event-detail p:not(.eyebrow){font-size:19px}
+.events-atlas .event-detail .announcement{font-size:16px!important}
+.events-atlas input{font-size:23px}
+.events-atlas .no-results{font-size:18px}
+@media(min-width:1650px){.events-atlas .category-line{font-size:24px}}
+@media(max-width:1100px){.events-atlas .category-line{font-size:18px}}
+@media(max-height:740px) and (min-width:761px){.events-atlas .category-line{font-size:18px}.events-atlas #event-description{font-size:17px}}
+@media(max-width:760px){
+  .events-atlas .eyebrow,.events-atlas .intro .eyebrow,.events-atlas .event-copy .eyebrow{font-size:10.5px;letter-spacing:.3em}
+  .events-atlas .event-meta{font-size:9.5px}
+  .events-atlas .event-breadcrumb button{font-size:9.5px}
+  .events-atlas #event-description{font-size:16px}
+  .events-atlas .event-detail p:not(.eyebrow){font-size:17px}
+}
+.events-atlas #overview .intro-note{font-size:10.5px;max-width:none}
