@@ -153,3 +153,13 @@ html:has(.events-atlas)::-webkit-scrollbar{display:none}
    tiles (blinking worlds and rails) on every orbit turn until reload. The
    zoom animations still promote the layer while they run. */
 .events-atlas #atlas-camera{will-change:auto}
+/* "View all events" sits under the intro heading as its call to action. The
+   intro ignores pointer input so drags reach the orbit; the button opts back in. */
+.events-atlas #overview .intro-link{pointer-events:auto;display:inline-flex;align-items:baseline;gap:10px;margin-top:22px;padding:0 0 5px;border-bottom:1px solid #d9a44166;font-size:15px;letter-spacing:.02em;color:var(--paper);transition:color .3s,border-color .3s}
+.events-atlas #overview .intro-link span{color:var(--gold);transition:translate .4s var(--ease)}
+.events-atlas #overview .intro-link:hover{color:#edc679;border-color:var(--gold)}
+.events-atlas #overview .intro-link:hover span{translate:4px 0}
+@media(max-width:760px){.events-atlas #overview .intro-link{margin-top:14px;font-size:13px}}
+/* Tailwind's preflight zeroes every margin, which strips the UA's margin:auto
+   that centres a modal dialog; restore it so both dialogs open centred. */
+.events-atlas dialog{inset:0;margin:auto}

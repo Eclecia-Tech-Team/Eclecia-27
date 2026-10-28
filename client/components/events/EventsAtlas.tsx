@@ -41,16 +41,14 @@ export function EventsAtlas() {
                 <br />a universe.
               </h1>
               <p className="intro-note">Drag to rotate.</p>
+              <button className="intro-link" id="browse-bottom">
+                View all {ATLAS_EVENT_COUNT} events <span aria-hidden>→</span>
+              </button>
             </div>
             <div id="atlas-camera">
               <div id="category-worlds" />
             </div>
             <img className="foreground" src={atlasArt.shared("silk-foreground")} alt="" aria-hidden />
-            <footer className="atlas-footer">
-              <button id="browse-bottom">
-                Discover all {ATLAS_EVENT_COUNT} events <span aria-hidden>↗</span>
-              </button>
-            </footer>
           </section>
 
           <section id="event-scene" aria-label="Explore category events" hidden inert>

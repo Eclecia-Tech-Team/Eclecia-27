@@ -516,8 +516,12 @@ export function mountAtlas(root: HTMLElement): () => void {
     const duration = 1000;
     const fade = animate(scene, [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(.85)" }], duration * 0.65);
     const zoom = animate(camera, [{ opacity: 0, transform: camera.dataset.zoomBack ?? "none" }, { opacity: 1, transform: "none" }], duration);
+    // The dive's fade-out still holds the intro hidden; once the fade-in below
+    // is dropped it would take over again and hide the heading and its link.
+    const intro = root.querySelector(".intro")!;
+    cancelAnimations(intro);
     const settling = [
-      animate(root.querySelector(".intro")!, [{ opacity: 0, translate: "-20px 0" }, { opacity: 1, translate: "0 0" }], duration, {
+      animate(intro, [{ opacity: 0, translate: "-20px 0" }, { opacity: 1, translate: "0 0" }], duration, {
         delay: reduce.matches ? 0 : 180,
         fill: "both",
       }),
@@ -847,9 +851,9 @@ export function mountAtlas(root: HTMLElement): () => void {
     play(q(".intro .eyebrow"), [{ opacity: 0, translate: "0 14px" }, {}], 1500, 900);
     play(q(".intro h1"), [{ opacity: 0, translate: "0 26px", clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0 0)" }], 1650, 1100);
     play(q(".intro-note"), [{ opacity: 0, translate: "0 12px" }, {}], 2000, 800);
+    play(q("#browse-bottom"), [{ opacity: 0, translate: "0 12px" }, {}], 2200, 800);
     play(frontCaption, [{ opacity: 0, translate: "0 14px" }, { opacity: 1 }], 2800, 800);
     play(q(".foreground"), [{ opacity: 0, translate: "0 70px" }, {}], 1900, 1300);
-    play(q(".atlas-footer"), [{ opacity: 0 }, {}], 2500, 900, "ease-out");
     Promise.all(introAnimations.map((a) => a.finished.catch(() => {}))).then(endIntro);
   }
 
