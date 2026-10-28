@@ -60,7 +60,12 @@ export function mountAtlas(root: HTMLElement): () => void {
   let traveling = false;
   /** Opening sequence in flight: input waits, and the orbit spin is driven by `introSpin`. */
   let introPlaying = false;
-  let introSpin: { start: number; duration: number; from: number } | null = null;
+  let introSpin: { start: number; duration: number; from: number; to: number } | null = null;
+  /** Rotation that seats a random world in front, so each visit opens on a different one. */
+  const introSeat = (() => {
+    const a = Math.PI - ORBIT_ANGLES[Math.floor(Math.random() * ORBIT_ANGLES.length)];
+    return Math.atan2(Math.sin(a), Math.cos(a));
+  })();
   let introAnimations: Animation[] = [];
 
   const camera = $("atlas-camera");
@@ -782,14 +787,14 @@ export function mountAtlas(root: HTMLElement): () => void {
   function frame(time: number) {
     const dt = Math.min(3, (time - previousTime) / 16.667 || 1);
     previousTime = time;
-    // Opening spin: the system winds down from over a full turn and seats the
-    // front world, decelerating like a released orrery.
+    // Opening drift: the system eases from rest through just over a world's
+    // step and settles the front world, sine in-out so it never whips.
     if (introSpin) {
       const t = clamp((performance.now() - introSpin.start) / introSpin.duration, 0, 1);
-      orbitRotation = introSpin.from * Math.pow(1 - t, 4);
+      orbitRotation = introSpin.to + ((introSpin.from - introSpin.to) * (1 + Math.cos(Math.PI * t))) / 2;
       if (t >= 1) {
+        orbitRotation = orbitTarget = introSpin.to;
         introSpin = null;
-        orbitRotation = orbitTarget = 0;
       }
       renderOrbit();
     }
@@ -868,14 +873,19 @@ export function mountAtlas(root: HTMLElement): () => void {
     });
 
   /**
-   * Entrance, ~3.2 s: the eclipse ignites, the orbit rises, light runs once
-   * round the outer rail, the worlds fade in while the system spins down and
-   * seats Tandav in front, then the title, caption, silk and footer arrive.
-   * Any press or key skips straight to the end.
+   * Entrance, ~4.6 s, kept slow and restrained: the sky and eclipse surface,
+   * the orbit settles into place, light runs once round the outer rail, the
+   * worlds fade in as the system turns just over a world and seats a random one in front,
+   * then the title, link, caption and silk arrive. Every move is short in
+   * distance and long in time. It always plays through; input waits for it.
    */
   function playIntro() {
     root.removeAttribute("data-intro");
-    if (reduce.matches) return;
+    if (reduce.matches) {
+      orbitRotation = orbitTarget = introSeat;
+      renderOrbit();
+      return;
+    }
     introPlaying = true;
     root.classList.add("atlas-intro");
     const out = "cubic-bezier(.16,1,.3,1)";
@@ -886,26 +896,32 @@ export function mountAtlas(root: HTMLElement): () => void {
     const q = (selector: string) => root.querySelector(selector);
     const all = (selector: string) => [...root.querySelectorAll(selector)];
 
-    play(q(".sky"), [{ opacity: 0 }, { opacity: 1 }], 0, 1100, "ease-out");
-    play(q(".asset-eclipse"), [{ opacity: 0, scale: ".5" }, { opacity: 1, scale: "1" }], 150, 1400);
-    play(q(".asset-corona"), [{ filter: "brightness(2.6)" }, { filter: "brightness(1)" }], 350, 2000);
-    all(".asset-orbits").forEach((el) => play(el, [{ opacity: 0, translate: "0 34px", scale: ".94" }, {}], 450, 1500));
-    all(".asset-trail").forEach((el) => play(el, [{ opacity: 0 }, {}], 900, 500, "ease-out"));
+    play(q(".sky"), [{ opacity: 0 }, { opacity: 1 }], 0, 1600, "ease-out");
+    play(q(".asset-eclipse"), [{ opacity: 0, scale: ".82" }, { opacity: 1, scale: "1" }], 150, 2000);
+    play(q(".asset-corona"), [{ filter: "brightness(1.8)" }, { filter: "brightness(1)" }], 400, 2600);
+    all(".asset-orbits").forEach((el) => play(el, [{ opacity: 0, translate: "0 20px", scale: ".97" }, {}], 400, 2000));
+    all(".asset-trail").forEach((el) => play(el, [{ opacity: 0 }, {}], 1000, 800, "ease-out"));
     // Light runs once round the outer rail, leaving the glow behind it.
     all(".trail-loop").forEach((path) => {
       path.setAttribute("pathLength", "1");
-      play(path, [{ strokeDasharray: "1 1", strokeDashoffset: "1" }, { strokeDasharray: "1 1", strokeDashoffset: "0" }], 900, 1900, "cubic-bezier(.45,0,.2,1)");
+      play(path, [{ strokeDasharray: "1 1", strokeDashoffset: "1" }, { strokeDasharray: "1 1", strokeDashoffset: "0" }], 1000, 2400, "cubic-bezier(.45,0,.2,1)");
     });
-    introSpin = { start: performance.now() + 650, duration: 2400, from: -Math.PI * 2.5 };
+    // Just over a step: the front slot starts close to a world and its gap
+    // passes mid-ease at speed. Much more fractional (1.25+ with the old
+    // tail-heavy ease) left it empty until the slow tail brought a world in.
+    introSpin = { start: performance.now() + 500, duration: 3800, from: introSeat - ORBIT_STEP * 1.2, to: introSeat };
     orbitRotation = orbitTarget = introSpin.from;
     renderOrbit();
-    categoryButtons.forEach((b, i) => play(b, [{ opacity: 0, scale: ".55" }, {}], 650 + i * 95, 1000));
-    play(q(".intro .eyebrow"), [{ opacity: 0, translate: "0 14px" }, {}], 1500, 900);
-    play(q(".intro h1"), [{ opacity: 0, translate: "0 26px", clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0 0)" }], 1650, 1100);
-    play(q(".intro-note"), [{ opacity: 0, translate: "0 12px" }, {}], 2000, 800);
-    play(q("#browse-bottom"), [{ opacity: 0, translate: "0 12px" }, {}], 2200, 800);
-    play(frontCaption, [{ opacity: 0, translate: "0 14px" }, { opacity: 1 }], 2800, 800);
-    play(q(".foreground"), [{ opacity: 0, translate: "0 70px" }, {}], 1900, 1300);
+    categoryButtons.forEach((b, i) => {
+      play(b, [{ opacity: 0, scale: ".9", translate: "0 12px" }, {}], 550 + i * 120, 1600);
+      play(solar?.occluders[i] ?? null, [{ opacity: 0 }, {}], 550 + i * 120, 1600);
+    });
+    play(q(".intro .eyebrow"), [{ opacity: 0, translate: "0 10px" }, {}], 1700, 1000);
+    play(q(".intro h1"), [{ opacity: 0, translate: "0 20px", clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0 0)" }], 1850, 1300);
+    play(q(".intro-note"), [{ opacity: 0, translate: "0 10px" }, {}], 2300, 1000);
+    play(q("#browse-bottom"), [{ opacity: 0, translate: "0 10px" }, {}], 2500, 1000);
+    play(frontCaption, [{ opacity: 0, translate: "0 10px" }, { opacity: 1 }], 3600, 1000);
+    play(q(".foreground"), [{ opacity: 0, translate: "0 40px" }, {}], 2000, 1600);
     Promise.all(introAnimations.map((a) => a.finished.catch(() => {}))).then(endIntro);
   }
 
@@ -918,16 +934,11 @@ export function mountAtlas(root: HTMLElement): () => void {
     root.querySelectorAll(".trail-loop").forEach((path) => path.removeAttribute("pathLength"));
     if (introSpin) {
       introSpin = null;
-      orbitRotation = orbitTarget = 0;
+      orbitRotation = orbitTarget = introSeat;
       renderOrbit();
     }
   }
 
-  const skipIntro = () => {
-    if (introPlaying) endIntro();
-  };
-  on(root, "pointerdown", skipIntro, { capture: true });
-  on(window, "keydown", skipIntro, { capture: true });
 
   // Deep link: #category/event opens straight into that world.
   const [route, eventId] = location.hash.slice(1).split("/");

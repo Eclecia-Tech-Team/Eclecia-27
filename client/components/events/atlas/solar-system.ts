@@ -53,6 +53,9 @@ function image(src: string, className: string) {
 export class SolarSystem {
   readonly tracedPath: TracedSample[];
   readonly nodes: Element[];
+  /** Each world's cut-out in the front-rail mask, in category order; fade one
+   * with its world or the rail shows an empty world-shaped hole. */
+  readonly occluders: SVGGElement[];
   sun = { x: 0, y: 0 };
   private orbit: HTMLImageElement;
   private frontOrbit: HTMLImageElement;
@@ -112,6 +115,7 @@ export class SolarSystem {
       this.mask.append(group);
       return { group, base, art };
     });
+    this.occluders = this.maskWorlds.map((w) => w.group);
     defs.append(black, this.mask);
     maskDefs.append(defs);
     this.frontOrbit.style.mask = "url(#atlas-orbit-occlusion)";
