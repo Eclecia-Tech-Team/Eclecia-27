@@ -31,7 +31,18 @@ const art = (src: string, className: string, style?: CSSProperties) => (
 
 const vars = (v: Record<string, string | number>) => v as CSSProperties;
 
-const CATEGORIES = ["Music", "Dance", "Drama", "Art", "Fashion", "Literary"];
+/** Photosphere texture: contrast-boosted grey noise, soft-lit onto the disc. */
+const SunGrain = ({ seed, freq, className }: { seed: number; freq: number; className: string }) => (
+  <svg className={className} viewBox="0 0 200 200" aria-hidden>
+    <filter id={`ld-grain-${seed}`} x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency={freq} numOctaves={3} seed={seed} />
+      <feColorMatrix values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" />
+    </filter>
+    <rect width="200" height="200" filter={`url(#ld-grain-${seed})`} />
+  </svg>
+);
+
+const CATEGORIES =["Music", "Dance", "Drama", "Art", "Fashion", "Literary"];
 
 /**
  * Gold dust that gathers into the sun: golden-angle spiral, so it is spread
@@ -131,7 +142,13 @@ export function SiteLoader() {
 
         <div className="ld-stage">
           {art(ASSETS.cloudinary.blacksun, "ld-rays")}
-          <div className="ld-sun" />
+          <div className="ld-sun">
+            <span className="ld-sun-corona" />
+            <span className="ld-sun-disc">
+              <SunGrain seed={7} freq={0.11} className="ld-sun-grain" />
+              <SunGrain seed={23} freq={0.045} className="ld-sun-grain ld-sun-grain--slow" />
+            </span>
+          </div>
           {art(ASSETS.cloudinary.blacksun2, "ld-moon")}
           <span className="ld-diamond" />
           {art(ASSETS.cloudinary.minisun, "ld-minisun")}

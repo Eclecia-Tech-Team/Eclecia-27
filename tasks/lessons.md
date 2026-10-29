@@ -17,3 +17,6 @@
 - That goes for every descendant too: when you zoom a parent, grep for `will-change: transform` on anything inside it.
 - Rectangular holes + "reload fixes it" = GPU tile/raster-scale problem, not image decode. Check will-change and zoomed layers first.
 - Debug rendering bugs from code + user's screenshot; don't open the browser to reproduce unless asked.
+
+## Sun / glow
+- Don't over-brighten glowing art (white core, strong glow, opaque rays): user reads it as "ball of light". Default warm and restrained; compare a frame to the scene's other art before showing.
