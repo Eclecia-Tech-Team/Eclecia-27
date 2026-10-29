@@ -13,6 +13,8 @@ type GoldLook = {
 
 export type GoldButtonProps = GoldLook & {
   href: string;
+  target?: string;
+  rel?: string;
   onClick?: () => void;
 };
 
@@ -28,8 +30,31 @@ const goldClass = ({ variant = "solid", size = "md", className = "" }: Omit<Gold
  * Ornate CTA: a cusped gold lozenge with an inner hairline and small lotus
  * finials at both points, echoing the divider ornament. Frame is SVG that
  * stretches with the label (non-scaling strokes keep lines crisp).
+ * Supports both internal View Transitions and external links (e.g. target="_blank", mailto).
  */
-export function GoldButton({ href, onClick, children, ...look }: GoldButtonProps) {
+export function GoldButton({ href, onClick, target, rel, children, ...look }: GoldButtonProps) {
+  const isExternal =
+    href.startsWith("http") ||
+    href.startsWith("mailto:") ||
+    href.startsWith("tel:") ||
+    Boolean(target);
+
+  if (isExternal) {
+    return (
+      <a
+        href={href}
+        target={target}
+        rel={rel}
+        onClick={onClick}
+        className={goldClass(look)}
+      >
+        <GoldFrame variant={look.variant} size={look.size}>
+          {children}
+        </GoldFrame>
+      </a>
+    );
+  }
+
   return (
     <TransitionLink href={href} onClick={onClick} className={goldClass(look)}>
       <GoldFrame variant={look.variant} size={look.size}>
