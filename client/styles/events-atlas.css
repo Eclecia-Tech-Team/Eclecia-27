@@ -226,3 +226,30 @@ html:has(.events-atlas)::-webkit-scrollbar{display:none}
   .events-atlas .event-detail p:not(.eyebrow){font-size:17px}
 }
 .events-atlas #overview .intro-note{font-size:10.5px;max-width:none}
+
+/* ---- Dialog polish ----
+   Both dialogs get the site's ornate frame: a brighter outer line, a faint
+   inner hairline (as on GoldButton) and hollow gold diamonds at its corners,
+   over a soft glow from the top. */
+.events-atlas dialog{border-color:#d9a44170;background:radial-gradient(ellipse 80% 50% at 50% 0%,#0c2128,#06151b 70%)}
+.events-atlas dialog::before{content:'';position:absolute;inset:7px;border:1px solid #d9a44129;pointer-events:none}
+.events-atlas dialog{--diamond:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 0L12 6L6 12L0 6Z' fill='%23d9a441'/%3E%3Cpath d='M6 3.2L8.8 6L6 8.8L3.2 6Z' fill='%2306151b'/%3E%3C/svg%3E")}
+.events-atlas dialog::after{content:'';position:absolute;inset:1px;pointer-events:none;background:var(--diamond) 0 0/12px no-repeat,var(--diamond) 100% 0/12px no-repeat,var(--diamond) 0 100%/12px no-repeat,var(--diamond) 100% 100%/12px no-repeat}
+/* Results scroll under a soft fade, so a cut-off row reads as "more below";
+   bottom padding lets the last row scroll clear of it. Rows get room for a
+   hover wash without shifting the text column. */
+.events-atlas .directory-results{margin-inline:-10px;padding:0 16px 56px 10px;mask-image:linear-gradient(to bottom,#000 calc(100% - 64px),transparent)}
+.events-atlas .directory-entry{padding:13px 10px;transition:background .35s var(--ease)}
+.events-atlas .directory-entry:hover{background:linear-gradient(90deg,#d9a44114,transparent 85%)}
+.events-atlas .directory-entry>span:last-child{transition:translate .35s var(--ease)}
+.events-atlas .directory-entry:hover>span:last-child{translate:3px -3px}
+/* The placeholder already invites a search; keep the label for screen readers only. */
+.events-atlas .search-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.events-atlas .directory-entry small{letter-spacing:.2em}
+.events-atlas .directory-filters button{letter-spacing:.24em}
+/* The results area keeps one height whatever the filter, so the dialog never
+   reshapes; an empty search shows its message inside that space. */
+.events-atlas .directory-body{position:relative;height:42dvh}
+.events-atlas .directory-results{height:100%;max-height:none;align-content:start}
+.events-atlas .no-results{position:absolute;inset:24px 0 auto}
+@media(max-width:760px){.events-atlas .directory-body{height:48dvh}}

@@ -107,10 +107,13 @@ export function EventsAtlas() {
           </label>
           <input id="event-search" type="search" placeholder="A voice, a canvas, a world…" autoComplete="off" />
           <div className="directory-filters" id="directory-filters" aria-label="Filter by category" />
-          <div className="directory-results" id="directory-results" />
-          <p className="no-results" id="no-results" hidden>
-            No worlds found. Try another search.
-          </p>
+          {/* Fixed-height body: filtering never resizes the dialog. */}
+          <div className="directory-body">
+            <div className="directory-results" id="directory-results" />
+            <p className="no-results" id="no-results" hidden>
+              No worlds found. Try another search.
+            </p>
+          </div>
         </dialog>
 
         <dialog id="event-detail" className="event-detail">
