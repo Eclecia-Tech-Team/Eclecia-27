@@ -10,7 +10,13 @@ import "@/styles/auth.css";
 
 /** Server shell for the (auth) layout: reads the session, renders the panel. */
 export async function AuthPage({ children }: { children: ReactNode }) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch (err) {
+    console.error("[auth] failed to retrieve session in AuthPage:", err);
+    session = null;
+  }
 
   return (
     <PageFade className="min-h-dvh">

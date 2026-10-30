@@ -13,6 +13,14 @@ export const googleEnabled = Boolean(
 
 const randomAvatar = () => Math.floor(Math.random() * 10) + 1;
 
+const toPlainRoles = (roles: unknown): string[] => {
+  if (!roles) return [];
+  if (Array.isArray(roles)) {
+    return Array.from(roles).map(String);
+  }
+  return [];
+};
+
 const providers: Provider[] = [
   Credentials({
     credentials: {
@@ -45,7 +53,7 @@ const providers: Provider[] = [
         email: user.email,
         image: user.image ?? undefined,
         avatar,
-        roles: user.roles ?? [],
+        roles: toPlainRoles(user.roles),
       };
     },
   }),
@@ -61,10 +69,13 @@ if (googleEnabled) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   providers,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
+    error: "/login",
   },
   callbacks: {
     async signIn({ user, account }) {
@@ -90,7 +101,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         user.id = existing._id.toString();
         user.name = existing.username;
         (user as { avatar?: number }).avatar = existing.avatar;
-        (user as { roles?: string[] }).roles = existing.roles ?? [];
+        (user as { roles?: string[] }).roles = toPlainRoles(existing.roles);
         return true;
       }
 
@@ -120,7 +131,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       user.id = created._id.toString();
       user.name = created.username;
       (user as { avatar?: number }).avatar = created.avatar;
-      (user as { roles?: string[] }).roles = created.roles ?? [];
+      (user as { roles?: string[] }).roles = toPlainRoles(created.roles);
       await sendWelcomeEmail(email).catch((err) =>
         console.error("[auth] welcome_mail_failed", err)
       );
@@ -133,19 +144,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id ? String(user.id) : undefined;
         token.username = user.name ?? undefined;
-        token.avatar = (user as { avatar?: number }).avatar;
-        token.roles = (user as { roles?: string[] }).roles ?? [];
+        token.avatar =
+          typeof (user as { avatar?: number }).avatar === "number"
+            ? (user as { avatar?: number }).avatar
+            : undefined;
+        token.roles = toPlainRoles((user as { roles?: unknown }).roles);
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
+        session.user.id = (token.id as string) || (token.sub as string) || "";
         session.user.username = token.username as string | undefined;
         session.user.avatar = token.avatar as number | undefined;
-        session.user.roles = (token.roles as string[] | undefined) ?? [];
+        session.user.roles = toPlainRoles(token.roles);
       }
       return session;
     },
