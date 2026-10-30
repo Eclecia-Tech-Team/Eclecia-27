@@ -313,11 +313,12 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
               <div className="pb-6">
                 <button
                   type="button"
+                  disabled={busy}
                   onClick={() => signIn("google", { redirectTo: "/register" })}
-                  className="flex w-full items-center justify-center gap-3 border border-gold/35 bg-black/30 py-3 font-sans text-[14px] font-medium text-parchment transition-colors hover:border-gold hover:bg-gold/10"
+                  className="group relative flex w-full items-center justify-center gap-3 border border-gold/35 bg-black/30 py-3.5 font-sans text-[14px] font-medium tracking-wide text-parchment transition-all duration-300 hover:border-gold hover:bg-gold/10 hover:shadow-[0_0_18px_rgba(217,164,65,0.12)] disabled:cursor-not-allowed disabled:border-gold/15 disabled:bg-black/20 disabled:text-parchment/35 disabled:shadow-none disabled:hover:border-gold/15 disabled:hover:bg-black/20"
                 >
-                  <GoogleMark />
-                  Continue with Google
+                  <GoogleMark className="transition-all duration-300 group-disabled:opacity-35 group-disabled:grayscale-[0.7]" />
+                  <span>Continue with Google</span>
                 </button>
               </div>
             </>
@@ -584,7 +585,7 @@ function Submit({ disabled, children }: { disabled?: boolean; children: ReactNod
       <GoldActionButton
         type="submit"
         disabled={disabled}
-        className="min-w-[240px] text-[15px]! tracking-[0.06em]! normal-case! disabled:pointer-events-none disabled:opacity-70"
+        className="min-w-[240px] text-[15px]! tracking-[0.06em]! normal-case!"
       >
         {children}
       </GoldActionButton>
@@ -628,9 +629,9 @@ function EyeIcon({ open }: { open: boolean }) {
   );
 }
 
-function GoogleMark() {
+function GoogleMark({ className = "" }: { className?: string }) {
   return (
-    <svg aria-hidden width="18" height="18" viewBox="0 0 48 48">
+    <svg aria-hidden width="18" height="18" viewBox="0 0 48 48" className={className}>
       <path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.9-6.9C35.9 2.4 30.5 0 24 0 14.6 0 6.5 5.4 2.6 13.2l8 6.2C12.5 13.7 17.8 9.5 24 9.5z" />
       <path fill="#4285F4" d="M46.9 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.9c-.6 3-2.2 5.5-4.7 7.2l7.7 6c4.5-4.2 7-10.3 7-17.7z" />
       <path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-8-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l8-6.2z" />

@@ -238,3 +238,64 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .gold-btn:hover .gold-btn-sheen { animation: none; }
 }
+
+/* ---- Gold CTA button :disabled state ---- */
+.gold-btn:disabled,
+.gold-btn[disabled],
+.gold-btn[aria-disabled="true"] {
+  cursor: not-allowed !important;
+  pointer-events: auto !important;
+  transform: none !important;
+  filter: none !important;
+  color: rgba(235, 226, 206, 0.35) !important;
+}
+
+.gold-btn:disabled .gold-btn-fill,
+.gold-btn[disabled] .gold-btn-fill,
+.gold-btn[aria-disabled="true"] .gold-btn-fill {
+  fill: rgba(18, 14, 8, 0.72) !important;
+}
+
+.gold-btn:disabled .gold-btn-outer,
+.gold-btn[disabled] .gold-btn-outer,
+.gold-btn[aria-disabled="true"] .gold-btn-outer {
+  stroke: rgba(217, 164, 65, 0.22) !important;
+}
+
+.gold-btn:disabled .gold-btn-inner,
+.gold-btn[disabled] .gold-btn-inner,
+.gold-btn[aria-disabled="true"] .gold-btn-inner {
+  stroke: rgba(217, 164, 65, 0.08) !important;
+}
+
+.gold-btn:disabled .gold-btn-finial,
+.gold-btn[disabled] .gold-btn-finial,
+.gold-btn[aria-disabled="true"] .gold-btn-finial {
+  opacity: 0.2 !important;
+  transform: none !important;
+}
+
+.gold-btn:disabled .gold-btn-finial path,
+.gold-btn:disabled .gold-btn-finial circle,
+.gold-btn[disabled] .gold-btn-finial path,
+.gold-btn[disabled] .gold-btn-finial circle {
+  fill: #8a7243 !important;
+}
+
+.gold-btn:disabled .gold-btn-sheen,
+.gold-btn[disabled] .gold-btn-sheen,
+.gold-btn[aria-disabled="true"] .gold-btn-sheen {
+  display: none !important;
+  animation: none !important;
+}
+
+.gold-btn:disabled:hover,
+.gold-btn[disabled]:hover {
+  transform: none !important;
+  filter: none !important;
+}
+
+.gold-btn:disabled:hover .gold-btn-finial:first-of-type,
+.gold-btn[disabled]:hover .gold-btn-finial:first-of-type {
+  transform: translate(-70%, -50%) !important;
+}

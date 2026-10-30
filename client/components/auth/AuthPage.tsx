@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { auth, googleEnabled } from "@/auth";
 import { SiteHeader } from "@/components/common/Header";
 import { SiteFooter } from "@/components/common/Footer";
@@ -13,7 +13,10 @@ export async function AuthPage({ children }: { children: ReactNode }) {
   let session = null;
   try {
     session = await auth();
-  } catch (err) {
+  } catch (err: unknown) {
+    if ((err as { digest?: string })?.digest === "DYNAMIC_SERVER_USAGE") {
+      throw err;
+    }
     console.error("[auth] failed to retrieve session in AuthPage:", err);
     session = null;
   }
@@ -29,10 +32,12 @@ export async function AuthPage({ children }: { children: ReactNode }) {
         />
         <SiteHeader />
         <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-14 pt-24 md:pb-10 md:pt-24">
-          <AuthPanel
-            googleEnabled={googleEnabled}
-            user={session?.user ? { username: session.user.username, email: session.user.email } : null}
-          />
+          <Suspense fallback={null}>
+            <AuthPanel
+              googleEnabled={googleEnabled}
+              user={session?.user ? { username: session.user.username, email: session.user.email } : null}
+            />
+          </Suspense>
         </main>
         <SiteFooter />
         {children}

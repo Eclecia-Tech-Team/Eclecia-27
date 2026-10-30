@@ -22,7 +22,7 @@ export type GoldActionButtonProps = GoldLook &
   Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "className">;
 
 const goldClass = ({ variant = "solid", size = "md", className = "" }: Omit<GoldLook, "children">) =>
-  `gold-btn group relative inline-flex items-center justify-center font-taiganja font-semibold uppercase tracking-[0.3em] transition-transform duration-300 hover:scale-[1.03] ${
+  `gold-btn group relative inline-flex items-center justify-center font-taiganja font-semibold uppercase tracking-[0.3em] transition-transform duration-300 hover:scale-[1.03] disabled:hover:scale-100 disabled:cursor-not-allowed ${
     variant === "solid" ? "text-black" : "text-gold hover:text-parchment"
   } ${size === "sm" ? "px-7 py-2 text-[10px]" : "px-10 py-3.5 text-[12px]"} ${className}`;
 
@@ -98,11 +98,13 @@ function GoldFrame({
       >
         {/* Fill (solid) / soft glass (ghost) */}
         <path
+          className="gold-btn-fill transition-colors duration-300"
           d="M14 1 H186 L199 24 L186 47 H14 L1 24 Z"
           fill={solid ? "#d9a441" : "rgba(0,0,0,0.35)"}
         />
         {/* Outer line */}
         <path
+          className="gold-btn-outer transition-colors duration-300"
           d="M14 1 H186 L199 24 L186 47 H14 L1 24 Z"
           fill="none"
           stroke={solid ? "rgba(255,240,200,0.9)" : "rgba(217,164,65,0.8)"}
@@ -111,6 +113,7 @@ function GoldFrame({
         />
         {/* Inner hairline */}
         <path
+          className="gold-btn-inner transition-colors duration-300"
           d="M17 5 H183 L194 24 L183 43 H17 L6 24 Z"
           fill="none"
           stroke={solid ? "rgba(30,20,5,0.45)" : "rgba(217,164,65,0.35)"}
@@ -149,7 +152,7 @@ function GoldFrame({
         size={finial}
       />
 
-      <span className="relative z-10">{children}</span>
+      <span className="gold-btn-label relative z-10 transition-colors duration-300">{children}</span>
     </>
   );
 }
