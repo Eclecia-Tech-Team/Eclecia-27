@@ -1,5 +1,7 @@
 /** Events atlas line-up: seven worlds, thirty events. Copy is short editorial
- *  framing only; dates, rules, fees and prizes are not invented here. */
+ *  framing only; dates, rules, fees and prizes are not invented here. The site
+ *  reads each world's copy from here but its events from Mongo; these events
+ *  only feed scripts/seed-events.ts. */
 
 export interface AtlasEvent {
   id: string;
@@ -104,8 +106,6 @@ export const ATLAS_CATEGORIES: AtlasCategory[] = [
     ],
   },
 ];
-
-export const ATLAS_EVENT_COUNT = ATLAS_CATEGORIES.reduce((n, c) => n + c.events.length, 0);
 
 /** Atlas art, served from public/assets/opt/events (immutable cache headers). */
 const ATLAS_MEDIA = "/assets/opt/events";

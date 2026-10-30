@@ -1,11 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { GoldActionButton } from "@/components/common/GoldButton";
 import { SiteHeader } from "@/components/common/Header";
-import { ATLAS_EVENT_COUNT, atlasArt } from "@/constants/events";
+import { atlasArt, type AtlasCategory } from "@/constants/events";
 import { ASSETS } from "@/constants/assets";
+import { saveAtlasSpot } from "./atlas/atlas-spot";
 import { mountAtlas } from "./atlas/engine";
 import { MobileEventsAtlas } from "./MobileEventsAtlas";
 import "@/styles/events-atlas.css";
@@ -26,18 +28,25 @@ const serverSnapshot = () => false;
  * The site header sits outside the atlas root so its scoped styles never
  * reach it.
  */
-export function EventsAtlas() {
+export function EventsAtlas({ categories }: { categories: AtlasCategory[] }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const phone = useSyncExternalStore(subscribePhone, phoneSnapshot, serverSnapshot);
+  const router = useRouter();
+  const eventCount = categories.reduce((n, c) => n + c.events.length, 0);
+
+  const discover = useCallback((category: string, event: string) => {
+    saveAtlasSpot({ category, event });
+    router.push(`/events/${event}`);
+  }, [router]);
 
   useEffect(() => {
     // Keep the desktop engine and markup unchanged. Never start it on phones,
     // including the first hydration pass before the media store synchronizes.
     if (phone || window.matchMedia(phoneQuery).matches || !rootRef.current) return;
-    return mountAtlas(rootRef.current);
-  }, [phone]);
+    return mountAtlas(rootRef.current, { categories, onDiscover: discover });
+  }, [phone, categories, discover]);
 
-  if (phone) return <><SiteHeader /><MobileEventsAtlas /></>;
+  if (phone) return <><SiteHeader /><MobileEventsAtlas categories={categories} eventCount={eventCount} onDiscover={discover} /></>;
 
   return (
     <>
@@ -62,7 +71,7 @@ export function EventsAtlas() {
                 <span className="hint-touch">Swipe to turn.</span>
               </p>
               <button className="intro-link" id="browse-bottom">
-                View all {ATLAS_EVENT_COUNT} events <span aria-hidden>→</span>
+                View all {eventCount} events <span aria-hidden>→</span>
               </button>
             </div>
             <div id="atlas-camera">
@@ -146,22 +155,6 @@ export function EventsAtlas() {
             <p className="no-results" id="no-results" hidden>
               No worlds found. Try another search.
             </p>
-          </div>
-        </dialog>
-
-        <dialog id="event-detail" className="event-detail">
-          <button className="close-button" data-close="event-detail" aria-label="Close event details">
-            ×
-          </button>
-          <img id="detail-art" alt="" draggable={false} />
-          <div>
-            <p className="eyebrow" id="detail-category" />
-            <h2 id="detail-title" />
-            <p id="detail-description" />
-            <p className="announcement">Competition details and registration will be announced.</p>
-            <GoldActionButton variant="ghost" className="atlas-cta" data-close="event-detail">
-              Back to the world
-            </GoldActionButton>
           </div>
         </dialog>
 

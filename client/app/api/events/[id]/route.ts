@@ -1,6 +1,6 @@
+import { eventLookup } from "@/lib/events";
 import Event from "@/lib/models/Events";
 import connect from "@/lib/mongoose";
-import { isValidObjectId } from "mongoose";
 import { NextResponse } from "next/server";
 
 /** One event by Mongo id or atlas slug (e.g. "short-film"). */
@@ -12,9 +12,7 @@ export async function GET(
     const { id } = await params;
     await connect();
 
-    const event = await Event.findOne(
-      isValidObjectId(id) ? { _id: id } : { slug: id.toLowerCase() },
-    )
+    const event = await Event.findOne(eventLookup(id))
       .select(
         "_id slug eventName category kind date time duration venue description banner rules clubs isTeamEvent pocs minMembersPerTeam maxMembersPerTeam teamLimit isPaidEvent fees prizePool isActive doc",
       )

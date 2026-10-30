@@ -33,7 +33,8 @@ async function connect(): Promise<typeof mongoose> {
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(getMongoUri()).catch((err) => {
+    // /events renders from this: fail to its error state fast, not after the 30s default.
+    cached.promise = mongoose.connect(getMongoUri(), { serverSelectionTimeoutMS: 8000 }).catch((err) => {
       // Let the next request retry instead of caching a rejected promise forever.
       cached.promise = null;
       throw err;

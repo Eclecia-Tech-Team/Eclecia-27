@@ -130,12 +130,6 @@ body:has(.mobile-events){overflow:hidden}
 .mobile-events .m-results small{display:block;color:#c7b698;font-size:12px;line-height:1.4;margin-top:5px}
 .mobile-events .m-results>button>span:last-child{color:var(--m-gold)}
 .mobile-events .m-empty{font-size:18px;line-height:1.5;color:#dfd2bc;padding:12px 0}
-.mobile-events .m-detail{text-align:center}
-.mobile-events .m-detail-art{width:100%;height:190px;object-fit:contain;margin:5px auto 8px}
-.mobile-events .m-detail h2{margin:8px 0 16px}
-.mobile-events .m-detail>p:not(.m-kicker){font-size:18px;line-height:1.45;color:#e2d6c0}
-.mobile-events .m-detail .m-announcement{padding-top:16px;margin-top:20px;border-top:1px solid #d9a44144;font-size:16px!important;color:#d6bc93!important}
-.mobile-events .m-detail .m-cta{width:calc(100% - 28px);margin-top:24px}
 
 @media(max-height:740px){
   .mobile-events .m-shell{padding-top:78px}

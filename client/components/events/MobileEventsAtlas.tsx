@@ -6,16 +6,17 @@ import {
   type CSSProperties, type PointerEvent as ReactPointerEvent,
 } from "react";
 import { GoldActionButton } from "@/components/common/GoldButton";
-import { ATLAS_CATEGORIES as canonicalCategories, ATLAS_EVENT_COUNT, atlasArt } from "@/constants/events";
+import { ATLAS_CATEGORIES, atlasArt, type AtlasCategory } from "@/constants/events";
 import { ASSETS } from "@/constants/assets";
+import { clearAtlasSpot, readAtlasSpot } from "./atlas/atlas-spot";
 import "@/styles/mobile-events.css";
 
 type Selection = { mode: "categories" | "events"; category: number; event: number };
-const count = canonicalCategories.length;
-type CategoryOrder = readonly (typeof canonicalCategories)[number][];
+const count = ATLAS_CATEGORIES.length;
+type CategoryOrder = readonly AtlasCategory[];
 
-function shuffledCategories() {
-  const order = [...canonicalCategories];
+function shuffledCategories(canonical: CategoryOrder) {
+  const order = [...canonical];
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
@@ -37,19 +38,14 @@ const motionSnapshot = () => matchMedia("(prefers-reduced-motion: reduce)").matc
 const serverMotion = () => false;
 
 function initialSelection(categories: CategoryOrder): Selection {
-  const [world, event] = typeof location === "undefined" ? [] : location.hash.slice(1).split("/");
-  const index = categories.findIndex((c) => c.id === world);
+  // Back from an event page: reopen straight into that world.
+  const spot = readAtlasSpot();
+  const index = categories.findIndex((c) => c.id === spot?.category && c.events.length);
   if (index < 0) return { mode: "categories", category: 0, event: 0 };
   return {
     mode: "events", category: index,
-    event: Math.max(0, categories[index].events.findIndex((e) => e.id === event)),
+    event: Math.max(0, categories[index].events.findIndex((e) => e.id === spot?.event)),
   };
-}
-
-function writeHash(next: Selection, categories: CategoryOrder) {
-  const c = categories[next.category];
-  const hash = next.mode === "events" ? "#" + c.id + "/" + c.events[next.event].id : "";
-  history.replaceState(history.state, "", location.pathname + location.search + hash);
 }
 
 /**
@@ -57,10 +53,14 @@ function writeHash(next: Selection, categories: CategoryOrder) {
  * not the desktop scene engine. Discrete React state; drag feedback stays on
  * one DOM transform, with no per-pointer-move renders or animation loop.
  */
-export function MobileEventsAtlas() {
+export function MobileEventsAtlas({ categories: canonical, eventCount, onDiscover }: {
+  categories: AtlasCategory[];
+  eventCount: number;
+  onDiscover: (categoryId: string, eventId: string) => void;
+}) {
   // Shuffle once per mount, keeping swipes, arrows and shortcuts in one order.
-  // This component only mounts on the client; direct event links still resolve by ID.
-  const [categories] = useState(shuffledCategories);
+  // This component only mounts on the client.
+  const [categories] = useState(() => shuffledCategories(canonical));
   const [selection, setSelection] = useState<Selection>(() => initialSelection(categories));
   const [dialTurn, setDialTurn] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
@@ -73,7 +73,6 @@ export function MobileEventsAtlas() {
   const copyRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const directoryRef = useRef<HTMLDialogElement>(null);
-  const detailRef = useRef<HTMLDialogElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const backRef = useRef<HTMLButtonElement>(null);
   const alive = useRef(true);
@@ -90,22 +89,14 @@ export function MobileEventsAtlas() {
     alive.current = true;
     const root = rootRef.current;
     const directory = directoryRef.current;
-    const detail = detailRef.current;
-    const readRoute = () => {
-      setSelection(initialSelection(categories));
-      root?.scrollTo({ top: 0, behavior: "instant" });
-    };
-    window.addEventListener("hashchange", readRoute);
     return () => {
       alive.current = false;
       cancelAnimationFrame(focusFrame.current);
       clearTimeout(blockTimer.current);
-      window.removeEventListener("hashchange", readRoute);
       root?.getAnimations({ subtree: true }).forEach((a) => a.cancel());
       directory?.close();
-      detail?.close();
     };
-  }, [categories]);
+  }, []);
 
   useLayoutEffect(() => {
     const copy = copyRef.current;
@@ -141,7 +132,7 @@ export function MobileEventsAtlas() {
     }
     if (!alive.current) return;
     setSelection(next);
-    writeHash(next, categories);
+    if (next.mode === "categories") clearAtlasSpot();
     rootRef.current?.scrollTo({ top: 0, behavior: "instant" });
     focusFrame.current = requestAnimationFrame(() => {
       if (!alive.current) return;
@@ -158,7 +149,7 @@ export function MobileEventsAtlas() {
   }
 
   function openCategory(index = selection.category, eventIndex = 0) {
-    if (blockedClick.current) return;
+    if (blockedClick.current || !categories[index].events.length) return;
     void changeView({ mode: "events", category: index, event: eventIndex });
   }
 
@@ -166,7 +157,6 @@ export function MobileEventsAtlas() {
     if (busy.current || index < 0 || index >= c.events.length) return;
     const next: Selection = { ...selection, event: index };
     setSelection(next);
-    writeHash(next, categories);
     rootRef.current?.scrollTo({ top: 0, behavior: "instant" });
   }
 
@@ -245,7 +235,7 @@ export function MobileEventsAtlas() {
     <div
       ref={rootRef} className="mobile-events" data-view={selection.mode}
       onKeyDown={(e) => {
-        if (directoryRef.current?.open || detailRef.current?.open || (e.target as HTMLElement).matches("input,textarea")) return;
+        if (directoryRef.current?.open || (e.target as HTMLElement).matches("input,textarea")) return;
         if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); advance(e.key === "ArrowRight" ? 1 : -1); }
         if (e.key === "Escape" && inEvents) { e.preventDefault(); void changeView({ ...selection, mode: "categories" }); }
       }}
@@ -271,7 +261,7 @@ export function MobileEventsAtlas() {
             <section aria-label="Choose an event category" className="m-categories">
               <header className="m-intro">
                 <h1>Find your <em>stage.</em></h1>
-                <p>7 categories <span aria-hidden="true">/</span> {ATLAS_EVENT_COUNT} events</p>
+                <p>7 categories <span aria-hidden="true">/</span> {eventCount} events</p>
               </header>
               <div className="m-dial" {...swipe} aria-roledescription="carousel" aria-label="Swipe between seven categories">
                 <div
@@ -304,7 +294,7 @@ export function MobileEventsAtlas() {
                 <p>{c.kind} <span aria-hidden="true">/</span> {c.events.length} events</p>
               </div>
               <div className="m-category-actions">
-                <GoldActionButton id="m-explore" className="m-cta" variant="ghost" disabled={transitioning} onClick={() => openCategory()}>
+                <GoldActionButton id="m-explore" className="m-cta" variant="ghost" disabled={transitioning || !c.events.length} onClick={() => openCategory()}>
                   Explore {c.events.length} events <span aria-hidden="true">→</span>
                 </GoldActionButton>
                 <nav className="m-category-arrows" aria-label="Previous and next categories">
@@ -358,8 +348,8 @@ export function MobileEventsAtlas() {
                 <p>{event.description}</p>
               </div>
               <div className="m-event-actions">
-                <GoldActionButton className="m-cta" variant="ghost" onClick={() => detailRef.current?.showModal()}>
-                  Event details <span aria-hidden="true">→</span>
+                <GoldActionButton className="m-cta" variant="ghost" onClick={() => onDiscover(c.id, event.id)}>
+                  Discover event <span aria-hidden="true">→</span>
                 </GoldActionButton>
                 <nav className="m-event-progress" aria-label="Events in this category">
                   <p aria-live="polite">{selection.event + 1} of {c.events.length} events</p>
@@ -377,7 +367,7 @@ export function MobileEventsAtlas() {
           )}
         </div>
         <footer className="m-footer">
-          <button type="button" className="m-browse" onClick={openDirectory}>Browse all {ATLAS_EVENT_COUNT} events <span aria-hidden="true">→</span></button>
+          <button type="button" className="m-browse" onClick={openDirectory}>Browse all {eventCount} events <span aria-hidden="true">→</span></button>
           {assetError && <p role="status" className="m-asset-error">Some artwork could not load. All events are still available below.</p>}
         </footer>
       </main>
@@ -389,7 +379,7 @@ export function MobileEventsAtlas() {
           if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) e.currentTarget.close();
         }}>
         <button className="m-close" aria-label="Close event directory" type="button" onClick={() => directoryRef.current?.close()}>×</button>
-        <p className="m-kicker">7 categories. {ATLAS_EVENT_COUNT} events.</p>
+        <p className="m-kicker">7 categories. {eventCount} events.</p>
         <h2 id="m-directory-title">Find your stage.</h2>
         <label className="m-search-label" htmlFor="m-event-search">Search events or categories</label>
         <input ref={searchRef} id="m-event-search" type="search" placeholder="Search for your event…" autoComplete="off" value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -413,16 +403,6 @@ export function MobileEventsAtlas() {
           ))}
           {matches.length === 0 && <p className="m-empty">No events found. Try another name or choose All worlds.</p>}
         </div>
-      </dialog>
-
-      <dialog ref={detailRef} className="m-dialog m-detail" aria-labelledby="m-detail-title">
-        <button type="button" className="m-close" aria-label="Close event details" onClick={() => detailRef.current?.close()}>×</button>
-        <img className="m-detail-art" src={atlasArt.event(c.id, event.id)} alt={event.name + " illustration"} />
-        <p className="m-kicker">{c.name} / {event.kind}</p>
-        <h2 id="m-detail-title">{event.name}</h2>
-        <p>{event.description}</p>
-        <p className="m-announcement">Competition details and registration will be announced.</p>
-        <GoldActionButton className="m-cta" variant="ghost" onClick={() => detailRef.current?.close()}>Back to the event</GoldActionButton>
       </dialog>
     </div>
   );
