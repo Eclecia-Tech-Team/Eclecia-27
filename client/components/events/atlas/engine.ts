@@ -116,7 +116,7 @@ export function mountAtlas(root: HTMLElement): () => void {
     const animation = el.animate(frames, { duration: reduce.matches ? 1 : duration, easing: EASE, fill: "forwards", ...options });
     return animation.finished.catch(() => {}).then(() => animation);
   }
-  const cancelAnimations = (el: Element) => el.getAnimations().forEach((a) => a.cancel());
+  const cancelAnimations = (el: Element | null | undefined) => el?.getAnimations?.().forEach((a) => a.cancel());
 
   function fadeCopy() {
     const copy = $("event-copy");
@@ -527,10 +527,10 @@ export function mountAtlas(root: HTMLElement): () => void {
     const fadeOut = (el: Element | null, from: number, length: number, frames: Keyframe[] = [{ opacity: 0 }]) =>
       el && animate(el, [{ opacity: getComputedStyle(el).opacity }, ...frames], duration * length, { delay: at(from), easing: "ease-in-out" });
     const intro = root.querySelector(".intro")!;
-    const silk = root.querySelector(".foreground")!;
+    const silk = root.querySelector(".foreground, .atlas-figures");
     const sky = root.querySelector(".sky")!;
     const copyFade = fadeOut(intro, 0, 0.35, [{ opacity: 0, translate: "-30px 0" }]);
-    const decorFade = fadeOut(silk, 0, 0.35);
+    const decorFade = silk ? fadeOut(silk, 0, 0.35) : Promise.resolve();
     [frontCaption, eclipse(), ...rails(), ...categoryButtons.filter((b) => b !== focusedWorld)].forEach((el) => fadeOut(el, 0, 0.35));
     const skyFade = fadeOut(sky, 0.45, 0.4);
     const zooming = lens && animate(lens, diveKeyframes(x, y, rect.width), duration, { easing: "linear" });
@@ -604,9 +604,11 @@ export function mountAtlas(root: HTMLElement): () => void {
         fill: "both",
       }),
     ];
-    const silk = root.querySelector(".foreground")!;
-    cancelAnimations(silk);
-    settling.push(animate(silk, [{ opacity: 0 }, { opacity: getComputedStyle(silk).opacity }], duration));
+    const silk = root.querySelector(".foreground, .atlas-figures");
+    if (silk) {
+      cancelAnimations(silk);
+      settling.push(animate(silk, [{ opacity: 0 }, { opacity: getComputedStyle(silk).opacity }], duration));
+    }
     categoryButtons.forEach((b) => {
       cancelAnimations(b);
       b.style.opacity = "1";
@@ -974,7 +976,7 @@ export function mountAtlas(root: HTMLElement): () => void {
     play(q(".intro-note"), [{ opacity: 0, translate: "0 10px" }, {}], 2300, 1000);
     play(q("#browse-bottom"), [{ opacity: 0, translate: "0 10px" }, {}], 2500, 1000);
     play(frontCaption, [{ opacity: 0, translate: "0 10px" }, { opacity: 1 }], 3600, 1000);
-    play(q(".foreground"), [{ opacity: 0, translate: "0 40px" }, {}], 2000, 1600);
+    play(q(".foreground, .atlas-figures"), [{ opacity: 0, translate: "0 40px" }, {}], 2000, 1600);
     Promise.all(introAnimations.map((a) => a.finished.catch(() => {}))).then(endIntro);
   }
 

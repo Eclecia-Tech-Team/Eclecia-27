@@ -7,6 +7,7 @@ import {
 } from "react";
 import { GoldActionButton } from "@/components/common/GoldButton";
 import { ATLAS_CATEGORIES as canonicalCategories, ATLAS_EVENT_COUNT, atlasArt } from "@/constants/events";
+import { ASSETS } from "@/constants/assets";
 import "@/styles/mobile-events.css";
 
 type Selection = { mode: "categories" | "events"; category: number; event: number };
@@ -250,7 +251,20 @@ export function MobileEventsAtlas() {
       }}
     >
       <div className="m-sky" aria-hidden="true" />
-      <img className="m-silk" src={atlasArt.shared("silk-foreground")} alt="" aria-hidden="true" draggable={false} />
+      <div className="m-figures" aria-hidden="true">
+        <img
+          className="m-figure m-figure--veena"
+          src={ASSETS.cloudinary.veena}
+          alt=""
+          draggable={false}
+        />
+        <img
+          className="m-figure m-figure--hand"
+          src={ASSETS.cloudinary.hand}
+          alt=""
+          draggable={false}
+        />
+      </div>
       <main id="main" className="m-shell" tabIndex={-1}>
         <div ref={panelRef} className="m-view" aria-busy={transitioning}>
           {!inEvents ? (

@@ -5,6 +5,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import { GoldActionButton } from "@/components/common/GoldButton";
 import { SiteHeader } from "@/components/common/Header";
 import { ATLAS_EVENT_COUNT, atlasArt } from "@/constants/events";
+import { ASSETS } from "@/constants/assets";
 import { mountAtlas } from "./atlas/engine";
 import { MobileEventsAtlas } from "./MobileEventsAtlas";
 import "@/styles/events-atlas.css";
@@ -41,10 +42,10 @@ export function EventsAtlas() {
   return (
     <>
       <SiteHeader />
-      <div ref={rootRef} className="events-atlas" data-mode="atlas" data-intro="pending">
+      <div ref={rootRef} className="events-atlas select-none" data-mode="atlas" data-intro="pending">
         <div className="sky" aria-hidden>
           <div className="sky-texture" />
-          <img className="dust" src={atlasArt.shared("gold-dust")} alt="" />
+          <img className="dust" src={atlasArt.shared("gold-dust")} alt="" draggable={false} />
           <div className="vignette" />
         </div>
 
@@ -67,7 +68,21 @@ export function EventsAtlas() {
             <div id="atlas-camera">
               <div id="category-worlds" />
             </div>
-            <img className="foreground" src={atlasArt.shared("silk-foreground")} alt="" aria-hidden />
+            {/* Bottom figures matching loader: veena on bottom-left, mudra hand on bottom-right */}
+            <div className="atlas-figures" aria-hidden="true">
+              <img
+                src={ASSETS.cloudinary.veena}
+                alt=""
+                draggable={false}
+                className="atlas-figure atlas-figure--veena"
+              />
+              <img
+                src={ASSETS.cloudinary.hand}
+                alt=""
+                draggable={false}
+                className="atlas-figure atlas-figure--hand"
+              />
+            </div>
           </section>
 
           <section id="event-scene" aria-label="Explore category events" hidden inert>
@@ -78,7 +93,7 @@ export function EventsAtlas() {
               <span className="breadcrumb-rule" />
               <span id="breadcrumb" />
             </div>
-            <img className="immersive-corona" src={atlasArt.shared("corona-halo")} alt="" aria-hidden />
+            <img className="immersive-corona" src={atlasArt.shared("corona-halo")} alt="" aria-hidden draggable={false} />
             <div id="planet-system" />
             <div className="event-copy" id="event-copy" aria-live="polite" aria-atomic="true">
               <p className="eyebrow" id="world-label" />
@@ -138,7 +153,7 @@ export function EventsAtlas() {
           <button className="close-button" data-close="event-detail" aria-label="Close event details">
             ×
           </button>
-          <img id="detail-art" alt="" />
+          <img id="detail-art" alt="" draggable={false} />
           <div>
             <p className="eyebrow" id="detail-category" />
             <h2 id="detail-title" />

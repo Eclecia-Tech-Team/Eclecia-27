@@ -19,7 +19,10 @@ body:has(.mobile-events){overflow:hidden}
 .mobile-events button:disabled{cursor:wait;opacity:.55}
 .mobile-events img{user-select:none;-webkit-user-drag:none}
 .mobile-events .m-sky{position:fixed;inset:0;z-index:-2;pointer-events:none;background:linear-gradient(#0411168c,#041116b3 55%,#041116b8),url("/assets/opt/events/site/background.webp") center/cover}
-.mobile-events .m-silk{position:fixed;z-index:-1;pointer-events:none;bottom:-12px;left:0;width:100%;height:auto;max-width:none;opacity:.42}
+.mobile-events .m-figures{position:fixed;inset:0;z-index:0;pointer-events:none;user-select:none;-webkit-user-select:none}
+.mobile-events .m-figure{position:absolute;height:auto;pointer-events:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 0 14px rgba(217, 164, 65, 0.25));opacity:.85}
+.mobile-events .m-figure--veena{left:-2%;bottom:-1%;width:min(44vw,220px)}
+.mobile-events .m-figure--hand{right:-1%;bottom:-1%;width:min(30vw,150px)}
 .mobile-events .m-shell{position:relative;display:flex;flex-direction:column;width:100%;max-width:520px;margin:0 auto;min-height:100dvh;padding:84px 0 max(12px,env(safe-area-inset-bottom))}
 .mobile-events .m-view{display:flex;flex-direction:column;flex:1 0 auto;transform-origin:50% 35%}
 .mobile-events .m-categories,.mobile-events .m-events{display:flex;flex-direction:column;align-items:center;flex:1 0 auto}
@@ -161,4 +164,21 @@ body:has(.mobile-events){overflow:hidden}
 }
 @media(prefers-reduced-motion:reduce){
   .mobile-events *,.mobile-events *::before,.mobile-events *::after{animation:none!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+
+/* Make mobile events page, dial and categories non-selectable */
+.mobile-events,
+.mobile-events * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+}
+
+.mobile-events input,
+.mobile-events textarea {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+
 }
