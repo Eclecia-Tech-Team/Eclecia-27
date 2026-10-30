@@ -273,7 +273,7 @@ export function MobileEventsAtlas() {
                     return (
                       <button
                         key={world.id} type="button" className="m-world"
-                        style={{ "--offset": offset, "--world-scale": offset === 0 ? 1 : 0.76, "--world-brightness": offset === 0 ? 1 : 0.55 } as CSSProperties}
+                        style={{ "--offset": offset, "--world-scale": offset === 0 ? 1 : 0.76, "--world-brightness": offset === 0 ? 1 : 0.55, "--art-scale": offset === 0 ? 1.32 : 1 } as CSSProperties}
                         tabIndex={offset === 0 ? 0 : -1} aria-hidden={offset !== 0}
                         aria-label={"Enter " + world.name + ", " + world.events.length + " events"}
                         onClick={() => { if (canClick()) { if (offset === 0) openCategory(); else selectCategory(index); } }}
@@ -330,7 +330,7 @@ export function MobileEventsAtlas() {
                     if (Math.abs(offset) > 1) return null;
                     return (
                       <div key={item.id} className="m-event-world"
-                        style={{ "--offset": offset, "--world-brightness": offset === 0 ? 1 : 0.55 } as CSSProperties}
+                        style={{ "--offset": offset, "--world-brightness": offset === 0 ? 1 : 0.55, "--art-scale": offset === 0 ? 1.21 : 1 } as CSSProperties}
                         aria-hidden="true">
                         <img className="m-world-base" src={atlasArt.shared("planet-base")} alt="" draggable={false} />
                         <img className="m-world-art" src={atlasArt.event(c.id, item.id)} alt="" draggable={false} onError={imageFailed} />
