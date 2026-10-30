@@ -1,43 +1,94 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { TransitionLink } from "./TransitionLink";
 
-export type GoldButtonProps = {
-  href: string;
+type GoldLook = {
   children: ReactNode;
   /** solid = filled gold (primary), ghost = hairline frame. */
   variant?: "solid" | "ghost";
   size?: "sm" | "md";
   className?: string;
+};
+
+export type GoldButtonProps = GoldLook & {
+  href: string;
+  target?: string;
+  rel?: string;
   onClick?: () => void;
 };
+
+export type GoldActionButtonProps = GoldLook &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "className">;
+
+const goldClass = ({ variant = "solid", size = "md", className = "" }: Omit<GoldLook, "children">) =>
+  `gold-btn group relative inline-flex items-center justify-center font-taiganja font-semibold uppercase tracking-[0.3em] transition-transform duration-300 hover:scale-[1.03] ${
+    variant === "solid" ? "text-black" : "text-gold hover:text-parchment"
+  } ${size === "sm" ? "px-7 py-2 text-[10px]" : "px-10 py-3.5 text-[12px]"} ${className}`;
 
 /**
  * Ornate CTA: a cusped gold lozenge with an inner hairline and small lotus
  * finials at both points, echoing the divider ornament. Frame is SVG that
  * stretches with the label (non-scaling strokes keep lines crisp).
+ * Supports both internal View Transitions and external links (e.g. target="_blank", mailto).
  */
-export function GoldButton({
-  href,
-  children,
+export function GoldButton({ href, onClick, target, rel, children, ...look }: GoldButtonProps) {
+  const isExternal =
+    href.startsWith("http") ||
+    href.startsWith("mailto:") ||
+    href.startsWith("tel:") ||
+    Boolean(target);
+
+  if (isExternal) {
+    return (
+      <a
+        href={href}
+        target={target}
+        rel={rel ?? (target === "_blank" ? "noopener noreferrer" : undefined)}
+        onClick={onClick}
+        className={goldClass(look)}
+      >
+        <GoldFrame variant={look.variant} size={look.size}>
+          {children}
+        </GoldFrame>
+      </a>
+    );
+  }
+
+  return (
+    <TransitionLink href={href} onClick={onClick} className={goldClass(look)}>
+      <GoldFrame variant={look.variant} size={look.size}>
+        {children}
+      </GoldFrame>
+    </TransitionLink>
+  );
+}
+
+/**
+ * GoldButton's look on a plain <button>, for in-page actions (opening or
+ * closing a dialog) rather than navigation. `data-variant` lets scoped
+ * stylesheets that reset buttons restore the right colours.
+ */
+export function GoldActionButton({ variant = "solid", size = "md", className, children, ...button }: GoldActionButtonProps) {
+  return (
+    <button type="button" {...button} data-variant={variant} className={goldClass({ variant, size, className })}>
+      <GoldFrame variant={variant} size={size}>
+        {children}
+      </GoldFrame>
+    </button>
+  );
+}
+
+/** Stretchable SVG frame, lotus finials and label shared by both buttons. */
+function GoldFrame({
   variant = "solid",
   size = "md",
-  className = "",
-  onClick,
-}: GoldButtonProps) {
+  children,
+}: Pick<GoldLook, "variant" | "size" | "children">) {
   const solid = variant === "solid";
-  const pad =
-    size === "sm" ? "px-7 py-2 text-[10px]" : "px-10 py-3.5 text-[12px]";
   const finial = size === "sm" ? 14 : 18;
   return (
-    <TransitionLink
-      href={href}
-      onClick={onClick}
-      className={`gold-btn group relative inline-flex items-center justify-center font-taiganja font-semibold uppercase tracking-[0.3em] transition-transform duration-300 hover:scale-[1.03] ${
-        solid ? "text-black" : "text-gold hover:text-parchment"
-      } ${pad} ${className}`}
-    >
+    <>
       {/* Stretchable frame */}
       <svg
         aria-hidden
@@ -99,7 +150,7 @@ export function GoldButton({
       />
 
       <span className="relative z-10">{children}</span>
-    </TransitionLink>
+    </>
   );
 }
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/common/ComingSoon";
+import { EventsAtlas } from "@/components/events/EventsAtlas";
 import { getBreadcrumbJsonLd, ROUTES } from "@/constants/seo";
 
 const route = ROUTES.find((r) => r.path === "/events")!;
@@ -30,10 +30,7 @@ export default function EventsPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <ComingSoon
-        eyebrow="Events"
-        note="Music, dance, drama, art, fashion and literary. The full line-up drops soon."
-      />
+      <EventsAtlas />
     </>
   );
 }

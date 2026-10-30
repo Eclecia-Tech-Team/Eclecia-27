@@ -1,0 +1,283 @@
+/* Events atlas: ported from design/events-atlas/poc (styles.css + solar-system.css).
+   Every rule is scoped under .events-atlas, since Next keeps imported CSS
+   loaded across client navigation. The site header replaces the POC one. */
+/* Page-level rules the atlas needs while it is mounted. */
+body:has(.events-atlas[data-mode=atlas]){overflow:hidden}
+html:has(.events-atlas){scrollbar-width:none;background:#041116}
+html:has(.events-atlas)::-webkit-scrollbar{display:none}
+.events-atlas{color-scheme:dark;--ink:#041116;--gold:#d9a441;--paper:#ece4d2;--muted:#c4bba7;--hairline:#d9a44138;--ease:cubic-bezier(.22,1,.36,1);--header:76px}
+/* Layer contexts: sky 0, atlas 1, immersive scene 2, chrome 5, dialogs native top layer. */
+.events-atlas,.events-atlas *{box-sizing:border-box}.events-atlas{background:var(--ink);scroll-behavior:auto;scrollbar-width:thin;scrollbar-color:#a27a3c #041116}.events-atlas{margin:0;color:var(--paper);font-family:Georgia,serif;overflow-x:clip;overscroll-behavior:none}.events-atlas[data-mode=atlas]{overflow:hidden}.events-atlas button,.events-atlas input{font:inherit}.events-atlas button,.events-atlas a{-webkit-tap-highlight-color:transparent}.events-atlas button{color:inherit;cursor:pointer}.events-atlas button{background:none;border:0}.events-atlas button:disabled{cursor:default;opacity:.25}.events-atlas button:focus-visible,.events-atlas a:focus-visible,.events-atlas input:focus-visible{outline:2px solid var(--gold);outline-offset:6px}.events-atlas button:active{scale:.97}.events-atlas img{display:block;max-width:100%;user-select:none;-webkit-user-drag:none}.events-atlas h1,.events-atlas h2,.events-atlas p{margin:0}.events-atlas h1,.events-atlas h2{font-family:var(--font-cormorant),Georgia,serif;font-weight:600}.events-atlas button{touch-action:manipulation}.events-atlas .skip-link{position:fixed;top:12px;left:12px;transform:translateY(-160%);z-index:10;background:var(--ink);padding:12px;color:var(--paper)}.events-atlas .skip-link:focus{transform:none}
+.events-atlas .sky{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:#041116}.events-atlas .sky-texture{position:absolute;inset:-4%;background:url('/assets/opt/events/site/background.webp') center/cover;opacity:.9;transform:translate3d(var(--sky-x,0px),var(--sky-y,0px),0) scale(1.04)}.events-atlas .dust{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.65;transform:translate3d(var(--dust-x,0px),var(--dust-y,0px),0)}.events-atlas .vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 65% 48%,transparent 25%,#01080c65 82%),linear-gradient(90deg,#020b0f7a,transparent 52%)}
+.events-atlas #overview{position:fixed;inset:0;min-height:100dvh;z-index:1;overflow:hidden}.events-atlas .intro{position:absolute;left:5.5vw;top:calc(var(--header) + 40px);z-index:2;pointer-events:none}.events-atlas .eyebrow{color:var(--gold);font-size:11px;letter-spacing:.25em;line-height:1.5}.events-atlas .intro h1{font-size:clamp(57px,5.8vw,88px);line-height:.98;letter-spacing:-.025em;margin:16px 0 23px}.events-atlas .intro-note{font-size:16px;color:var(--muted);letter-spacing:.025em}.events-atlas .intro-note:before{content:'';display:inline-block;width:27px;height:1px;background:var(--gold);vertical-align:middle;margin-right:13px}.events-atlas #atlas-camera{position:absolute;inset:0;will-change:transform;transform-origin:50% 50%}.events-atlas .astrolabe{position:absolute;width:min(69vw,900px);height:min(69vw,900px);left:61%;top:54%;translate:-50% -50%;object-fit:contain;opacity:.48}.events-atlas .central-eclipse{position:absolute;left:61%;top:53%;translate:-50% -50%;width:clamp(130px,17vw,255px);aspect-ratio:1}.events-atlas .central-eclipse img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.events-atlas .central-eclipse .core{scale:.76}.events-atlas .central-eclipse .corona{scale:1.1;opacity:.92}.events-atlas .category-world{position:absolute;left:0;top:0;display:block;padding:0;text-align:center;transform:translate3d(var(--x),var(--y),0) translate(-50%,-50%);width:var(--size);opacity:0;animation:world-arrive 1s var(--ease) forwards;animation-delay:calc(90ms * var(--i) + 80ms);transition:opacity .5s var(--ease);isolation:isolate}.events-atlas .category-world .world-art{position:relative;display:block;aspect-ratio:1;transition:transform .65s var(--ease)}.events-atlas .world-base,.events-atlas .world-artwork,.events-atlas .world-halo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.events-atlas .world-base{filter:brightness(.79);transition:filter .5s}.events-atlas .world-artwork{inset:6%;width:88%;height:88%;transition:transform .7s var(--ease),opacity .5s}.events-atlas .world-halo{scale:1.18;opacity:0;transition:opacity .6s var(--ease),transform .8s var(--ease);pointer-events:none}.events-atlas .category-world:hover .world-art,.events-atlas .category-world:focus-visible .world-art{transform:translateY(-6px) scale(1.06)}.events-atlas .category-world:hover .world-base,.events-atlas .category-world:focus-visible .world-base{filter:brightness(1)}.events-atlas .category-world:hover .world-halo,.events-atlas .category-world:focus-visible .world-halo{opacity:.8}.events-atlas .category-name{font-family:var(--font-taiganja),Georgia,serif;font-size:clamp(16px,1.4vw,22px);display:block;margin-top:7px;letter-spacing:.01em;color:var(--paper)}.events-atlas .category-kind{display:block;font-size:11px;letter-spacing:.03em;color:#bbaa87;margin-top:5px}.events-atlas .category-world:hover .category-name{color:#edc679}.events-atlas .world-enter{font-family:Georgia,serif;position:absolute;inset:auto 0 -19px;letter-spacing:.15em;font-size:9px;color:var(--gold);opacity:0;translate:0 4px;transition:.4s var(--ease)}.events-atlas .category-world:hover .world-enter,.events-atlas .category-world:focus-visible .world-enter{opacity:1;translate:0 0}.events-atlas .foreground{position:absolute;bottom:26px;left:0;width:100%;height:16vh;object-fit:fill;pointer-events:none;opacity:.8}.events-atlas .atlas-footer{position:absolute;bottom:0;left:0;right:0;height:54px;padding:0 5vw;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(transparent,#020b0fe6);z-index:2}.events-atlas .atlas-footer>span{font-size:9px;letter-spacing:.22em;color:#cbb88f}.events-atlas .atlas-footer button{font-size:14px;padding:10px 0}.events-atlas .atlas-footer button span{color:var(--gold);margin-left:15px}.events-atlas .atlas-footer button:hover{color:var(--gold)}
+.events-atlas #event-scene{position:fixed;inset:0;z-index:2;overflow:hidden;opacity:0}.events-atlas #event-scene[hidden]{display:none}.events-atlas .event-breadcrumb{position:absolute;top:105px;left:5.5vw;display:flex;align-items:center;gap:20px;z-index:3;color:#c1af8c;font-size:11px;letter-spacing:.13em;text-transform:uppercase}.events-atlas .event-breadcrumb button{color:var(--paper);font-size:11px;padding:8px 0;letter-spacing:.1em;text-transform:uppercase}.events-atlas .event-breadcrumb button span{font-size:20px;margin-right:12px;color:var(--gold)}.events-atlas .breadcrumb-rule{width:1px;height:18px;background:#d9a44169}.events-atlas #breadcrumb{font-family:var(--font-taiganja),Georgia,serif;color:var(--gold);font-size:12px}.events-atlas .immersive-corona{position:absolute;left:-57vw;bottom:-64vw;width:109vw;max-width:none;opacity:.6;pointer-events:none;transform:rotate(-15deg)}.events-atlas #planet-system{position:absolute;inset:0;pointer-events:none}.events-atlas .event-planet{position:absolute;top:0;left:0;width:var(--planet-size);height:var(--planet-size);transform-origin:center;will-change:transform,opacity;padding:0;pointer-events:auto;isolation:isolate}.events-atlas .event-planet .planet-base{position:absolute;inset:4%;width:92%;height:92%;object-fit:contain;filter:brightness(.77)}.events-atlas .event-planet .planet-halo{position:absolute;inset:-8%;width:116%;height:116%;max-width:none;opacity:.68;object-fit:contain}.events-atlas .event-planet .planet-artwork{position:absolute;inset:7%;width:86%;height:86%;object-fit:contain;filter:drop-shadow(0 10px 15px #01080d50)}.events-atlas .event-planet .planet-ring{position:absolute;left:-22%;top:-4%;width:144%;height:111%;max-width:none;object-fit:contain;opacity:.67;pointer-events:none}.events-atlas .planet-ring.rear{clip-path:inset(0 0 50% 0)}.events-atlas .planet-ring.front{clip-path:inset(50% 0 0 0)}.events-atlas .planet-preview{position:absolute;top:100%;left:8%;right:8%;font-size:16px;letter-spacing:.08em;text-transform:uppercase;text-align:center;line-height:1.4;color:#e4c98d}.events-atlas .event-planet.is-current .planet-preview{display:none}.events-atlas .event-copy{position:absolute;left:5.5vw;top:44%;width:35%;max-width:530px;transform:translateY(-28%);z-index:3;pointer-events:none;text-shadow:0 2px 15px #020a0f}.events-atlas .event-copy>*{pointer-events:auto}.events-atlas .category-line{font-size:18px;color:#c6bca7;line-height:1.5;margin:14px 0 30px}.events-atlas #event-title{font-size:clamp(42px,5.1vw,78px);line-height:.98;letter-spacing:-.025em;text-wrap:balance;min-height:1em}.events-atlas #event-description{font-size:17px;line-height:1.6;color:#c6bca7;max-width:340px;margin:22px 0 28px}.events-atlas .event-meta{display:flex;gap:24px;align-items:center;font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:#d0b883}.events-atlas .event-meta span+span{border-left:1px solid #a9894f;padding-left:24px}.events-atlas .outline-button{display:inline-flex;align-items:center;justify-content:space-between;gap:30px;border:1px solid #d9a441b3;color:var(--paper);padding:15px 24px;font-size:17px;margin-top:30px;background:#04111670;transition:background .3s,border-color .3s,transform .4s var(--ease);white-space:nowrap}.events-atlas .outline-button:hover{background:#d9a44117;border-color:#eccc8b;transform:translateY(-2px)}.events-atlas .outline-button span{color:var(--gold)}.events-atlas .event-progress{position:absolute;right:3vw;top:50%;translate:0 -50%;display:flex;flex-direction:column;gap:12px;z-index:3}.events-atlas .event-progress:before{content:'';position:absolute;top:12px;bottom:12px;left:50%;width:1px;background:#a37b3b66;z-index:-1}.events-atlas .progress-stop{display:grid;place-items:center;width:30px;height:30px;padding:0}.events-atlas .progress-stop:after{content:'';width:7px;height:7px;border:1px solid var(--gold);border-radius:50%;background:#06151a;transition:transform .4s,background .4s}.events-atlas .progress-stop[aria-current=true]:after{background:#f0c96d;box-shadow:0 0 12px #d9a44170;transform:scale(1.5)}.events-atlas .event-bottom{position:absolute;left:5.5vw;right:5vw;bottom:30px;display:flex;align-items:center;justify-content:space-between;z-index:3}.events-atlas .category-dock{display:flex;gap:10px;align-items:center}.events-atlas .dock-world{position:relative;width:43px;height:43px;border:1px solid #9b7a3844;border-radius:50%;padding:6px;transition:border-color .4s,transform .4s var(--ease)}.events-atlas .dock-world img{width:100%;height:100%;object-fit:contain;opacity:.65;transition:opacity .3s}.events-atlas .dock-world:hover{border-color:var(--gold);transform:translateY(-4px)}.events-atlas .dock-world[aria-current=true]{border-color:var(--gold);box-shadow:0 0 20px #d9a44118}.events-atlas .dock-world[aria-current=true] img,.events-atlas .dock-world:hover img{opacity:1}.events-atlas .dock-world span{position:absolute;bottom:-20px;left:50%;translate:-50% 0;font-family:var(--font-taiganja),Georgia,serif;font-size:9px;white-space:nowrap;color:var(--gold);opacity:0}.events-atlas .dock-world[aria-current=true] span{opacity:1}.events-atlas .journey-controls{display:flex;align-items:center;gap:19px;color:var(--muted);font-size:12px}.events-atlas .journey-controls button{width:42px;height:42px;border:1px solid #aa854552;border-radius:50%;font-size:21px;color:var(--paper);transition:border-color .3s}.events-atlas .journey-controls button:hover:not(:disabled){border-color:var(--gold)}.events-atlas #scroll-track{height:0;pointer-events:none}
+.events-atlas dialog{color:var(--paper);background:#06151b;border:1px solid #a5824355;padding:38px;box-shadow:0 20px 100px #010507b0;max-height:85dvh;overscroll-behavior:contain}.events-atlas dialog::backdrop{background:#01090dd9;backdrop-filter:blur(10px)}.events-atlas dialog[open]{animation:dialog-enter .4s var(--ease)}.events-atlas .directory{width:min(940px,92vw)}.events-atlas .dialog-heading{display:flex;justify-content:space-between;align-items:flex-start}.events-atlas .dialog-heading h2{font-size:54px;line-height:1.1;margin:10px 0 25px}.events-atlas .close-button{font:32px Georgia,serif;width:42px;height:42px;padding:0;color:#e1c588}.events-atlas .search-label{display:block;font-size:12px;color:var(--muted);margin-bottom:10px}.events-atlas input{width:100%;border:0;border-bottom:1px solid #aa854588;background:transparent;padding:12px 0;color:var(--paper);font-size:21px;border-radius:0}.events-atlas input::placeholder{color:#928d80}.events-atlas .directory-filters{display:flex;gap:17px;overflow:auto;padding:23px 0 18px}.events-atlas .directory-filters button{font-size:12px;color:var(--muted);white-space:nowrap;padding:6px 0;border-bottom:1px solid transparent}.events-atlas .directory-filters button[aria-pressed=true]{color:var(--gold);border-bottom-color:var(--gold)}.events-atlas .directory-results{display:grid;grid-template-columns:1fr 1fr;gap:5px 26px;max-height:42dvh;overflow:auto;padding:0 6px 10px 0}.events-atlas .directory-entry{display:grid;grid-template-columns:62px 1fr 20px;align-items:center;gap:16px;text-align:left;padding:13px 0;border-bottom:1px solid #d9a4411c}.events-atlas .directory-entry img{width:62px;height:62px;object-fit:contain}.events-atlas .directory-entry strong{display:block;font-family:var(--font-cormorant),Georgia,serif;font-size:24px;font-weight:600;line-height:1.1}.events-atlas .directory-entry small{display:block;font-size:11px;color:#b7a57e;margin-top:8px}.events-atlas .directory-entry>span:last-child{color:var(--gold)}.events-atlas .directory-entry:hover strong{color:#e9c27a}.events-atlas .no-results{padding:24px 0;color:var(--muted)}.events-atlas .event-detail{width:min(900px,92vw);overflow:auto;position:fixed}.events-atlas .event-detail[open]{display:grid;grid-template-columns:43% 1fr;gap:32px;align-items:center}.events-atlas .event-detail>.close-button{position:absolute;top:14px;right:14px}.events-atlas .event-detail>img{width:100%;max-height:450px;object-fit:contain}.events-atlas .event-detail h2{font-size:48px;line-height:1.04;margin:12px 0 18px}.events-atlas .event-detail p:not(.eyebrow){font-size:17px;line-height:1.7;color:var(--muted)}.events-atlas .event-detail .announcement{margin-top:22px;padding-top:20px;border-top:1px solid var(--hairline);font-size:14px!important}.events-atlas .load-status{position:fixed;bottom:65px;left:50%;translate:-50% 0;color:#e3c78f;z-index:6;font-size:12px;padding:10px 18px;background:#041116e8;border:1px solid #a5824338;transition:opacity .3s;pointer-events:none}.events-atlas .load-status[hidden]{display:none}.events-atlas .noscript{position:fixed;inset:30%;background:var(--ink);padding:40px;z-index:8}
+@keyframes world-arrive{from{opacity:0;translate:0 22px}to{opacity:1;translate:0 0}}@keyframes dialog-enter{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+@media(min-width:1650px){.events-atlas .intro{left:6vw}.events-atlas .intro h1{font-size:96px}.events-atlas .category-line{font-size:22px}.events-atlas .event-copy{left:6vw}}@media(max-height:740px) and (min-width:761px){.events-atlas .intro{top:105px}.events-atlas .intro h1{font-size:64px}.events-atlas .intro-note{font-size:14px}.events-atlas .category-line{margin-bottom:18px;font-size:16px}.events-atlas #event-title{font-size:52px}.events-atlas #event-description{margin:16px 0;font-size:15px}.events-atlas .outline-button{margin-top:20px;padding:12px 20px}.events-atlas .event-copy{top:43%}.events-atlas .category-kind{font-size:10px}.events-atlas .category-name{font-size:16px}.events-atlas .foreground{height:12vh}}
+@media(max-width:1100px){.events-atlas .intro h1{font-size:68px}.events-atlas .category-name{font-size:16px}.events-atlas .category-kind{font-size:10px}.events-atlas .event-copy{width:37%}.events-atlas #event-title{font-size:55px}.events-atlas .category-line{font-size:16px}.events-atlas .event-bottom{bottom:30px}.events-atlas .category-dock{gap:7px}.events-atlas .dock-world{width:37px;height:37px}}
+@media(max-width:760px){.events-atlas{--header:66px}.events-atlas .intro{top:94px;left:25px}.events-atlas .intro h1{font-size:56px;margin:10px 0 12px}.events-atlas .intro .eyebrow{font-size:9px}.events-atlas .intro-note{font-size:13px}.events-atlas .astrolabe{left:50%;top:64%;width:105vw;height:105vw;opacity:.5}.events-atlas .central-eclipse{left:50%;top:64%;width:26vw}.events-atlas .category-name{font-size:14px;margin-top:2px}.events-atlas .category-kind{display:none}.events-atlas .category-world .world-artwork{inset:5%;width:90%;height:90%}.events-atlas .world-enter{display:none}.events-atlas .foreground{height:10vh;bottom:31px}.events-atlas .atlas-footer{padding:0 24px;height:44px}.events-atlas .atlas-footer>span{display:none}.events-atlas .atlas-footer button{margin-left:auto;font-size:12px}.events-atlas .event-breadcrumb{top:83px;left:24px;font-size:10px;gap:16px}.events-atlas .event-breadcrumb button{font-size:10px}.events-atlas #breadcrumb{font-size:11px}.events-atlas .event-copy{left:25px;top:auto;bottom:118px;width:calc(100% - 65px);max-width:none;transform:none}.events-atlas .event-copy .eyebrow{font-size:9px}.events-atlas .category-line{display:none}.events-atlas #event-title{font-size:clamp(36px,10vw,53px);margin-top:11px;max-width:85%;line-height:1}.events-atlas #event-description{font-size:14px;max-width:80%;margin:13px 0 15px;line-height:1.4}.events-atlas .event-meta{font-size:9px;gap:17px}.events-atlas .event-meta span+span{padding-left:17px}.events-atlas .outline-button{font-size:14px;padding:11px 17px;margin-top:17px;gap:30px}.events-atlas .event-progress{right:12px;top:44%;gap:5px}.events-atlas .event-progress:before{top:10px;bottom:10px}.events-atlas .progress-stop{width:23px;height:23px}.events-atlas .progress-stop:after{width:6px;height:6px}.events-atlas .immersive-corona{width:160vw;left:-110vw;bottom:-102vw;opacity:.45}.events-atlas .event-bottom{left:24px;right:20px;bottom:36px}.events-atlas .category-dock{gap:5px}.events-atlas .dock-world{width:33px;height:33px;padding:5px}.events-atlas .dock-world span{font-size:8px;bottom:-17px}.events-atlas .journey-controls{gap:7px}.events-atlas .journey-controls button{width:30px;height:30px;font-size:16px}.events-atlas #journey-label{display:none}.events-atlas .planet-preview{font-size:20px}.events-atlas .directory{padding:24px;width:94vw;max-height:90dvh}.events-atlas .dialog-heading h2{font-size:42px}.events-atlas .directory-results{grid-template-columns:1fr;max-height:48dvh}.events-atlas .directory-filters{gap:17px}.events-atlas .directory-entry{grid-template-columns:54px 1fr 18px}.events-atlas .directory-entry strong{font-size:22px}.events-atlas .event-detail{padding:30px}.events-atlas .event-detail[open]{grid-template-columns:1fr;gap:14px}.events-atlas .event-detail>img{height:190px}.events-atlas .event-detail h2{font-size:39px}.events-atlas .event-detail p:not(.eyebrow){font-size:15px}.events-atlas .load-status{bottom:49px;white-space:nowrap;font-size:10px}}
+@media(max-width:380px){.events-atlas .intro h1{font-size:48px}.events-atlas .intro{top:87px}.events-atlas .category-name{font-size:12px}.events-atlas .dock-world{width:29px;height:29px}.events-atlas .category-dock{gap:3px}.events-atlas .event-bottom{left:18px;right:15px}.events-atlas .event-copy{bottom:107px}}
+.events-atlas .planet-preview{font-size:42px;letter-spacing:.03em}
+.events-atlas,.events-atlas #scroll-track{overflow-anchor:none}
+.events-atlas .directory{position:fixed}
+/* Inclined eclipse atlas. The orbital artwork is projected as one plane;
+   category medallions remain face-on and use apparent size to express depth. */
+.events-atlas #overview .astrolabe{left:55%;top:55%;width:min(96vw,1330px);height:min(96vw,1330px);transform:rotate(-21deg) scaleY(.54);opacity:.56;mask-image:linear-gradient(35deg,#000 18%,#000b 58%,#0005 88%);pointer-events:none}
+.events-atlas #overview .central-eclipse{left:56%;top:53%;width:clamp(155px,19vw,280px);z-index:1}
+.events-atlas #overview .central-eclipse .core{filter:brightness(.65)}
+.events-atlas #overview .category-world .world-art{filter:brightness(var(--world-light,1)) saturate(var(--world-saturation,1));transform:translate3d(calc(var(--depth-x,0px)*var(--world-parallax,1)),calc(var(--depth-y,0px)*var(--world-parallax,1)),0)}
+.events-atlas #overview .category-world:hover .world-art,.events-atlas #overview .category-world:focus-visible .world-art{filter:brightness(1.08) saturate(1);transform:translate3d(calc(var(--depth-x,0px)*var(--world-parallax,1)),calc(var(--depth-y,0px)*var(--world-parallax,1)),0) translateY(-6px) scale(1.055)}
+.events-atlas #overview .category-name{font-size:var(--label-size,18px);white-space:nowrap;position:relative;left:50%;translate:-50% 0;width:max-content}
+.events-atlas #overview .category-kind{font-size:var(--kind-size,11px);white-space:nowrap;position:relative;left:50%;translate:-50% 0;width:max-content}
+.events-atlas #overview .foreground{height:11vh;opacity:.63}
+@media(max-width:760px){.events-atlas #overview .astrolabe{left:54%;top:64%;width:109vw;height:109vw;transform:rotate(-26deg) scaleY(.64);opacity:.52}.events-atlas #overview .central-eclipse{left:54%;top:64%;width:29vw}.events-atlas #overview .category-name{margin-top:4px}.events-atlas #overview .foreground{height:9vh}}
+@media(prefers-reduced-motion:reduce){.events-atlas #overview .category-world .world-art{transform:none!important}}
+/* The ring's matrix3d is calculated from the same plane as the worlds.
+   Only transform, opacity and z-order change during rotation. */
+.events-atlas #atlas-camera{cursor:grab;touch-action:none}
+.events-atlas #atlas-camera.is-dragging,.events-atlas #atlas-camera.is-dragging *{cursor:grabbing!important}
+.events-atlas #overview .astrolabe{max-width:none;mask-image:none;opacity:.57;transform-origin:50% 50%;will-change:transform;backface-visibility:hidden}
+.events-atlas #overview .category-world{height:var(--size);pointer-events:none;cursor:pointer;animation-name:world-arrive}
+.events-atlas #overview .category-world .world-art{height:100%;width:100%;pointer-events:auto;opacity:var(--world-light,1);filter:none;transform:translate3d(calc(var(--depth-x,0px)*var(--world-parallax,1)),calc(var(--depth-y,0px)*var(--world-parallax,1)),0) scale(var(--world-scale,1));transition:opacity .35s;will-change:transform;cursor:pointer}
+.events-atlas #overview .category-world:hover .world-art,.events-atlas #overview .category-world:focus-visible .world-art{filter:none;opacity:1;transform:translate3d(calc(var(--depth-x,0px)*var(--world-parallax,1)),calc(var(--depth-y,0px)*var(--world-parallax,1)),0) scale(calc(var(--world-scale,1)*1.045))}
+.events-atlas #overview .category-world.selected .world-halo{opacity:.95}
+.events-atlas #overview .category-caption{position:absolute;left:50%;top:50%;width:max-content;transform:translate(-50%,var(--caption-y,100px)) scale(var(--caption-scale,1));transform-origin:top center;pointer-events:auto;will-change:transform}
+.events-atlas #overview .category-name{position:static;translate:none;left:auto;font-size:25px;margin-top:0;width:auto}
+.events-atlas #overview .category-kind{position:static;translate:none;left:auto;font-size:12px;margin-top:6px;width:auto}
+.events-atlas #overview .world-enter{bottom:-24px;left:0;right:0;white-space:nowrap}
+.events-atlas #overview .intro h1{font-size:clamp(45px,4.8vw,76px)}
+.events-atlas .orbit-controls{display:flex;align-items:center;gap:13px;pointer-events:auto}
+.events-atlas .atlas-footer .orbit-controls button{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid #b391514f;border-radius:50%;font:23px Georgia,serif;color:var(--gold);transition:background .3s,border-color .3s}
+.events-atlas .atlas-footer .orbit-controls button:hover{background:#d9a44118;border-color:var(--gold)}
+.events-atlas #orbit-front{font-size:11px;color:#cdbd9c;min-width:118px;text-align:center;letter-spacing:.025em}
+@media(max-width:760px){.events-atlas #overview .intro h1{font-size:56px}.events-atlas #overview .category-name{font-size:21px}.events-atlas #overview .category-kind{display:none}.events-atlas .atlas-footer{padding:0 18px}.events-atlas .atlas-footer .orbit-controls button{width:28px;height:28px;font-size:20px}.events-atlas .orbit-controls{gap:6px}.events-atlas #orbit-front{display:none}.events-atlas .atlas-footer #browse-bottom{font-size:11px}.events-atlas #overview .category-world:focus-visible{outline:none}.events-atlas #overview .category-world:focus-visible .world-art{outline:1px solid var(--gold);border-radius:50%}}
+@media(max-width:760px) and (max-height:740px){.events-atlas #overview .intro h1{font-size:43px}}
+@media(prefers-reduced-motion:reduce){.events-atlas #overview .category-world .world-art{transform:scale(var(--world-scale,1))!important}}
+@media(max-width:760px) and (max-height:740px){.events-atlas .intro{top:86px}.events-atlas .intro h1{font-size:43px;margin:8px 0 10px}.events-atlas .intro-note{font-size:12px}.events-atlas .event-copy{bottom:103px}.events-atlas #event-description{margin:10px 0 12px}.events-atlas .event-copy .outline-button{margin-top:12px}.events-atlas .event-bottom{bottom:30px}.events-atlas #event-title{font-size:36px}}
+@media(prefers-reduced-motion:reduce){.events-atlas,.events-atlas *,.events-atlas *:before,.events-atlas *:after{animation-duration:.001ms!important;animation-delay:0ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}.events-atlas .category-world{opacity:1}.events-atlas .sky-texture,.events-atlas .dust{transform:none!important}}
+
+/* All visual layers are original artwork; only medallions orbit. */
+.events-atlas .asset-orbits{position:absolute;max-width:none;transform-origin:50% 40%;pointer-events:none;opacity:.85}
+.events-atlas .asset-orbits-rear{clip-path:polygon(0 0,100% 0,100% 18%,0 58%);z-index:5}
+.events-atlas .asset-orbits-front{clip-path:polygon(0 58%,100% 18%,100% 100%,0 100%);z-index:50}
+.events-atlas .asset-eclipse{position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:40}
+.events-atlas #category-worlds{display:contents}
+.events-atlas .asset-eclipse img{position:absolute;object-fit:contain;max-width:none}
+.events-atlas .asset-core{inset:0;width:100%;height:100%;filter:brightness(.72)}
+.events-atlas .asset-corona{left:-29%;top:-29%;width:158%;height:158%;mix-blend-mode:screen;opacity:.85}
+.events-atlas #overview .astrolabe,.events-atlas #overview .central-eclipse{display:none}
+.events-atlas #overview .category-world{width:var(--size);height:var(--size);animation:none;opacity:1;z-index:2}
+.events-atlas #overview .category-world .world-art{transform:perspective(1100px) translateY(var(--bob,0px)) rotateY(var(--turn,0rad)) rotateZ(var(--sway,0deg))!important;opacity:1;transition:none;filter:var(--haze,none)}
+.events-atlas #overview .category-world:hover .world-art,.events-atlas #overview .category-world:focus-visible .world-art{filter:var(--haze,) brightness(1.15)}
+.events-atlas #overview .world-base{opacity:1;filter:brightness(.88)}
+.events-atlas #overview .world-halo{opacity:var(--halo,.4);mix-blend-mode:screen}
+.events-atlas #overview .world-artwork{width:94%;height:94%;left:3%;top:3%;object-fit:contain;filter:drop-shadow(0 4px 5px #0009)}
+.events-atlas #overview .category-caption{transform:translate(-50%,var(--caption-y)) scale(var(--caption-scale));opacity:var(--caption-opacity,1);text-shadow:0 2px 9px #001014,0 0 20px #001014}
+.events-atlas #overview .category-name{font-size:25px}
+.events-atlas #overview .category-kind{font-size:11px;color:#c4baa1}
+.events-atlas #overview .intro{pointer-events:none}
+.events-atlas #overview .intro h1{font-size:clamp(42px,3.75vw,54px)}
+.events-atlas #overview .intro-note{font-size:13px;max-width:190px}
+.events-atlas #overview .intro-note:before{width:16px;margin-right:8px}
+/* Whole silk frame at its native 2095:751 aspect, sunk partly below the
+   fold so the lotus and curl frame the corners behind the orbit. */
+.events-atlas #overview .foreground{opacity:.42;width:100%;height:auto;aspect-ratio:2095/751;object-fit:contain;bottom:calc(100vw*751/2095*-.22);pointer-events:none;z-index:0}
+.events-atlas #overview #atlas-camera{z-index:1}
+.events-atlas[data-mode=atlas] .sky-texture{opacity:.35}
+.events-atlas[data-mode=atlas] .dust{opacity:.23}
+@media(max-width:760px){
+  .events-atlas #overview .intro{top:110px;left:26px}
+  .events-atlas #overview .intro h1{font-size:49px}
+  .events-atlas #overview .category-name{font-size:20px}
+  .events-atlas #overview .category-kind{display:none}
+  .events-atlas #overview .foreground{bottom:calc(100vw*751/2095*-.08);opacity:.5}
+}
+/* Eclipse lighting: shade on the far side, warm rim toward the sun, clipped
+   to the medallion disc. A plain circle clip, not an image mask: masks get
+   re-rasterized every frame while the worlds float. */
+.events-atlas #overview .world-shade,.events-atlas #overview .world-rim{position:absolute;inset:1.8% 2% 1.7% 0;border-radius:50%;pointer-events:none}
+.events-atlas #overview .world-shade{background:linear-gradient(var(--sun-angle,0rad),rgb(1 6 10/var(--shade,.3)) 0%,rgb(1 6 10/calc(var(--shade,.3)*.45)) 38%,transparent 64%)}
+.events-atlas #overview .world-rim{mix-blend-mode:screen;background:linear-gradient(var(--sun-angle,0rad),transparent 74%,rgb(255 182 92/calc(var(--rim,.5)*.22)) 90%,rgb(255 224 164/calc(var(--rim,.5)*.6)) 100%)}
+/* Contact shadow where each world meets the rail plane. */
+.events-atlas #overview .world-shadow{position:absolute;left:50%;top:50%;width:90%;height:17%;transform:translate(-50%,-50%) translateY(calc(var(--size)*.47));border-radius:50%;background:radial-gradient(closest-side,rgb(0 4 7/.8),rgb(0 4 7/.38) 55%,transparent),radial-gradient(closest-side,rgb(240 180 90/.14),transparent 70%);opacity:var(--contact,.5);pointer-events:none}
+/* Diffuse, fixed glow along the outer rail: no visible line, just warm light. */
+.events-atlas .asset-trail{position:absolute;max-width:none;transform-origin:50% 40%;pointer-events:none;overflow:visible;mix-blend-mode:screen;filter:blur(14px)}
+.events-atlas .asset-trail{transition:opacity .6s;will-change:opacity}
+.events-atlas.atlas-travel .asset-trail{opacity:0;transition:opacity .25s}
+/* While the camera travels, worlds slide under a still cursor; ignore hover
+   so they don't flicker on and off, and hold the chosen world lit. */
+.events-atlas.atlas-travel #atlas-camera,.events-atlas.atlas-travel #atlas-camera *{pointer-events:none!important}
+.events-atlas #overview .category-world.selected .world-art{filter:var(--haze,) brightness(1.15)}
+.events-atlas .asset-trail-rear{z-index:6}
+.events-atlas .asset-trail-front{z-index:51}
+.events-atlas .asset-trail path{fill:none;vector-effect:non-scaling-stroke;stroke-linecap:round}
+.events-atlas .trail-loop{stroke:#f5b552;stroke-width:26;stroke-opacity:.5}
+@media(max-width:760px){.events-atlas .asset-trail{filter:blur(9px)}.events-atlas .trail-loop{stroke-width:15}}
+/* Living eclipse and drifting dust. */
+.events-atlas .asset-corona{animation:corona-breathe 6.5s ease-in-out infinite alternate,corona-spin 220s linear infinite}
+@keyframes corona-breathe{from{opacity:.72;scale:1}to{opacity:.95;scale:1.045}}
+@keyframes corona-spin{to{rotate:360deg}}
+.events-atlas[data-mode=atlas] .dust{animation:dust-drift 70s ease-in-out infinite alternate}
+@keyframes dust-drift{to{translate:-26px -14px}}
+/* Single caption, pinned under the front slot. */
+.events-atlas #front-caption{position:absolute;left:0;top:0;z-index:95;transform:translate3d(var(--x,50vw),var(--y,80vh),0) translateX(-50%);text-align:center;padding:0;width:max-content;text-shadow:0 2px 9px #001014,0 0 20px #001014;cursor:pointer}
+.events-atlas #front-caption .category-name{font-size:28px}
+.events-atlas #front-caption .category-kind{font-size:12px;color:#c4baa1;margin-top:6px}
+.events-atlas #front-caption .world-enter{position:static;display:block;margin-top:10px;opacity:.8;translate:none;font-size:9px}
+.events-atlas #front-caption:hover .world-enter{opacity:1}
+.events-atlas #front-caption:hover .category-name{color:#edc679}
+@media(max-width:760px){.events-atlas #front-caption .category-name{font-size:21px}.events-atlas #front-caption .world-enter{display:none}}
+@media(prefers-reduced-motion:reduce){.events-atlas #overview .category-world .world-art{transform:rotateY(var(--turn,0rad))!important}}
+/* Event mode makes the page scrollable; a visible scrollbar appearing (and
+   vanishing on return) narrows the viewport and jolts every fixed layer
+   sideways. Scrolling still works; the progress stops show position. */
+.events-atlas{scrollbar-width:none}
+
+/* Integration with the site: the shared header (68px, 82px from md) replaces
+   the POC bar, so content offsets follow its height. */
+.events-atlas{--header:68px}
+@media(min-width:768px){.events-atlas{--header:82px}}
+.events-atlas .event-breadcrumb{top:calc(var(--header) + 26px)}
+/* A press-scale on the worlds reads as a shake right as the camera dives in. */
+.events-atlas .category-world:active,.events-atlas #front-caption:active{scale:none}
+/* Rotate buttons removed (drag, wheel and arrow keys turn the orbit); keep
+   the directory link on the right. */
+.events-atlas .atlas-footer #browse-bottom{margin-left:auto}
+/* Entrance: everything waits dark until the opening sequence starts (the
+   engine removes data-intro), and input waits until it ends or is skipped. */
+.events-atlas[data-intro=pending] :is(.sky,#atlas-camera,.intro,.foreground,.atlas-footer){opacity:0}
+.events-atlas.atlas-intro #atlas-camera,.events-atlas.atlas-intro #atlas-camera *{pointer-events:none!important}
+/* No standing will-change on the camera: Chrome keeps a will-change layer at
+   the raster scale it last animated through, so after the 2x dive and return
+   the whole atlas stayed rasterized at 2x, overran tile memory and dropped
+   tiles (blinking worlds and rails) on every orbit turn until reload. The
+   zoom animations still promote the layer while they run. */
+.events-atlas #atlas-camera{will-change:auto}
+/* "View all events" sits under the intro heading as its call to action. The
+   intro ignores pointer input so drags reach the orbit; the button opts back in. */
+.events-atlas #overview .intro-link{pointer-events:auto;display:inline-flex;align-items:baseline;gap:10px;margin-top:22px;padding:0 0 5px;border-bottom:1px solid #d9a44166;font-size:15px;letter-spacing:.02em;color:var(--paper);transition:color .3s,border-color .3s}
+.events-atlas #overview .intro-link span{color:var(--gold);transition:translate .4s var(--ease)}
+.events-atlas #overview .intro-link:hover{color:#edc679;border-color:var(--gold)}
+.events-atlas #overview .intro-link:hover span{translate:4px 0}
+@media(max-width:760px){.events-atlas #overview .intro-link{margin-top:14px;font-size:13px}}
+/* Tailwind's preflight zeroes every margin, which strips the UA's margin:auto
+   that centres a modal dialog; restore it so both dialogs open centred. */
+.events-atlas dialog{inset:0;margin:auto}
+/* Same trap for the worlds: a standing will-change pinned each world at the
+   dive's peak raster scale (up to 6x), so tiles dropped on every orbit turn
+   after returning. Their perspective rotateY keeps them composited anyway. */
+.events-atlas #overview .category-world .world-art{will-change:auto}
+/* Stand-in for the chosen world during the dive (see enterCategory). */
+.events-atlas .atlas-lens{position:absolute;inset:0;z-index:3;pointer-events:none}.events-atlas .atlas-lens *{pointer-events:none!important}
+/* World view legibility: the event copy sits over the corona's bright arc.
+   A soft dark pool behind the block, a dimmer corona, brighter body text
+   and a larger meta line keep it readable without boxing it in. */
+.events-atlas .event-copy::before{content:'';position:absolute;inset:-22% -35% -26% -45%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgb(2 9 12/.85),rgb(2 9 12/.6) 55%,transparent)}
+.events-atlas .immersive-corona{opacity:.42}
+.events-atlas .event-copy{text-shadow:0 1px 2px #020a0f,0 2px 18px #020a0f}
+.events-atlas .category-line{color:#ddd4c1}
+.events-atlas #event-description{color:#e6dece}
+.events-atlas .event-meta{font-size:12px;color:#e3cf9c}
+.events-atlas .event-meta span+span{border-left-color:#c9a560}
+.events-atlas .event-copy .outline-button{background:#041116d9}
+@media(max-width:760px){.events-atlas .event-meta{font-size:10.5px}.events-atlas .immersive-corona{opacity:.32}}
+/* Atlas CTAs use the site's GoldButton lozenge. The atlas button reset
+   (font/colour inherit) outranks Tailwind's layered utilities, so restore
+   the lozenge's type and colours here; the margin leaves room for the
+   left lotus finial so it lines up with the copy above. */
+.events-atlas button.gold-btn{font-family:var(--font-taiganja),Georgia,serif;font-weight:600;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#000;text-shadow:none}
+.events-atlas button.gold-btn[data-variant=ghost]{color:var(--gold)}
+.events-atlas button.gold-btn[data-variant=ghost]:hover{color:var(--paper)}
+.events-atlas .atlas-cta{margin:34px 0 0 14px}
+.events-atlas .event-detail .atlas-cta{margin-top:26px}
+@media(max-width:760px){.events-atlas button.gold-btn{font-size:10px;padding:10px 26px}.events-atlas .atlas-cta{margin-top:18px}}
+
+/* ---- Site type system ----
+   Matches the rest of the site: Cormorant for text (sized up, it runs
+   smaller than Georgia), Taiganja gold kickers for eyebrows, Geist Mono
+   uppercase for small labels and counters, Nasyhama italic gold for the
+   heading's accent word. */
+.events-atlas{font-family:var(--font-cormorant),Georgia,serif;font-weight:500}
+.events-atlas .eyebrow{font-family:var(--font-taiganja),var(--font-cormorant),serif;font-size:13px;letter-spacing:.35em;color:#d9a441cc}
+.events-atlas :is(.intro-note,.event-meta,#journey-label,.event-breadcrumb button,.category-kind,.world-enter,.search-label,.directory-filters button,.directory-entry small,.load-status){font-family:var(--font-geist-mono),ui-monospace,monospace;font-size:10.5px;letter-spacing:.3em;text-transform:uppercase}
+.events-atlas .intro-note{color:#ece4d299}
+.events-atlas .event-meta{font-size:11px;color:#ece4d2b8}
+.events-atlas .event-meta span+span{border-left-color:#ece4d240}
+.events-atlas .event-breadcrumb button{font-size:10.5px;color:#ece4d2cc}
+.events-atlas #journey-label{color:#ece4d299}
+.events-atlas #overview .category-kind,.events-atlas #front-caption .category-kind{font-size:10px;color:#ece4d28c;margin-top:8px}
+.events-atlas #front-caption .world-enter{font-size:9.5px;color:var(--gold)}
+.events-atlas .directory-filters button{font-size:10px}
+.events-atlas .directory-entry small{font-size:9.5px;color:#ece4d280;margin-top:9px}
+.events-atlas .category-line{font-size:21px}
+.events-atlas #event-description{font-size:19px;line-height:1.5}
+.events-atlas .event-detail p:not(.eyebrow){font-size:19px}
+.events-atlas .event-detail .announcement{font-size:16px!important}
+.events-atlas input{font-size:23px}
+.events-atlas .no-results{font-size:18px}
+@media(min-width:1650px){.events-atlas .category-line{font-size:24px}}
+@media(max-width:1100px){.events-atlas .category-line{font-size:18px}}
+@media(max-height:740px) and (min-width:761px){.events-atlas .category-line{font-size:18px}.events-atlas #event-description{font-size:17px}}
+@media(max-width:760px){
+  .events-atlas .eyebrow,.events-atlas .intro .eyebrow,.events-atlas .event-copy .eyebrow{font-size:10.5px;letter-spacing:.3em}
+  .events-atlas .event-meta{font-size:9.5px}
+  .events-atlas .event-breadcrumb button{font-size:9.5px}
+  .events-atlas #event-description{font-size:16px}
+  .events-atlas .event-detail p:not(.eyebrow){font-size:17px}
+}
+.events-atlas #overview .intro-note{font-size:10.5px;max-width:none}
+
+/* ---- Dialog polish ----
+   Both dialogs get the site's ornate frame: a brighter outer line, a faint
+   inner hairline (as on GoldButton) and hollow gold diamonds at its corners,
+   over a soft glow from the top. */
+.events-atlas dialog{border-color:#d9a44170;background:radial-gradient(ellipse 80% 50% at 50% 0%,#0c2128,#06151b 70%)}
+.events-atlas dialog::before{content:'';position:absolute;inset:7px;border:1px solid #d9a44129;pointer-events:none}
+.events-atlas dialog{--diamond:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 0L12 6L6 12L0 6Z' fill='%23d9a441'/%3E%3Cpath d='M6 3.2L8.8 6L6 8.8L3.2 6Z' fill='%2306151b'/%3E%3C/svg%3E")}
+.events-atlas dialog::after{content:'';position:absolute;inset:1px;pointer-events:none;background:var(--diamond) 0 0/12px no-repeat,var(--diamond) 100% 0/12px no-repeat,var(--diamond) 0 100%/12px no-repeat,var(--diamond) 100% 100%/12px no-repeat}
+/* Results scroll under a soft fade, so a cut-off row reads as "more below";
+   bottom padding lets the last row scroll clear of it. Rows get room for a
+   hover wash without shifting the text column. */
+.events-atlas .directory-results{margin-inline:-10px;padding:0 16px 56px 10px;mask-image:linear-gradient(to bottom,#000 calc(100% - 64px),transparent)}
+.events-atlas .directory-entry{padding:13px 10px;transition:background .35s var(--ease)}
+.events-atlas .directory-entry:hover{background:linear-gradient(90deg,#d9a44114,transparent 85%)}
+.events-atlas .directory-entry>span:last-child{transition:translate .35s var(--ease)}
+.events-atlas .directory-entry:hover>span:last-child{translate:3px -3px}
+/* The placeholder already invites a search; keep the label for screen readers only. */
+.events-atlas .search-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.events-atlas .directory-entry small{letter-spacing:.2em}
+.events-atlas .directory-filters button{letter-spacing:.24em}
+/* The results area keeps one height whatever the filter, so the dialog never
+   reshapes; an empty search shows its message inside that space. */
+.events-atlas .directory-body{position:relative;height:42dvh}
+.events-atlas .directory-results{height:100%;max-height:none;align-content:start}
+.events-atlas .no-results{position:absolute;inset:24px 0 auto}
+@media(max-width:760px){.events-atlas .directory-body{height:48dvh}}
+
+/* ---- Phones (≤760px only; laptop views are untouched) ---- */
+.events-atlas .hint-touch{display:none}
+@media(max-width:760px){
+  /* Atlas: touch wording, and the front world says what it is and that it opens. */
+  .events-atlas .hint-pointer{display:none}
+  .events-atlas .hint-touch{display:inline}
+  .events-atlas #overview #front-caption .category-kind{display:block;margin-top:7px}
+  .events-atlas #overview #front-caption .world-enter{display:block;margin-top:9px;font-size:9px;letter-spacing:.3em}
+  /* World view: the dock gets the whole bottom row at thumb size; scrolling,
+     swiping and the progress stops already step between events, so the
+     arrow pair goes. Clears the home indicator on notched phones. */
+  .events-atlas .journey-controls{display:none}
+  .events-atlas .event-bottom{bottom:max(32px,calc(env(safe-area-inset-bottom) + 14px))}
+  .events-atlas .category-dock{width:100%;justify-content:space-between;gap:0}
+  .events-atlas .dock-world{width:40px;height:40px;padding:6px}
+  .events-atlas .dock-world span{bottom:-18px;font-size:8.5px}
+  .events-atlas .progress-stop{width:30px;height:30px}
+  .events-atlas .event-progress{gap:2px}
+  /* Directory: labels stay on one line, and the filter row fades at its edge
+     to show it scrolls. */
+  .events-atlas .directory-entry{grid-template-columns:46px minmax(0,1fr) 16px;gap:12px}
+  .events-atlas .directory-entry img{width:46px;height:46px}
+  .events-atlas .directory-entry small{font-size:9px;letter-spacing:.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .events-atlas .dialog-heading h2{font-size:36px;margin:8px 0 18px}
+  .events-atlas .directory-filters{gap:20px;-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent);padding-right:40px}
+  .events-atlas .directory-filters button{letter-spacing:.18em}
+}

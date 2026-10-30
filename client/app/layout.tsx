@@ -3,6 +3,8 @@ import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "@/styles/globals.css";
 import { ASSETS } from "@/constants/assets";
+import { SiteLoader } from "@/components/common/loader/SiteLoader";
+import { loaderBootScript } from "@/components/common/loader/bootScript";
 import { SEO_KEYWORDS, getStructuredData, getBreadcrumbJsonLd } from "@/constants/seo";
 
 const geistSans = Geist({
@@ -136,9 +138,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} ${nasyhama.variable} ${taiganja.variable} h-full antialiased`}
     >
       <head>
+        {/* Before first paint: skip the loader on repeat visits, else pin its eclipse onto the hero's. */}
+        <script dangerouslySetInnerHTML={{ __html: loaderBootScript() }} />
         {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
@@ -176,8 +181,19 @@ export default function RootLayout({
         />
         <link rel="preload" as="image" href={ASSETS.cloudinary.suncover} />
         <link rel="preload" as="image" href={ASSETS.cloudinary.blacksun2} />
+        {/* Opening loader art. */}
+        <link rel="preload" as="image" href={ASSETS.cloudinary.wordmarkBlacker} />
+        <link rel="preload" as="image" href={ASSETS.cloudinary.blacksun} />
+        <link rel="preload" as="image" href={ASSETS.cloudinary.minisun} />
+        <link rel="preload" as="image" href={ASSETS.cloudinary.veena} />
+        <link rel="preload" as="image" href={ASSETS.cloudinary.hand} />
+        <link rel="preload" as="image" href={ASSETS.cloudinary.banner} />
+        <link rel="preload" as="image" href={ASSETS.cloudinary.divider} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <SiteLoader />
+        {children}
+      </body>
     </html>
   );
 }
