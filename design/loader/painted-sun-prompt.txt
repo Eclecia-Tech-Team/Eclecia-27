@@ -1,7 +1,0 @@
-Use case: stylized-concept.
-Asset type: one isolated transparent-background sun illustration for the opening loader of Eclecia, a premium Indian cultural festival website.
-Primary request: a beautiful circular golden sun, front-on and perfectly centered, complete silhouette with generous clear padding on all four sides, actual transparent background.
-Style: richly hand-painted Indian miniature illustration and antique gold engraving, matching dark teal marble, delicate gold lotus filigree, vermilion silk and ornamental medallions. The sun must be a SUN rather than an empty frame: a warm burnished amber and muted saffron disc, intricate subtle floral/lotus scrollwork engraved into its face, slender alternating straight and gently curved flame-like gold rays, elegant fine etched details, tiny warm red accents only. No human face.
-Composition: square, symmetrical, perfectly round solar disc, complete uncut rays. Readable refined silhouette at 200px, sun occupies about 80% of canvas.
-Materials: antique gold leaf, painted amber, fine gold linework. Restrained warm glow painted into the artwork itself; dark bronze shadows. Crisp clean alpha around every ray.
-Constraints: no words, letters, numbers, branding, frame, checkerboard, background, cast shadow, planets, orbital rings, additional objects. No photographic solar plasma, no white-hot center, no 3D rendering. A single finished painted celestial emblem, luxurious and warm rather than cartoonish.
