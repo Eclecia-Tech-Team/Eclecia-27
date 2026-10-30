@@ -1,12 +1,22 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { GoldActionButton } from "@/components/common/GoldButton";
 import { SiteHeader } from "@/components/common/Header";
 import { ATLAS_EVENT_COUNT, atlasArt } from "@/constants/events";
 import { mountAtlas } from "./atlas/engine";
+import { MobileEventsAtlas } from "./MobileEventsAtlas";
 import "@/styles/events-atlas.css";
+
+const phoneQuery = "(max-width: 760px)";
+const subscribePhone = (notify: () => void) => {
+  const media = window.matchMedia(phoneQuery);
+  media.addEventListener("change", notify);
+  return () => media.removeEventListener("change", notify);
+};
+const phoneSnapshot = () => window.matchMedia(phoneQuery).matches;
+const serverSnapshot = () => false;
 
 /**
  * /events: the Events Atlas. Seven category worlds orbit an eclipse; choosing
@@ -17,11 +27,16 @@ import "@/styles/events-atlas.css";
  */
 export function EventsAtlas() {
   const rootRef = useRef<HTMLDivElement>(null);
+  const phone = useSyncExternalStore(subscribePhone, phoneSnapshot, serverSnapshot);
 
   useEffect(() => {
-    if (!rootRef.current) return;
+    // Keep the desktop engine and markup unchanged. Never start it on phones,
+    // including the first hydration pass before the media store synchronizes.
+    if (phone || window.matchMedia(phoneQuery).matches || !rootRef.current) return;
     return mountAtlas(rootRef.current);
-  }, []);
+  }, [phone]);
+
+  if (phone) return <><SiteHeader /><MobileEventsAtlas /></>;
 
   return (
     <>
@@ -41,7 +56,10 @@ export function EventsAtlas() {
                 Every art,
                 <br />a <em className="font-nasyhama font-normal italic text-gold">universe</em>.
               </h1>
-              <p className="intro-note">Drag to rotate.</p>
+              <p className="intro-note">
+                <span className="hint-pointer">Drag to rotate.</span>
+                <span className="hint-touch">Swipe to turn.</span>
+              </p>
               <button className="intro-link" id="browse-bottom">
                 View all {ATLAS_EVENT_COUNT} events <span aria-hidden>→</span>
               </button>

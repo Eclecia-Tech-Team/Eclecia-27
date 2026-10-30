@@ -245,7 +245,12 @@ export class SolarSystem {
   pointAt(t: number): OrbitPoint {
     const frontness = (1 - Math.cos(t)) / 2;
     // Deliberate foreground emphasis; preserve the approved far-side size.
-    const size = (this.farSize / (1 - this.depthPerspective * frontness)) * (1 + 0.72 * Math.pow(frontness, 4));
+    // Phones enlarge the near side further so front worlds make thumb-sized
+    // targets; the far side keeps its size so rear worlds don't crowd.
+    const size =
+      (this.farSize / (1 - this.depthPerspective * frontness)) *
+      (1 + 0.72 * Math.pow(frontness, 4)) *
+      (this.small ? 1 + 0.3 * frontness : 1);
     const p = this.tracePoint(t);
     const { roll, width } = this.orbitLayout;
     // Medallions turn to face the eclipse as they travel round the flanks.

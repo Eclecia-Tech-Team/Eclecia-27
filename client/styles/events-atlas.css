@@ -253,3 +253,31 @@ html:has(.events-atlas)::-webkit-scrollbar{display:none}
 .events-atlas .directory-results{height:100%;max-height:none;align-content:start}
 .events-atlas .no-results{position:absolute;inset:24px 0 auto}
 @media(max-width:760px){.events-atlas .directory-body{height:48dvh}}
+
+/* ---- Phones (≤760px only; laptop views are untouched) ---- */
+.events-atlas .hint-touch{display:none}
+@media(max-width:760px){
+  /* Atlas: touch wording, and the front world says what it is and that it opens. */
+  .events-atlas .hint-pointer{display:none}
+  .events-atlas .hint-touch{display:inline}
+  .events-atlas #overview #front-caption .category-kind{display:block;margin-top:7px}
+  .events-atlas #overview #front-caption .world-enter{display:block;margin-top:9px;font-size:9px;letter-spacing:.3em}
+  /* World view: the dock gets the whole bottom row at thumb size; scrolling,
+     swiping and the progress stops already step between events, so the
+     arrow pair goes. Clears the home indicator on notched phones. */
+  .events-atlas .journey-controls{display:none}
+  .events-atlas .event-bottom{bottom:max(32px,calc(env(safe-area-inset-bottom) + 14px))}
+  .events-atlas .category-dock{width:100%;justify-content:space-between;gap:0}
+  .events-atlas .dock-world{width:40px;height:40px;padding:6px}
+  .events-atlas .dock-world span{bottom:-18px;font-size:8.5px}
+  .events-atlas .progress-stop{width:30px;height:30px}
+  .events-atlas .event-progress{gap:2px}
+  /* Directory: labels stay on one line, and the filter row fades at its edge
+     to show it scrolls. */
+  .events-atlas .directory-entry{grid-template-columns:46px minmax(0,1fr) 16px;gap:12px}
+  .events-atlas .directory-entry img{width:46px;height:46px}
+  .events-atlas .directory-entry small{font-size:9px;letter-spacing:.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .events-atlas .dialog-heading h2{font-size:36px;margin:8px 0 18px}
+  .events-atlas .directory-filters{gap:20px;-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent);padding-right:40px}
+  .events-atlas .directory-filters button{letter-spacing:.18em}
+}
