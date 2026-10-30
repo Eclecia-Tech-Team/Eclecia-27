@@ -1,0 +1,106 @@
+/* Sign-in / register panel. Every change is a CSS transition on state, so a
+   quick double switch reverses smoothly instead of restarting. */
+
+.auth-card {
+  --auth-t: 460ms;
+  --auth-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Inner hairline, echoing the double line on GoldButton's frame. */
+.auth-card::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(217, 164, 65, 0.16);
+  pointer-events: none;
+}
+
+/* Collapse: animates to the content's real height with no measuring. */
+.auth-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--auth-t) var(--auth-ease),
+    opacity 160ms ease,
+    visibility 0s linear var(--auth-t);
+}
+.auth-collapse[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows var(--auth-t) var(--auth-ease),
+    opacity 300ms ease 120ms,
+    visibility 0s;
+}
+/* The side bleed keeps button finials and glow from being clipped. */
+.auth-collapse-clip {
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  margin-inline: -24px;
+  padding-inline: 24px;
+}
+
+/* Swap: items share one grid cell and slide out toward their side of the tabs. */
+.auth-swap {
+  display: inline-grid;
+}
+.auth-swap > * {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition:
+    opacity 160ms ease,
+    transform var(--auth-t) var(--auth-ease);
+}
+.auth-swap > [data-state="before"] { transform: translateX(-18px); }
+.auth-swap > [data-state="after"] { transform: translateX(18px); }
+.auth-swap > [data-state="active"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 300ms ease 100ms,
+    transform var(--auth-t) var(--auth-ease);
+}
+
+.auth-tab-line {
+  transition: transform var(--auth-t) var(--auth-ease);
+}
+.auth-card[data-tab="register"] .auth-tab-line {
+  transform: translateX(100%);
+}
+
+/* Art pane: the eclipse rises over the hills for register and sets for sign-in. */
+.auth-eclipse {
+  transform: translate(-50%, 16%);
+  transition: transform 700ms var(--auth-ease);
+}
+.auth-card[data-tab="register"] .auth-eclipse {
+  transform: translate(-50%, -8%);
+}
+.auth-art-piece {
+  opacity: 0;
+  transition:
+    opacity 200ms ease,
+    transform 700ms var(--auth-ease);
+}
+.auth-art-piece[data-state="before"] { transform: translateX(-28px); }
+.auth-art-piece[data-state="after"] { transform: translateX(28px); }
+.auth-art-piece[data-state="active"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 420ms ease 120ms,
+    transform 700ms var(--auth-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-card *,
+  .auth-card *::before,
+  .auth-card *::after {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+}
