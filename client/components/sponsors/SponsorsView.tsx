@@ -263,7 +263,8 @@ export function SponsorsView() {
   const moonRight = frameLeft + (POSE.moon.x + POSE.moon.w / 2) * scale;
   const moonBottom = frameTop + (POSE.moon.y + POSE.moon.w / 2) * scale;
   const colLeft = mobile ? 0 : Math.max(moonRight + 48, w * 0.3);
-const colTop = mobile ? moonBottom + 24 : h * 0.22;  // Heading blocks: centred under the moon on mobile/portrait, left-aligned beside it on desktop.
+  const colTop = mobile ? moonBottom + 24 : h * 0.22;
+  // Heading blocks: centred under the moon on mobile/portrait, left-aligned beside it on desktop.
   const headingCls = `flex flex-col gap-5 ${mobile ? "items-center text-center" : ""}`;
   return (
     <PageFade>

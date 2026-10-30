@@ -44,7 +44,7 @@ export function GoldButton({ href, onClick, target, rel, children, ...look }: Go
       <a
         href={href}
         target={target}
-        rel={rel}
+        rel={rel ?? (target === "_blank" ? "noopener noreferrer" : undefined)}
         onClick={onClick}
         className={goldClass(look)}
       >

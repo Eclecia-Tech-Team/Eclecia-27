@@ -42,7 +42,7 @@ const SunGrain = ({ seed, freq, className }: { seed: number; freq: number; class
   </svg>
 );
 
-const CATEGORIES =["Music", "Dance", "Drama", "Art", "Fashion", "Literary"];
+const CATEGORIES = ["Music", "Dance", "Drama", "Art", "Fashion", "Literary"];
 
 /**
  * Gold dust that gathers into the sun: golden-angle spiral, so it is spread
