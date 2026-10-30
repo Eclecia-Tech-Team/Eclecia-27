@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/common/ComingSoon";
+import { AuthPage } from "@/components/auth/AuthPage";
 import { getBreadcrumbJsonLd, ROUTES } from "@/constants/seo";
 
 const route = ROUTES.find((r) => r.path === "/register")!;
@@ -18,7 +18,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RegisterPage() {
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   const breadcrumbJsonLd = getBreadcrumbJsonLd(
     "/register",
     process.env.NEXT_PUBLIC_SITE_URL,
@@ -30,10 +35,7 @@ export default function RegisterPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <ComingSoon
-        eyebrow="Registrations"
-        note="Registrations open soon. Follow @eclecia_hitk for the announcement."
-      />
+      <AuthPage mode="register" error={error} />
     </>
   );
 }
