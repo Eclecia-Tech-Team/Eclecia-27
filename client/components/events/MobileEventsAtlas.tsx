@@ -289,25 +289,27 @@ export function MobileEventsAtlas() {
                 <h2>{c.name}</h2>
                 <p>{c.kind} <span aria-hidden="true">/</span> {c.events.length} events</p>
               </div>
-              <GoldActionButton id="m-explore" className="m-cta" variant="ghost" disabled={transitioning} onClick={() => openCategory()}>
-                Explore {c.events.length} events <span aria-hidden="true">→</span>
-              </GoldActionButton>
-              <nav className="m-category-arrows" aria-label="Previous and next categories">
-                <button type="button" onClick={() => selectCategory(selection.category - 1)} aria-label={"Previous category: " + previous.name}>← <span>{previous.name}</span></button>
-                <span aria-live="polite">{selection.category + 1} of {count}</span>
-                <button type="button" onClick={() => selectCategory(selection.category + 1)} aria-label={"Next category: " + next.name}><span>{next.name}</span> →</button>
-              </nav>
-              <nav className="m-category-shortcuts" aria-label="All seven categories">
-                {categories.map((world, index) => (
-                  <button
-                    key={world.id} type="button" onClick={() => selectCategory(index)}
-                    aria-label={"Show " + world.name + " category"} aria-pressed={selection.category === index}
-                    title={world.name}
-                  >
-                    <span><img src={categoryThumb(world.id)} alt="" draggable={false} onError={imageFailed} /></span>
-                  </button>
-                ))}
-              </nav>
+              <div className="m-category-actions">
+                <GoldActionButton id="m-explore" className="m-cta" variant="ghost" disabled={transitioning} onClick={() => openCategory()}>
+                  Explore {c.events.length} events <span aria-hidden="true">→</span>
+                </GoldActionButton>
+                <nav className="m-category-arrows" aria-label="Previous and next categories">
+                  <button type="button" onClick={() => selectCategory(selection.category - 1)} aria-label={"Previous category: " + previous.name}>← <span>{previous.name}</span></button>
+                  <span aria-live="polite">{selection.category + 1} of {count}</span>
+                  <button type="button" onClick={() => selectCategory(selection.category + 1)} aria-label={"Next category: " + next.name}><span>{next.name}</span> →</button>
+                </nav>
+                <nav className="m-category-shortcuts" aria-label="All seven categories">
+                  {categories.map((world, index) => (
+                    <button
+                      key={world.id} type="button" onClick={() => selectCategory(index)}
+                      aria-label={"Show " + world.name + " category"} aria-pressed={selection.category === index}
+                      title={world.name}
+                    >
+                      <span><img src={categoryThumb(world.id)} alt="" draggable={false} onError={imageFailed} /></span>
+                    </button>
+                  ))}
+                </nav>
+              </div>
             </section>
           ) : (
             <section aria-label={c.name + " events"} className="m-events">
