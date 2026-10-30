@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ASSETS } from "@/constants/assets";
 import { LOADER } from "@/constants/loader";
 
@@ -31,17 +31,6 @@ const art = (src: string, className: string, style?: CSSProperties) => (
 
 const vars = (v: Record<string, string | number>) => v as CSSProperties;
 
-/** Photosphere texture: contrast-boosted grey noise, soft-lit onto the disc. */
-const SunGrain = ({ seed, freq, className }: { seed: number; freq: number; className: string }) => (
-  <svg className={className} viewBox="0 0 200 200" aria-hidden>
-    <filter id={`ld-grain-${seed}`} x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency={freq} numOctaves={3} seed={seed} />
-      <feColorMatrix values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" />
-    </filter>
-    <rect width="200" height="200" filter={`url(#ld-grain-${seed})`} />
-  </svg>
-);
-
 const CATEGORIES = ["Music", "Dance", "Drama", "Art", "Fashion", "Literary"];
 
 /**
@@ -70,6 +59,67 @@ const DUST = Array.from({ length: 24 }, (_, i) => {
  */
 export function SiteLoader() {
   const [phase, setPhase] = useState<"intro" | "exit" | "gone">("intro");
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Match the actual rendered hero image, including its responsive panel scale,
+  // font-dependent offsets and bounds fitting, rather than duplicating its math.
+  useEffect(() => {
+    if (phase === "gone" || window.location.pathname !== "/") return;
+    const root = rootRef.current;
+    if (!root) return;
+    let image: HTMLImageElement | null = null;
+    let panel: HTMLElement | null = null;
+    let cancelled = false;
+    let frame = 0;
+    const measure = () => {
+      if (cancelled) return;
+      const rect = image?.getBoundingClientRect();
+      if (!rect?.width || !rect.height) return;
+      root.style.setProperty("--ld-wmx", `${rect.left + rect.width / 2}px`);
+      root.style.setProperty("--ld-wmy", `${rect.top + rect.height / 2}px`);
+      root.style.setProperty("--ld-wmw", `${rect.width}px`);
+    };
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => { frame = requestAnimationFrame(measure); });
+    };
+    const observer = new ResizeObserver(schedule);
+    const bindImage = () => {
+      const next = document.querySelector<HTMLImageElement>("[data-hero-wordmark]");
+      if (next === image) return;
+      if (image) {
+        observer.unobserve(image);
+        image.removeEventListener("load", schedule);
+      }
+      if (panel) observer.unobserve(panel);
+      image = next;
+      panel = image?.closest("section") ?? null;
+      if (image) {
+        observer.observe(image);
+        image.addEventListener("load", schedule);
+      }
+      if (panel) observer.observe(panel);
+      schedule();
+    };
+    // The landing swaps its frame-space image for a viewport-space image on
+    // phones after hydration. Follow that replacement instead of the stale node.
+    const mounts = new MutationObserver(bindImage);
+    mounts.observe(document.body, { childList: true, subtree: true });
+    bindImage();
+    window.addEventListener("resize", schedule);
+    window.visualViewport?.addEventListener("resize", schedule);
+    void document.fonts.ready.then(() => { if (!cancelled) schedule(); });
+    measure();
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      mounts.disconnect();
+      image?.removeEventListener("load", schedule);
+      window.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("resize", schedule);
+    };
+  }, [phase]);
 
   useEffect(() => {
     const forced = new URLSearchParams(window.location.search).has("loader");
@@ -120,6 +170,7 @@ export function SiteLoader() {
 
   return (
     <div
+      ref={rootRef}
       className={`site-loader${phase === "exit" ? " is-exit" : ""}`}
       role="status"
       aria-label="Loading Eclecia"
@@ -143,11 +194,7 @@ export function SiteLoader() {
         <div className="ld-stage">
           {art(ASSETS.cloudinary.blacksun, "ld-rays")}
           <div className="ld-sun">
-            <span className="ld-sun-corona" />
-            <span className="ld-sun-disc">
-              <SunGrain seed={7} freq={0.11} className="ld-sun-grain" />
-              <SunGrain seed={23} freq={0.045} className="ld-sun-grain ld-sun-grain--slow" />
-            </span>
+            {art("/assets/opt/loader/painted-sun-v1.webp", "ld-sun-art")}
           </div>
           {art(ASSETS.cloudinary.blacksun2, "ld-moon")}
           <span className="ld-diamond" />
@@ -162,6 +209,9 @@ export function SiteLoader() {
               </li>
             ))}
           </ul>
+        </div>
+
+        <div className="ld-brand">
           <div
             className="ld-wm"
             style={vars({ "--ld-wm": `url(${ASSETS.cloudinary.wordmarkBlacker})` })}

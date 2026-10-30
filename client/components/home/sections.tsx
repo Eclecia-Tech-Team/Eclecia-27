@@ -235,6 +235,7 @@ export function HeroSection({
           <img
             src={ASSETS.cloudinary.wordmarkBlacker}
             alt="ECLECIA"
+            data-hero-wordmark
             draggable={false}
             className={`relative select-none object-contain ${
               compact

@@ -200,82 +200,32 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   100% { opacity: 1; transform: scale(1) rotate(0); filter: brightness(1); }
 }
 
-/* The sun, born as the dust lands; the moon will cover it. A churning
-   photosphere (two counter-rotating noise layers), limb darkening, and a
-   flickering ray corona. */
+/* The painted sun replaces the procedural photosphere only. Its central disc
+   fills the original moon; its rays extend beyond it until totality. The moon
+   finishes crossing at 2.65s, then the painted rays retract behind it. */
 .ld-sun {
-  left: 17%;
-  top: 17%;
-  width: 66%;
-  height: 66%;
+  left: -7%;
+  top: -7%;
+  width: 114%;
+  height: 114%;
   animation:
     ld-sun-born 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 1.15s both,
-    ld-sun-dim 0.9s ease-in 1.75s both;
+    ld-painted-shrink 0.8s cubic-bezier(0.4, 0, 0.2, 1) 2.65s forwards;
 }
-.ld-sun > * { position: absolute; border-radius: 50%; }
-.ld-sun-disc {
-  inset: 0;
-  overflow: hidden;
-  isolation: isolate;
-  background: radial-gradient(circle at 50% 50%, #fff1c4 0%, #ffdb7a 24%, #f2bd4a 54%, #d99a2b 80%, #9c6514 100%);
-  box-shadow:
-    0 0 calc(var(--S) * 0.04) calc(var(--S) * 0.01) rgba(255, 205, 110, 0.55),
-    0 0 calc(var(--S) * 0.14) calc(var(--S) * 0.03) rgba(230, 175, 70, 0.25),
-    0 0 calc(var(--S) * 0.4) calc(var(--S) * 0.06) rgba(217, 164, 65, 0.12);
-}
-/* Limb darkening + a hot white core. */
-.ld-sun-disc::after {
-  content: "";
+.ld-sun-art {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, rgba(255, 240, 200, 0.15) 0%, transparent 28%),
-    radial-gradient(circle, transparent 50%, rgba(120, 75, 10, 0.35) 80%, rgba(70, 40, 5, 0.75) 100%);
-  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
-.ld-sun-grain {
-  inset: -25%;
-  position: absolute;
-  width: 150%;
-  height: 150%;
-  mix-blend-mode: soft-light;
-  opacity: 0.9;
-  animation: ld-sun-spin 14s linear infinite;
-}
-.ld-sun-grain--slow {
-  mix-blend-mode: overlay;
-  opacity: 0.45;
-  animation-duration: 22s;
-  animation-direction: reverse;
-}
-@keyframes ld-sun-spin { to { transform: rotate(360deg); } }
-
-/* Corona: fine rays fanning past the limb, flickering. */
-.ld-sun-corona {
-  inset: -38%;
-  background:
-    repeating-conic-gradient(from 0deg, rgba(255, 220, 140, 0.3) 0deg 1.2deg, transparent 1.2deg 5deg),
-    repeating-conic-gradient(from 2.5deg, rgba(230, 180, 80, 0.2) 0deg 0.8deg, transparent 0.8deg 7.5deg);
-  -webkit-mask: radial-gradient(circle, #000 34%, rgba(0, 0, 0, 0.35) 46%, transparent 70%);
-  mask: radial-gradient(circle, #000 34%, rgba(0, 0, 0, 0.35) 46%, transparent 70%);
-  filter: blur(calc(var(--S) * 0.006));
-  animation:
-    ld-sun-spin 40s linear infinite,
-    ld-corona-flicker 1.6s ease-in-out infinite alternate;
-}
-@keyframes ld-corona-flicker {
-  from { opacity: 0.55; scale: 0.97; }
-  to { opacity: 0.8; scale: 1.03; }
-}
-
 @keyframes ld-sun-born {
-  from { opacity: 0; transform: scale(0.2); filter: brightness(2.6); }
-  to { opacity: 1; transform: scale(1); filter: brightness(0.92); }
+  from { opacity: 0; transform: scale(0.2); }
+  to { opacity: 1; transform: scale(1); }
 }
-@keyframes ld-sun-dim {
-  from { filter: brightness(0.92); }
-  to { filter: brightness(0.7); }
+@keyframes ld-painted-shrink {
+  from { transform: scale(1); }
+  to { transform: scale(0.5); }
 }
 
 /* The moon crosses from lower-left: first to second contact. */
@@ -372,18 +322,23 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   bottom: 0;
   transform: translateX(-50%);
   width: min(92vw, 900px);
-  /* Wordmark width: 70vw on phones; on larger screens as big as the slot's
-     height allows (wordmark + divider stack is ~0.73 of this width tall). */
-  --wmw: min(70vw, 520px, calc((100svh - var(--my) - var(--S) * 0.55) * 1.3));
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 2;
 }
+.ld-brand {
+  position: absolute;
+  left: var(--ld-wmx, 50vw);
+  top: var(--ld-wmy, calc((100svh + var(--my) + var(--S) * 0.55) / 2));
+  width: var(--ld-wmw, min(70vw, 520px));
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
 .ld-wm {
   position: relative;
-  width: var(--wmw);
+  width: 100%;
   /* Brush stroke: a soft edge sweeps left to right. */
   -webkit-mask: linear-gradient(100deg, #000 44%, transparent 56%) 100% 0 / 260% 100% no-repeat;
   mask: linear-gradient(100deg, #000 44%, transparent 56%) 100% 0 / 260% 100% no-repeat;
@@ -411,10 +366,13 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   100% { opacity: 0; background-position: 0 0; }
 }
 .ld-divider {
-  width: var(--wmw);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
   height: auto;
   /* The divider art has wide transparent bands above and below the lotus. */
-  margin: calc(var(--wmw) * -0.09) 0 calc(var(--wmw) * -0.08);
+  margin: -9% 0 -8%;
   animation: ld-unfurl 0.6s cubic-bezier(0.65, 0, 0.35, 1) 3.6s both;
 }
 @keyframes ld-unfurl {
@@ -436,6 +394,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   to { --ld-iris: 130vmax; }
 }
 .is-exit .ld-caption,
+.is-exit .ld-brand,
 .is-exit .ld-figures { animation: ld-fade-out 0.4s ease-in both; }
 
 /* ---------------------------------------------------------------------------

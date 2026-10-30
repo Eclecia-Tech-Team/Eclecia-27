@@ -182,6 +182,7 @@ export default function RootLayout({
         <link rel="preload" as="image" href={ASSETS.cloudinary.suncover} />
         <link rel="preload" as="image" href={ASSETS.cloudinary.blacksun2} />
         {/* Opening loader art. */}
+        <link rel="preload" as="image" href="/assets/opt/loader/painted-sun-v1.webp" fetchPriority="high" />
         <link rel="preload" as="image" href={ASSETS.cloudinary.wordmarkBlacker} />
         <link rel="preload" as="image" href={ASSETS.cloudinary.blacksun} />
         <link rel="preload" as="image" href={ASSETS.cloudinary.minisun} />
