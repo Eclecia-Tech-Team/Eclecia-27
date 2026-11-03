@@ -1,9 +1,10 @@
-import { ATLAS_CATEGORIES, atlasArt, type AtlasCategory } from "@/constants/events";
+import { atlasArt, type AtlasCategory } from "@/constants/events";
+import { clearAtlasSpot, readAtlasSpot } from "./atlas-spot";
 import { SolarSystem, type OrbitPoint } from "./solar-system";
 
 /*
  * Events atlas runtime: the category orbit, the zoom into a category's world of
- * event planets, and the directory/detail dialogs. Imperative by design — one
+ * event planets, and the directory dialog. Imperative by design — one
  * requestAnimationFrame loop and native Web Animations, no per-frame React
  * renders. Atlas wheel/drag input rotates the orbit; event mode keeps native
  * page scrolling as the camera.
@@ -22,8 +23,12 @@ const ORBIT_ANGLES = [
 const EASE = "cubic-bezier(.76,0,.24,1)";
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
-export function mountAtlas(root: HTMLElement): () => void {
-  const data = ATLAS_CATEGORIES;
+export interface AtlasOptions {
+  categories: AtlasCategory[];
+  onDiscover: (categoryId: string, eventId: string) => void;
+}
+
+export function mountAtlas(root: HTMLElement, { categories: data, onDiscover }: AtlasOptions): () => void {
   const controller = new AbortController();
   const { signal } = controller;
   const on = <T extends Event>(
@@ -72,7 +77,6 @@ export function mountAtlas(root: HTMLElement): () => void {
   const overview = $("overview");
   const scene = $("event-scene");
   const directory = $<HTMLDialogElement>("directory");
-  const detail = $<HTMLDialogElement>("event-detail");
   const loadStatus = $("load-status");
   const skyTexture = root.querySelector<HTMLElement>(".sky-texture")!;
   const dust = root.querySelector<HTMLElement>(".dust")!;
@@ -116,7 +120,7 @@ export function mountAtlas(root: HTMLElement): () => void {
     const animation = el.animate(frames, { duration: reduce.matches ? 1 : duration, easing: EASE, fill: "forwards", ...options });
     return animation.finished.catch(() => {}).then(() => animation);
   }
-  const cancelAnimations = (el: Element) => el.getAnimations().forEach((a) => a.cancel());
+  const cancelAnimations = (el: Element | null | undefined) => el?.getAnimations?.().forEach((a) => a.cancel());
 
   function fadeCopy() {
     const copy = $("event-copy");
@@ -151,7 +155,7 @@ export function mountAtlas(root: HTMLElement): () => void {
   frontCaption.tabIndex = -1;
   frontCaption.setAttribute("aria-hidden", "true");
   frontCaption.innerHTML =
-    '<span class="category-name"></span><span class="category-kind"></span><span class="world-enter">ENTER WORLD ↗</span>';
+    '<span class="category-name"></span><div class="category-meta-row"><span class="category-kind"></span><span class="category-meta-dot">·</span><span class="category-count"></span></div><span class="world-enter">ENTER WORLD ↗</span>';
   on(frontCaption, "click", () => {
     if (performance.now() >= blockOrbitClickUntil && frontWorld) enterCategory(frontWorld);
   });
@@ -243,7 +247,10 @@ export function mountAtlas(root: HTMLElement): () => void {
       frontCategory = data[front].name;
       frontWorld = data[front];
       frontCaption.querySelector(".category-name")!.textContent = frontWorld.name;
-      frontCaption.querySelector(".category-kind")!.textContent = `${frontWorld.kind} · ${frontWorld.events.length} events`;
+      const kindEl = frontCaption.querySelector(".category-kind");
+      const countEl = frontCaption.querySelector(".category-count");
+      if (kindEl) kindEl.textContent = frontWorld.kind;
+      if (countEl) countEl.textContent = `${frontWorld.events.length} events`;
     }
     if (solar) {
       const slot = solar.frontSlot();
@@ -252,7 +259,9 @@ export function mountAtlas(root: HTMLElement): () => void {
         Math.atan2(Math.sin(Math.PI - ORBIT_ANGLES[front] - orbitRotation), Math.cos(Math.PI - ORBIT_ANGLES[front] - orbitRotation)),
       );
       frontCaption.style.setProperty("--x", `${slot.x}px`);
-      frontCaption.style.setProperty("--y", `${slot.y + slot.size * 0.5 + (small ? 6 : 12)}px`);
+      const targetY = slot.y + slot.size * 0.5 + (small ? 4 : 8);
+      const safeY = Math.min(targetY, innerHeight - 68);
+      frontCaption.style.setProperty("--y", `${safeY}px`);
       frontCaption.style.opacity = clamp(1 - offset / (ORBIT_STEP * 0.42), 0, 1).toFixed(3);
       frontCaption.style.pointerEvents = offset < ORBIT_STEP * 0.1 ? "auto" : "none";
     }
@@ -346,7 +355,7 @@ export function mountAtlas(root: HTMLElement): () => void {
         image(atlasArt.event(c.id, event.id), "planet-artwork", i === 0),
         image(atlasArt.shared("event-orbit"), "planet-ring front"),
       );
-      on(node, "click", () => (i === active ? openDetail() : goTo(i)));
+      on(node, "click", () => (Math.abs(progress - i) < 0.35 || i === active ? discover() : goTo(i)));
       $("planet-system").append(node);
       planets.push(node);
       const stop = document.createElement("button");
@@ -368,8 +377,10 @@ export function mountAtlas(root: HTMLElement): () => void {
     $("event-title").textContent = event.name;
     $("event-description").textContent = event.description;
     $("event-kind").textContent = event.kind;
-    $("event-counter").textContent = `${index + 1} / ${category.events.length} events`;
-    $("journey-label").textContent = `${index + 1} of ${category.events.length}`;
+    const clubName = event.club || "";
+    $("event-counter").textContent = clubName;
+    $("event-counter").style.display = clubName ? "inline-block" : "none";
+    $("journey-label").textContent = `${index + 1} OF ${category.events.length}`;
     $<HTMLButtonElement>("previous").disabled = index === 0;
     $<HTMLButtonElement>("next").disabled = index === category.events.length - 1;
     [...$("event-progress").children].forEach((b, i) => b.setAttribute("aria-current", String(i === index)));
@@ -377,13 +388,8 @@ export function mountAtlas(root: HTMLElement): () => void {
       p.classList.toggle("is-current", i === index);
       p.tabIndex = Math.abs(i - index) <= 1 ? 0 : -1;
     });
-    setHash(`#${category.id}/${event.id}`);
     fadeCopy();
   }
-
-  // Keep Next's history state intact; only the hash changes.
-  const setHash = (hash: string) =>
-    window.history.replaceState(window.history.state, "", `${location.pathname}${location.search}${hash}`);
 
   function renderPlanets() {
     if (!category) return;
@@ -483,7 +489,7 @@ export function mountAtlas(root: HTMLElement): () => void {
   ];
 
   async function enterCategory(c: AtlasCategory, index = 0, instant = false): Promise<void> {
-    if (busy || introPlaying) return;
+    if (busy || introPlaying || !c.events.length) return;
     if (mode === "events") return switchCategory(c, index);
     busy = true;
     focusedWorld = categoryButtons[data.indexOf(c)];
@@ -500,7 +506,7 @@ export function mountAtlas(root: HTMLElement): () => void {
     // atlas (masked rails, blurred glow, blend modes) while its layers fade
     // can't be re-rasterized fast enough and blinks. The atlas stays put and
     // only fades; the stand-in and its oversized raster are thrown away after.
-    // A deep-link load has no dive to show, and the stand-in sits outside the
+    // A restored load has no dive to show, and the stand-in sits outside the
     // hidden atlas, so it would flash alone in the dark.
     const lens = instant ? null : document.createElement("div");
     if (lens) {
@@ -514,7 +520,7 @@ export function mountAtlas(root: HTMLElement): () => void {
       overview.append(lens);
     }
     // The real world stays out of sight either way: the stand-in takes its
-    // place in a dive, and on a deep-link load it would show through the fade.
+    // place in a dive, and on a restored load it would show through the fade.
     focusedWorld.style.visibility = "hidden";
     const ready = decoded(sceneImages(index), 500);
     const start = performance.now();
@@ -527,10 +533,10 @@ export function mountAtlas(root: HTMLElement): () => void {
     const fadeOut = (el: Element | null, from: number, length: number, frames: Keyframe[] = [{ opacity: 0 }]) =>
       el && animate(el, [{ opacity: getComputedStyle(el).opacity }, ...frames], duration * length, { delay: at(from), easing: "ease-in-out" });
     const intro = root.querySelector(".intro")!;
-    const silk = root.querySelector(".foreground")!;
+    const silk = root.querySelector(".foreground, .atlas-figures");
     const sky = root.querySelector(".sky")!;
     const copyFade = fadeOut(intro, 0, 0.35, [{ opacity: 0, translate: "-30px 0" }]);
-    const decorFade = fadeOut(silk, 0, 0.35);
+    const decorFade = silk ? fadeOut(silk, 0, 0.35) : Promise.resolve();
     [frontCaption, eclipse(), ...rails(), ...categoryButtons.filter((b) => b !== focusedWorld)].forEach((el) => fadeOut(el, 0, 0.35));
     const skyFade = fadeOut(sky, 0.45, 0.4);
     const zooming = lens && animate(lens, diveKeyframes(x, y, rect.width), duration, { easing: "linear" });
@@ -540,7 +546,7 @@ export function mountAtlas(root: HTMLElement): () => void {
       await skyFade;
       // Switch the sky to its event-scene tint while the screen is black.
       root.dataset.mode = "events";
-      // A deep-link load stays dark (data-intro hides the atlas and sky) until
+      // A restored load stays dark (data-intro hides the atlas and sky) until
       // here, then fades the world up from black a little slower.
       root.removeAttribute("data-intro");
       const length = instant ? 1400 : 900;
@@ -569,7 +575,7 @@ export function mountAtlas(root: HTMLElement): () => void {
     updateCopy(index);
     renderPlanets();
     busy = false;
-    // Not on a deep-link load: with no input yet, Chrome treats programmatic
+    // Not on a restored load: with no input yet, Chrome treats programmatic
     // focus as keyboard focus and rings the back button on arrival.
     if (!instant) $("back").focus({ preventScroll: true });
   }
@@ -604,9 +610,11 @@ export function mountAtlas(root: HTMLElement): () => void {
         fill: "both",
       }),
     ];
-    const silk = root.querySelector(".foreground")!;
-    cancelAnimations(silk);
-    settling.push(animate(silk, [{ opacity: 0 }, { opacity: getComputedStyle(silk).opacity }], duration));
+    const silk = root.querySelector(".foreground, .atlas-figures");
+    if (silk) {
+      cancelAnimations(silk);
+      settling.push(animate(silk, [{ opacity: 0 }, { opacity: getComputedStyle(silk).opacity }], duration));
+    }
     categoryButtons.forEach((b) => {
       cancelAnimations(b);
       b.style.opacity = "1";
@@ -643,7 +651,7 @@ export function mountAtlas(root: HTMLElement): () => void {
     cancelAnimations(scene);
     cancelAnimations(camera);
     camera.style.transform = "none";
-    setHash("");
+    clearAtlasSpot();
     busy = false;
     focusedWorld?.focus({ preventScroll: true });
     // Drop the finished fade-ins once they end: a lingering fill keeps every
@@ -652,7 +660,7 @@ export function mountAtlas(root: HTMLElement): () => void {
   }
 
   async function switchCategory(c: AtlasCategory, index = 0): Promise<void> {
-    if (busy) return;
+    if (busy || !c.events.length) return;
     if (mode === "atlas") return enterCategory(c, index);
     if (c === category) {
       goTo(index);
@@ -694,7 +702,7 @@ export function mountAtlas(root: HTMLElement): () => void {
     () => {
       clearTimeout(snapTimer);
       snapTimer = window.setTimeout(() => {
-        if (mode !== "events" || busy || !category || directory.open || detail.open) return;
+        if (mode !== "events" || busy || !category || directory.open) return;
         const top = document.scrollingElement!.scrollTop;
         const target = clamp(Math.round(top / step()), 0, category.events.length - 1) * step();
         if (Math.abs(top - target) > 2) window.scrollTo({ top: target, behavior: reduce.matches ? "instant" : "smooth" });
@@ -712,18 +720,11 @@ export function mountAtlas(root: HTMLElement): () => void {
   on($("previous"), "click", () => goTo(active - 1));
   on($("next"), "click", () => goTo(active + 1));
 
-  function openDetail() {
-    if (!category) return;
-    const e = category.events[active];
-    const art = $<HTMLImageElement>("detail-art");
-    art.src = atlasArt.event(category.id, e.id);
-    art.alt = `${e.name} illustration`;
-    $("detail-category").textContent = `${category.name} / ${e.kind}`;
-    $("detail-title").textContent = e.name;
-    $("detail-description").textContent = e.description;
-    openModal(detail);
+  function discover() {
+    if (busy || !category) return;
+    onDiscover(category.id, category.events[active].id);
   }
-  on($("discover"), "click", openDetail);
+  on($("discover"), "click", discover);
 
   function renderDirectory() {
     const query = $<HTMLInputElement>("event-search").value.toLowerCase().trim();
@@ -787,24 +788,22 @@ export function mountAtlas(root: HTMLElement): () => void {
   root.querySelectorAll<HTMLElement>("[data-close]").forEach((b) =>
     on(b, "click", () => $<HTMLDialogElement>(b.dataset.close!).close()),
   );
-  [directory, detail].forEach((d) => {
-    on(d, "close", () => {
-      if (!busy) window.scrollTo({ top: modalScroll, behavior: "instant" });
-    });
-    on<MouseEvent>(d, "click", (e) => {
-      if (e.target !== d) return;
-      const r = d.getBoundingClientRect();
-      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) d.close();
-    });
+  on(directory, "close", () => {
+    if (!busy) window.scrollTo({ top: modalScroll, behavior: "instant" });
+  });
+  on<MouseEvent>(directory, "click", (e) => {
+    if (e.target !== directory) return;
+    const r = directory.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) directory.close();
   });
 
   on<KeyboardEvent>(window, "keydown", (e) => {
-    if (!directory.open && !detail.open && !busy && mode === "atlas" && ["ArrowLeft", "ArrowRight"].includes(e.key)) {
+    if (!directory.open && !busy && mode === "atlas" && ["ArrowLeft", "ArrowRight"].includes(e.key)) {
       e.preventDefault();
       turnOrbit(e.key === "ArrowLeft" ? -1 : 1);
       return;
     }
-    if (directory.open || detail.open || busy || mode !== "events" || (e.target as Element).matches?.("input,textarea")) return;
+    if (directory.open || busy || mode !== "events" || (e.target as Element).matches?.("input,textarea")) return;
     if (e.key === "Escape") {
       leaveCategory();
       return;
@@ -883,7 +882,7 @@ export function mountAtlas(root: HTMLElement): () => void {
       camera.style.setProperty("--depth-x", `${-skyX * 1.8}px`);
       camera.style.setProperty("--depth-y", `${-skyY * 1.8}px`);
     }
-    if (mode === "events" && !busy && !directory.open && !detail.open && category) {
+    if (mode === "events" && !busy && !directory.open && category) {
       const target = clamp(document.scrollingElement!.scrollTop / step(), 0, category.events.length - 1);
       if (target !== progress) {
         progress = reduce.matches ? target : progress + (target - progress) * (1 - Math.pow(0.86, dt));
@@ -974,7 +973,7 @@ export function mountAtlas(root: HTMLElement): () => void {
     play(q(".intro-note"), [{ opacity: 0, translate: "0 10px" }, {}], 2300, 1000);
     play(q("#browse-bottom"), [{ opacity: 0, translate: "0 10px" }, {}], 2500, 1000);
     play(frontCaption, [{ opacity: 0, translate: "0 10px" }, { opacity: 1 }], 3600, 1000);
-    play(q(".foreground"), [{ opacity: 0, translate: "0 40px" }, {}], 2000, 1600);
+    play(q(".foreground, .atlas-figures"), [{ opacity: 0, translate: "0 40px" }, {}], 2000, 1600);
     Promise.all(introAnimations.map((a) => a.finished.catch(() => {}))).then(endIntro);
   }
 
@@ -993,11 +992,11 @@ export function mountAtlas(root: HTMLElement): () => void {
   }
 
 
-  // Deep link: #category/event opens straight into that world.
-  const [route, eventId] = location.hash.slice(1).split("/");
-  const initial = data.find((c) => c.id === route);
+  // Back from an event page: reopen straight into that world.
+  const spot = readAtlasSpot();
+  const initial = data.find((c) => c.id === spot?.category && c.events.length);
   if (initial) {
-    enterCategory(initial, Math.max(0, initial.events.findIndex((e) => e.id === eventId)), true);
+    enterCategory(initial, Math.max(0, initial.events.findIndex((e) => e.id === spot?.event)), true);
   } else {
     Promise.all([imagesReady, loaderDone()]).then(() => {
       if (!disposed) playIntro();
@@ -1017,7 +1016,7 @@ export function mountAtlas(root: HTMLElement): () => void {
       $(id).replaceChildren();
     }
     if (directory.open) directory.close();
-    if (detail.open) detail.close();
     $("scroll-track").style.height = "0px";
   };
 }
+

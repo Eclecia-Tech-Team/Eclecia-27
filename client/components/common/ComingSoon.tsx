@@ -7,10 +7,12 @@ import { ASSETS } from "@/constants/assets";
 export interface ComingSoonProps {
   eyebrow: string;
   note?: string;
+  backHref?: string;
+  backLabel?: string;
 }
 
 /** Full-viewport placeholder used by pages that aren't live yet. */
-export function ComingSoon({ eyebrow, note }: ComingSoonProps) {
+export function ComingSoon({ eyebrow, note, backHref = "/", backLabel = "Back to the fest" }: ComingSoonProps) {
   return (
     <PageFade className="min-h-dvh">
       <div className="relative min-h-dvh flex flex-col justify-between overflow-hidden bg-black text-parchment">
@@ -43,10 +45,10 @@ export function ComingSoon({ eyebrow, note }: ComingSoonProps) {
             </p>
           )}
           <TransitionLink
-            href="/"
+            href={backHref}
             className="mt-3 font-mono text-[11px] uppercase tracking-[0.35em] text-parchment/60 transition-colors hover:text-gold"
           >
-            ← Back to the fest
+            ← {backLabel}
           </TransitionLink>
         </main>
 

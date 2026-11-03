@@ -1,5 +1,8 @@
 # Lessons
 
+## Mongo ids
+- `isValidObjectId` accepts any 12-character string: slugs like `general-quiz` get treated as ids and 404. Match `/^[a-f\d]{24}$/i` instead.
+
 ## Pattern
 
 - Mistake: Assumed “second section” meant the stats panel without checking the requested visual destination.

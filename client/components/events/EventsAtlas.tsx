@@ -1,15 +1,18 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { GoldActionButton } from "@/components/common/GoldButton";
 import { SiteHeader } from "@/components/common/Header";
-import { ATLAS_EVENT_COUNT, atlasArt } from "@/constants/events";
+import { atlasArt, type AtlasCategory } from "@/constants/events";
+import { ASSETS } from "@/constants/assets";
+import { saveAtlasSpot } from "./atlas/atlas-spot";
 import { mountAtlas } from "./atlas/engine";
 import { MobileEventsAtlas } from "./MobileEventsAtlas";
 import "@/styles/events-atlas.css";
 
-const phoneQuery = "(max-width: 760px)";
+const phoneQuery = "(max-width: 1024px)";
 const subscribePhone = (notify: () => void) => {
   const media = window.matchMedia(phoneQuery);
   media.addEventListener("change", notify);
@@ -25,26 +28,40 @@ const serverSnapshot = () => false;
  * The site header sits outside the atlas root so its scoped styles never
  * reach it.
  */
-export function EventsAtlas() {
+export function EventsAtlas({ categories }: { categories: AtlasCategory[] }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const phone = useSyncExternalStore(subscribePhone, phoneSnapshot, serverSnapshot);
+  const router = useRouter();
+  const eventCount = categories.reduce((n, c) => n + c.events.length, 0);
+
+  const discover = useCallback((category: string, event: string) => {
+    saveAtlasSpot({ category, event });
+    router.push(`/events/${event}`);
+  }, [router]);
 
   useEffect(() => {
     // Keep the desktop engine and markup unchanged. Never start it on phones,
     // including the first hydration pass before the media store synchronizes.
     if (phone || window.matchMedia(phoneQuery).matches || !rootRef.current) return;
-    return mountAtlas(rootRef.current);
-  }, [phone]);
+    return mountAtlas(rootRef.current, { categories, onDiscover: discover });
+  }, [phone, categories, discover]);
 
-  if (phone) return <><SiteHeader /><MobileEventsAtlas /></>;
+  if (phone) return <><SiteHeader /><MobileEventsAtlas categories={categories} eventCount={eventCount} onDiscover={discover} /></>;
 
   return (
     <>
       <SiteHeader />
-      <div ref={rootRef} className="events-atlas" data-mode="atlas" data-intro="pending">
+      <div ref={rootRef} className="events-atlas select-none" data-mode="atlas" data-intro="pending">
         <div className="sky" aria-hidden>
-          <div className="sky-texture" />
-          <img className="dust" src={atlasArt.shared("gold-dust")} alt="" />
+          <div
+            className="sky-texture"
+            style={
+              ASSETS.cloudinary.eventsBackground
+                ? { backgroundImage: `url(${ASSETS.cloudinary.eventsBackground})` }
+                : undefined
+            }
+          />
+          <img className="dust" src={atlasArt.shared("gold-dust")} alt="" draggable={false} />
           <div className="vignette" />
         </div>
 
@@ -61,13 +78,27 @@ export function EventsAtlas() {
                 <span className="hint-touch">Swipe to turn.</span>
               </p>
               <button className="intro-link" id="browse-bottom">
-                View all {ATLAS_EVENT_COUNT} events <span aria-hidden>→</span>
+                View all {eventCount} events <span aria-hidden>→</span>
               </button>
             </div>
             <div id="atlas-camera">
               <div id="category-worlds" />
             </div>
-            <img className="foreground" src={atlasArt.shared("silk-foreground")} alt="" aria-hidden />
+            {/* Bottom figures matching loader: veena on bottom-left, mudra hand on bottom-right */}
+            <div className="atlas-figures" aria-hidden="true">
+              <img
+                src={ASSETS.cloudinary.veena}
+                alt=""
+                draggable={false}
+                className="atlas-figure atlas-figure--veena"
+              />
+              <img
+                src={ASSETS.cloudinary.hand}
+                alt=""
+                draggable={false}
+                className="atlas-figure atlas-figure--hand"
+              />
+            </div>
           </section>
 
           <section id="event-scene" aria-label="Explore category events" hidden inert>
@@ -78,7 +109,7 @@ export function EventsAtlas() {
               <span className="breadcrumb-rule" />
               <span id="breadcrumb" />
             </div>
-            <img className="immersive-corona" src={atlasArt.shared("corona-halo")} alt="" aria-hidden />
+            <img className="immersive-corona" src={atlasArt.shared("corona-halo")} alt="" aria-hidden draggable={false} />
             <div id="planet-system" />
             <div className="event-copy" id="event-copy" aria-live="polite" aria-atomic="true">
               <p className="eyebrow" id="world-label" />
@@ -131,22 +162,6 @@ export function EventsAtlas() {
             <p className="no-results" id="no-results" hidden>
               No worlds found. Try another search.
             </p>
-          </div>
-        </dialog>
-
-        <dialog id="event-detail" className="event-detail">
-          <button className="close-button" data-close="event-detail" aria-label="Close event details">
-            ×
-          </button>
-          <img id="detail-art" alt="" />
-          <div>
-            <p className="eyebrow" id="detail-category" />
-            <h2 id="detail-title" />
-            <p id="detail-description" />
-            <p className="announcement">Competition details and registration will be announced.</p>
-            <GoldActionButton variant="ghost" className="atlas-cta" data-close="event-detail">
-              Back to the world
-            </GoldActionButton>
           </div>
         </dialog>
 
