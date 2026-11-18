@@ -5,6 +5,7 @@ import "@/styles/globals.css";
 import { ASSETS } from "@/constants/assets";
 import { SiteLoader } from "@/components/common/loader/SiteLoader";
 import { loaderBootScript } from "@/components/common/loader/bootScript";
+import { Providers } from "@/app/providers";
 import { SEO_KEYWORDS, getStructuredData, getBreadcrumbJsonLd } from "@/constants/seo";
 
 const geistSans = Geist({
@@ -201,7 +202,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <SiteLoader />
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

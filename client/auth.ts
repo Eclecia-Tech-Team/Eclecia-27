@@ -11,7 +11,7 @@ export const googleEnabled = Boolean(
   process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
 );
 
-const randomAvatar = () => Math.floor(Math.random() * 10) + 1;
+const randomAvatar = () => Math.floor(Math.random() * 7) + 1;
 
 const toPlainRoles = (roles: unknown): string[] => {
   if (!roles) return [];
@@ -138,11 +138,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
     redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      if (new URL(url).origin === baseUrl) return url;
-      return `${baseUrl}/`;
+      if (url.startsWith("/")) {
+        if (url === "/" || url === "/login" || url === "/register") return `${baseUrl}/profile`;
+        return `${baseUrl}${url}`;
+      }
+      if (new URL(url).origin === baseUrl) {
+        if (url === `${baseUrl}/` || url === `${baseUrl}/login` || url === `${baseUrl}/register`) {
+          return `${baseUrl}/profile`;
+        }
+        return url;
+      }
+      return `${baseUrl}/profile`;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id ? String(user.id) : undefined;
         token.username = user.name ?? undefined;
@@ -151,6 +159,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             ? (user as { avatar?: number }).avatar
             : undefined;
         token.roles = toPlainRoles((user as { roles?: unknown }).roles);
+      }
+      if (trigger === "update" && token.id) {
+        try {
+          await connect();
+          const freshUser = (await User.findById(token.id)
+            .select("username avatar roles")
+            .lean()) as { username?: string; avatar?: number; roles?: unknown } | null;
+          if (freshUser) {
+            if (freshUser.username) token.username = freshUser.username;
+            if (typeof freshUser.avatar === "number") token.avatar = freshUser.avatar;
+            if (freshUser.roles) token.roles = toPlainRoles(freshUser.roles);
+          }
+        } catch (err) {
+          console.error("[auth] jwt update session error:", err);
+        }
       }
       return token;
     },

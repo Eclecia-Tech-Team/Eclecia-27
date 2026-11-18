@@ -47,7 +47,7 @@ const userSchema = new Schema<IUserDocument>(
       type: Number,
       required: false,
       min: 1,
-      max: 10,
+      max: 7,
     },
     emailVerified: {
       type: Date,

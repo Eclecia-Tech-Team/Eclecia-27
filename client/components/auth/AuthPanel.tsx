@@ -74,7 +74,8 @@ async function post<T = { error?: string; message?: string }>(url: string, body:
 export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
   const router = useRouter();
   const pathTab: Tab = usePathname() === "/login" ? "login" : "register";
-  const errorCode = useSearchParams().get("error");
+  const searchParams = useSearchParams();
+  const errorCode = searchParams.get("error");
   // Moves on click; settles on the URL once the navigation lands.
   const [tab, setTab] = useOptimistic(pathTab);
   const [view, setView] = useState<View>("credentials");
@@ -117,11 +118,13 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
   };
 
   const finishSignIn = async () => {
+    const callbackUrl = searchParams.get("callbackUrl") || "/profile";
     const result = await signIn("credentials", { email, password, redirect: false });
     if (result?.error) {
       setError("We couldn't sign you in. Please try again.");
       return;
     }
+    router.push(callbackUrl);
     router.refresh();
   };
 
@@ -314,7 +317,7 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => signIn("google", { redirectTo: "/register" })}
+                  onClick={() => signIn("google", { redirectTo: searchParams.get("callbackUrl") || "/profile" })}
                   className="auth-google-btn group relative flex w-full items-center justify-center gap-3 py-3.5 font-sans text-[14px] font-medium tracking-wide text-parchment transition-all duration-300 hover:text-white disabled:cursor-not-allowed disabled:border-gold/15 disabled:bg-black/20 disabled:text-parchment/35 disabled:shadow-none disabled:hover:border-gold/15 disabled:hover:bg-black/20"
                 >
                   <GoogleMark className="transition-all duration-300 group-disabled:opacity-35 group-disabled:grayscale-[0.7]" />

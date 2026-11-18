@@ -3,10 +3,12 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { TransitionLink } from "./TransitionLink";
 import { GoldButton } from "./GoldButton";
 import { NAV_ITEMS, SOCIAL_LINKS } from "@/constants/navigation";
 import { ASSETS } from "@/constants/assets";
+import { getAvatarSrc } from "@/constants/avatars";
 
 export type SiteHeaderProps = {
   /** 0..1; landing fades it in with scroll. */
@@ -17,8 +19,10 @@ export type SiteHeaderProps = {
 export function SiteHeader({ opacity = 1 }: SiteHeaderProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
 
   const hidden = opacity < 0.01;
+  const user = session?.user;
 
   return (
     <>
@@ -83,17 +87,6 @@ export function SiteHeader({ opacity = 1 }: SiteHeaderProps) {
               className="h-10.5 w-auto max-w-13 object-contain md:h-13.5 md:max-w-16"
             />
           </TransitionLink>
-
-          {/* <span className="h-6 w-px bg-gold/30 md:h-7" aria-hidden /> */}
-
-          {/* IIC Rectangular Logo */}
-          {/* <TransitionLink href="/" className="flex items-center">
-            <img
-              src={ASSETS.cloudinary.iicLogo}
-              alt="IIC Logo"
-              className="h-7.5 w-auto max-w-24 object-contain opacity-90 sm:h-8.5 sm:max-w-28 md:h-11 md:max-w-40"
-            />
-          </TransitionLink> */}
         </div>
 
         {/* Center: Desktop Navigation Links */}
@@ -117,14 +110,52 @@ export function SiteHeader({ opacity = 1 }: SiteHeaderProps) {
           })}
         </nav>
 
-        {/* Right Side: Elevated "Join Us" Button (Desktop only: xl:) & Custom Animated Hamburger */}
+        {/* Right Side: Profile / Join Us & Custom Animated Hamburger */}
         <div className="flex items-center gap-3 pr-1 md:pr-2">
-          {/* Desktop only; the drawer carries its own Join Us on mobile */}
+          {/* Desktop Right Action */}
           <div className="hidden xl:block">
-            <GoldButton href="/register" variant="ghost" size="sm">
-              Join Us
-            </GoldButton>
+            {status === "loading" ? (
+              <div className="h-9 w-24 rounded-full bg-gold/10 border border-gold/20 animate-pulse" />
+            ) : user ? (
+              <TransitionLink
+                href="/profile"
+                className="group relative flex items-center gap-2.5 rounded-full border border-gold/40 bg-black/60 py-1 pl-1.5 pr-4 transition-all duration-300 hover:border-gold hover:bg-gold/15 hover:shadow-[0_0_15px_rgba(217,164,65,0.3)]"
+                title="View Profile"
+                aria-label="View Profile"
+              >
+                <div className="relative h-8 w-8 overflow-hidden rounded-full border border-gold shadow-[0_0_8px_rgba(217,164,65,0.4)]">
+                  <img
+                    src={getAvatarSrc(user.avatar)}
+                    alt={user.username || "Profile"}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                </div>
+                <span className="font-taiganja text-xs uppercase tracking-[0.2em] text-gold transition-colors group-hover:text-parchment max-w-[120px] truncate">
+                  {user.username || "Profile"}
+                </span>
+              </TransitionLink>
+            ) : (
+              <GoldButton href="/login" variant="ghost" size="sm">
+                Join Us
+              </GoldButton>
+            )}
           </div>
+
+          {/* Mobile Profile Icon (when authenticated) */}
+          {user && (
+            <TransitionLink
+              href="/profile"
+              className="xl:hidden h-8.5 w-8.5 overflow-hidden rounded-full border border-gold shadow-[0_0_8px_rgba(217,164,65,0.3)] flex items-center justify-center bg-black"
+              aria-label="Open profile"
+              title="Open profile"
+            >
+              <img
+                src={getAvatarSrc(user.avatar)}
+                alt="Profile"
+                className="h-full w-full object-cover"
+              />
+            </TransitionLink>
+          )}
 
           {/* Custom Animated Hamburger Button without circular outline */}
           <button
@@ -179,16 +210,40 @@ export function SiteHeader({ opacity = 1 }: SiteHeaderProps) {
           })}
         </nav>
 
-        {/* Join Us CTA Button (Matching desktop button styling) */}
+        {/* Join Us / Profile CTA in Mobile Drawer */}
         <div className="mt-8 flex justify-center">
-          <GoldButton
-            href="/register"
-            variant="solid"
-            size="md"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Join Us
-          </GoldButton>
+          {user ? (
+            <TransitionLink
+              href="/profile"
+              onClick={() => setMobileMenuOpen(false)}
+              className="group flex items-center gap-3 rounded-full border border-gold/50 bg-black/80 px-6 py-2.5 shadow-[0_0_20px_rgba(217,164,65,0.25)] transition-all hover:border-gold hover:bg-gold/15"
+            >
+              <div className="h-9 w-9 overflow-hidden rounded-full border border-gold shadow-sm">
+                <img
+                  src={getAvatarSrc(user.avatar)}
+                  alt={user.username || "Profile"}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/70">
+                  Account
+                </span>
+                <span className="font-nasyhama text-lg text-gold group-hover:text-parchment">
+                  {user.username || "View Profile"}
+                </span>
+              </div>
+            </TransitionLink>
+          ) : (
+            <GoldButton
+              href="/login"
+              variant="solid"
+              size="md"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Join Us
+            </GoldButton>
+          )}
         </div>
       </div>
     </>

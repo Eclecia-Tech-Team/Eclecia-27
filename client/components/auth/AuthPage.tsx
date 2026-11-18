@@ -1,6 +1,7 @@
 import AuthComingSoon from "./AuthComingSoon";
 /* eslint-disable @next/next/no-img-element */
 import { Suspense, type ReactNode } from "react";
+import { redirect } from "next/navigation";
 import { auth, googleEnabled } from "@/auth";
 import { SiteHeader } from "@/components/common/Header";
 import { SiteFooter } from "@/components/common/Footer";
@@ -23,6 +24,10 @@ export async function AuthPage({ children }: { children: ReactNode }) {
     }
     console.error("[auth] failed to retrieve session in AuthPage:", err);
     session = null;
+  }
+
+  if (session?.user) {
+    redirect("/profile");
   }
 
   return (
