@@ -75,9 +75,17 @@ export function SiteLoader() {
       if (cancelled) return;
       const rect = image?.getBoundingClientRect();
       if (!rect?.width || !rect.height) return;
+      const cy = rect.top + rect.height / 2;
       root.style.setProperty("--ld-wmx", `${rect.left + rect.width / 2}px`);
-      root.style.setProperty("--ld-wmy", `${rect.top + rect.height / 2}px`);
+      root.style.setProperty("--ld-wmy", `${cy}px`);
       root.style.setProperty("--ld-wmw", `${rect.width}px`);
+      // The lotus divider hangs under the wordmark and can run off the bottom
+      // of short screens: lift the pair just enough (its art has ~25% empty
+      // band at the bottom). The exit fades the brand out, so the small offset
+      // from the hero wordmark never shows.
+      const divider = root.querySelector<HTMLElement>(".ld-divider")?.getBoundingClientRect();
+      const overflow = divider?.height ? divider.bottom - divider.height * 0.25 - (window.innerHeight - 12) : 0;
+      if (overflow > 0) root.style.setProperty("--ld-wmy", `${cy - overflow}px`);
     };
     const schedule = () => {
       cancelAnimationFrame(frame);
@@ -106,6 +114,9 @@ export function SiteLoader() {
     const mounts = new MutationObserver(bindImage);
     mounts.observe(document.body, { childList: true, subtree: true });
     bindImage();
+    // The divider's height is only known once its art has loaded.
+    const dividerArt = root.querySelector<HTMLImageElement>(".ld-divider");
+    dividerArt?.addEventListener("load", schedule);
     window.addEventListener("resize", schedule);
     window.visualViewport?.addEventListener("resize", schedule);
     void document.fonts.ready.then(() => { if (!cancelled) schedule(); });
@@ -116,6 +127,7 @@ export function SiteLoader() {
       observer.disconnect();
       mounts.disconnect();
       image?.removeEventListener("load", schedule);
+      dividerArt?.removeEventListener("load", schedule);
       window.removeEventListener("resize", schedule);
       window.visualViewport?.removeEventListener("resize", schedule);
     };

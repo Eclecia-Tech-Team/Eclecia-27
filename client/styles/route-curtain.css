@@ -1,0 +1,108 @@
+/* === Route curtain (components/common/RouteCurtain.tsx) ======================
+   closing  the sky closes in on the eclipse (iris shrinking to its centre)
+   closed   the eclipse surfaces and turns slowly while the next page loads
+   opening  the iris opens from the eclipse's centre onto the new page
+   Durations come from the component (--rc-close / --rc-open).
+   ============================================================================ */
+
+@property --rc-iris {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+.route-curtain {
+  --rc-x: 50%;
+  --rc-y: 46%;
+  --S: clamp(150px, 24vmin, 250px);
+  position: fixed;
+  inset: 0;
+  z-index: 990;
+  overflow: hidden;
+  background: radial-gradient(circle at var(--rc-x) var(--rc-y), #120d07 0%, #050507 55%);
+  pointer-events: auto;
+  -webkit-mask-image: radial-gradient(circle at var(--rc-x) var(--rc-y), transparent var(--rc-iris), #000 calc(var(--rc-iris) + 8vmin));
+  mask-image: radial-gradient(circle at var(--rc-x) var(--rc-y), transparent var(--rc-iris), #000 calc(var(--rc-iris) + 8vmin));
+}
+.route-curtain[data-state="closing"] {
+  animation: rc-close var(--rc-close, 620ms) cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+.route-curtain[data-state="closed"] { --rc-iris: -8vmin; }
+.route-curtain[data-state="opening"] {
+  pointer-events: none;
+  animation: rc-open var(--rc-open, 900ms) cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+@keyframes rc-close {
+  from { --rc-iris: 130vmax; }
+  to { --rc-iris: -8vmin; }
+}
+@keyframes rc-open {
+  from { --rc-iris: -8vmin; }
+  to { --rc-iris: 130vmax; }
+}
+
+/* Eclipse, laid out like the hero's: moon, rays and the pendant mini sun. */
+.rc-eclipse {
+  position: absolute;
+  left: calc(var(--rc-x) - var(--S) / 2);
+  top: calc(var(--rc-y) - var(--S) / 2);
+  width: var(--S);
+  height: var(--S);
+  opacity: 0;
+}
+.rc-eclipse > * { position: absolute; max-width: none; user-select: none; }
+/* Only surfaces once shut, so a quick page swap reads as a plain dark beat. */
+.route-curtain[data-state="closed"] .rc-eclipse {
+  animation: rc-surface 700ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both;
+}
+.route-curtain[data-state="opening"] .rc-eclipse {
+  opacity: 1;
+  animation: rc-recede calc(var(--rc-open, 900ms) * 0.5) ease-in both;
+}
+@keyframes rc-surface {
+  from { opacity: 0; transform: scale(0.9); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes rc-recede {
+  to { opacity: 0; transform: scale(1.08); }
+}
+
+.rc-glow {
+  inset: -45%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(217, 164, 65, 0.16) 0%, rgba(217, 164, 65, 0.05) 40%, transparent 68%);
+  animation: rc-breathe 2.4s ease-in-out infinite alternate;
+}
+.rc-rays {
+  left: 0.5%;
+  top: 0.5%;
+  width: 99%;
+  height: 99%;
+  animation: rc-turn 22s linear infinite;
+}
+.rc-moon { inset: 0; width: 100%; height: 100%; }
+.rc-minisun {
+  /* Art is 133 x 199; centred 0.078 S below the moon's centre, as on the hero. */
+  left: calc(50% - var(--S) * 0.152);
+  top: calc(50% + var(--S) * 0.078 - var(--S) * 0.304 * 0.748);
+  width: calc(var(--S) * 0.304);
+  height: auto;
+  animation: rc-breathe 2.4s ease-in-out infinite alternate;
+}
+@keyframes rc-turn { to { rotate: 360deg; } }
+@keyframes rc-breathe {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-curtain { -webkit-mask-image: none; mask-image: none; }
+  .route-curtain[data-state="closing"] { animation: rc-fade-in 200ms ease both; }
+  .route-curtain[data-state="opening"] { animation: rc-fade-out 300ms ease both; }
+  .rc-rays,
+  .rc-glow,
+  .rc-minisun { animation: none; }
+  .route-curtain[data-state="closed"] .rc-eclipse { animation: rc-fade-in 200ms ease both; }
+}
+@keyframes rc-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rc-fade-out { to { opacity: 0; } }

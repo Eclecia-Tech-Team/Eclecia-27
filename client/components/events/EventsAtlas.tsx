@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/common/Header";
 import { atlasArt, type AtlasCategory } from "@/constants/events";
 import { ASSETS } from "@/constants/assets";
 import { saveAtlasSpot } from "./atlas/atlas-spot";
+import { curtainNavigate, holdCurtain } from "@/lib/route-curtain";
 import { mountAtlas } from "./atlas/engine";
 import { MobileEventsAtlas } from "./MobileEventsAtlas";
 import "@/styles/events-atlas.css";
@@ -36,14 +37,21 @@ export function EventsAtlas({ categories }: { categories: AtlasCategory[] }) {
 
   const discover = useCallback((category: string, event: string) => {
     saveAtlasSpot({ category, event });
-    router.push(`/events/${event}`);
+    const href = `/events/${event}`;
+    void curtainNavigate(href, () => router.push(href));
   }, [router]);
 
   useEffect(() => {
     // Keep the desktop engine and markup unchanged. Never start it on phones,
     // including the first hydration pass before the media store synchronizes.
     if (phone || window.matchMedia(phoneQuery).matches || !rootRef.current) return;
-    return mountAtlas(rootRef.current, { categories, onDiscover: discover });
+    // Keep the route curtain shut until the orbit's art has decoded.
+    const release = holdCurtain();
+    const dispose = mountAtlas(rootRef.current, { categories, onDiscover: discover, onReady: release });
+    return () => {
+      release();
+      dispose();
+    };
   }, [phone, categories, discover]);
 
   if (phone) return <><SiteHeader /><MobileEventsAtlas categories={categories} eventCount={eventCount} onDiscover={discover} /></>;

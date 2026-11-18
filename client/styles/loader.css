@@ -1,8 +1,10 @@
 /* === Opening loader: eclipse totality ======================================
    (components/common/loader). The intro is authored against a 4.2 s timeline
-   that starts at first paint; `.is-exit` plays the 0.8 s reveal (5 s total).
-   Keep in sync with LOADER.buildMs / exitMs in constants/loader.ts.
+   that starts at first paint; `.is-exit` plays the 0.8 s reveal. Every time
+   below is multiplied by --k (pace), so the real run is 4.2k + 0.8k s.
+   Keep in sync with LOADER.pace / buildMs / exitMs in constants/loader.ts.
 
+   (unscaled seconds)
    0.05  title card: presenter line, "presents"        → out 1.55
    0.55  gold dust drifts in and gathers into the sun  → sun born 1.15
    1.85  event categories light up under it           → out 2.80
@@ -25,6 +27,8 @@
   background: #050507;
   color: var(--parchment);
   pointer-events: auto;
+  /* Pace: stretches the whole timeline. LOADER.pace must match. */
+  --k: 1.35;
 }
 .site-loader > * { position: absolute; inset: 0; }
 
@@ -40,7 +44,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   height: 108%;
   object-fit: cover;
   opacity: 0;
-  animation: ld-sky-in 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.6s both;
+  animation: ld-sky-in calc(1.6s * var(--k)) cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.6s * var(--k)) both;
 }
 @keyframes ld-sky-in {
   from { opacity: 0; transform: scale(1.08); }
@@ -79,7 +83,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   gap: 10px;
   padding: 0 20px;
   text-align: center;
-  animation: ld-title-out 0.35s ease-in 1.55s both;
+  animation: ld-title-out calc(0.35s * var(--k)) ease-in calc(1.55s * var(--k)) both;
 }
 .ld-title-eyebrow {
   margin: 0;
@@ -89,14 +93,14 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   text-transform: uppercase;
   text-wrap: balance;
   color: rgba(236, 228, 210, 0.92);
-  animation: ld-track-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.05s both;
+  animation: ld-track-in calc(0.6s * var(--k)) cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.05s * var(--k)) both;
 }
 .ld-title-presents {
   margin: 0;
   font-size: clamp(26px, 7vw, 40px);
   line-height: 1;
   color: rgba(236, 228, 210, 0.85);
-  animation: ld-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) 0.35s both;
+  animation: ld-rise calc(0.5s * var(--k)) cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.35s * var(--k)) both;
 }
 @keyframes ld-title-out {
   to { opacity: 0; transform: translateY(-10px); filter: blur(4px); }
@@ -118,7 +122,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   background: radial-gradient(circle, #fff3cf 0%, #e9b154 45%, transparent 72%);
   box-shadow: 0 0 6px 1px rgba(233, 177, 84, 0.65);
   opacity: 0;
-  animation: ld-dust 0.7s cubic-bezier(0.55, 0, 0.9, 0.55) var(--d) both;
+  animation: ld-dust calc(0.7s * var(--k)) cubic-bezier(0.55, 0, 0.9, 0.55) var(--d) both;
 }
 @keyframes ld-dust {
   0% { opacity: 0; transform: translate(calc(var(--dx) * 1vmax), calc(var(--dy) * 1vmax)) scale(1.5); }
@@ -143,7 +147,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   padding: 0;
   max-width: min(90vw, 900px);
   list-style: none;
-  animation: ld-fade-out 0.3s ease-in 2.8s both;
+  animation: ld-fade-out calc(0.3s * var(--k)) ease-in calc(2.8s * var(--k)) both;
 }
 .ld-cats li {
   display: flex;
@@ -154,7 +158,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   color: var(--gold);
   text-shadow: 0 0 12px rgba(217, 164, 65, 0.45);
   opacity: 0;
-  animation: ld-cat-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) calc(1.85s + var(--i) * 0.08s) both;
+  animation: ld-cat-in calc(0.45s * var(--k)) cubic-bezier(0.2, 0.7, 0.2, 1) calc(calc(1.85s * var(--k)) + var(--i) * calc(0.08s * var(--k))) both;
 }
 /* Taiganja has no middle dot: a small gold lozenge separates the words. */
 .ld-cats li + li::before {
@@ -192,7 +196,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   width: var(--rw);
   height: var(--rw);
   opacity: 0;
-  animation: ld-rays-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.65s both;
+  animation: ld-rays-in calc(1s * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(2.65s * var(--k)) both;
 }
 @keyframes ld-rays-in {
   0% { opacity: 0; transform: scale(0.62) rotate(-28deg); filter: brightness(2.2) blur(6px); }
@@ -202,15 +206,29 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
 
 /* The painted sun replaces the procedural photosphere only. Its central disc
    fills the original moon; its rays extend beyond it until totality. The moon
-   finishes crossing at 2.65s, then the painted rays retract behind it. */
+   finishes crossing at 2.65s, then the painted crown dissolves behind it as
+   the corona blooms, so the two styles cross-fade instead of swapping.
+   --ld-sunk (boot script) shrinks it on short, wide viewports, where the
+   eclipse sits high and the crown would run off the top edge. */
 .ld-sun {
   left: -7%;
   top: -7%;
   width: 114%;
   height: 114%;
+  scale: var(--ld-sunk, 1);
   animation:
-    ld-sun-born 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 1.15s both,
-    ld-painted-shrink 0.8s cubic-bezier(0.4, 0, 0.2, 1) 2.65s forwards;
+    ld-sun-born calc(0.9s * var(--k)) cubic-bezier(0.22, 1, 0.36, 1) calc(1.1s * var(--k)) both,
+    ld-painted-fade calc(0.9s * var(--k)) cubic-bezier(0.4, 0, 0.2, 1) calc(2.6s * var(--k)) forwards;
+}
+/* Warm light behind the disc, kept low so the art stays the star. */
+.ld-sun::before {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(233, 177, 84, 0.32) 0%, rgba(217, 130, 50, 0.12) 45%, transparent 70%);
+  scale: 1.5;
+  animation: ld-sun-breathe calc(1.6s * var(--k)) ease-in-out calc(1.4s * var(--k)) both alternate 2;
 }
 .ld-sun-art {
   position: absolute;
@@ -218,14 +236,25 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   width: 100%;
   height: 100%;
   object-fit: contain;
+  /* Slightly calmer than the raw art, plus a slow turn while it is lit. */
+  filter: saturate(0.9) drop-shadow(0 0 calc(var(--S) * 0.03) rgba(233, 177, 84, 0.35));
+  animation: ld-sun-turn calc(2.5s * var(--k)) linear calc(1.1s * var(--k)) both;
 }
 @keyframes ld-sun-born {
-  from { opacity: 0; transform: scale(0.2); }
-  to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: scale(0.6); filter: blur(10px) brightness(1.5); }
+  to { opacity: 1; transform: scale(1); filter: blur(0) brightness(1); }
 }
-@keyframes ld-painted-shrink {
-  from { transform: scale(1); }
-  to { transform: scale(0.5); }
+@keyframes ld-sun-breathe {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+@keyframes ld-sun-turn {
+  from { rotate: -10deg; }
+  to { rotate: 8deg; }
+}
+@keyframes ld-painted-fade {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.62); opacity: 0; }
 }
 
 /* The moon crosses from lower-left: first to second contact. */
@@ -233,7 +262,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   inset: 0;
   width: 100%;
   height: 100%;
-  animation: ld-moon-cross 0.95s cubic-bezier(0.55, 0, 0.2, 1) 1.7s both;
+  animation: ld-moon-cross calc(0.95s * var(--k)) cubic-bezier(0.55, 0, 0.2, 1) calc(1.7s * var(--k)) both;
 }
 @keyframes ld-moon-cross {
   0% { opacity: 0; transform: translate(-82%, 26%); }
@@ -253,7 +282,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
     linear-gradient(90deg, transparent 0 20%, rgba(255, 240, 210, 0.9) 50%, transparent 80% 100%) center / 100% 2% no-repeat,
     linear-gradient(0deg, transparent 0 30%, rgba(255, 240, 210, 0.8) 50%, transparent 70% 100%) center / 1.5% 100% no-repeat;
   mix-blend-mode: screen;
-  animation: ld-diamond 0.6s cubic-bezier(0.2, 0.8, 0.3, 1) 2.5s both;
+  animation: ld-diamond calc(0.6s * var(--k)) cubic-bezier(0.2, 0.8, 0.3, 1) calc(2.5s * var(--k)) both;
 }
 @keyframes ld-diamond {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(0); }
@@ -269,7 +298,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   width: var(--sw);
   height: auto;
   opacity: 0;
-  animation: ld-bloom 0.7s cubic-bezier(0.16, 1, 0.3, 1) 3s both;
+  animation: ld-bloom calc(0.7s * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(3s * var(--k)) both;
 }
 @keyframes ld-bloom {
   from { opacity: 0; transform: scale(0.55); filter: brightness(2) blur(4px); }
@@ -286,7 +315,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   height: auto;
   filter: drop-shadow(0 0 18px rgba(217, 164, 65, 0.25));
   opacity: 0;
-  animation: ld-figure-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) calc(2.55s + var(--i) * 0.08s) both;
+  animation: ld-figure-up calc(0.9s * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(calc(2.55s * var(--k)) + var(--i) * calc(0.08s * var(--k))) both;
 }
 .ld-figure--veena { left: -1.5%; bottom: -2%; width: min(32vw, 400px); }
 .ld-figure--hand { right: -1%; bottom: -3%; width: min(20vw, 250px); }
@@ -332,7 +361,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   position: absolute;
   left: var(--ld-wmx, 50vw);
   top: var(--ld-wmy, calc((100svh + var(--my) + var(--S) * 0.55) / 2));
-  width: var(--ld-wmw, min(70vw, 520px));
+  width: var(--ld-wmw, min(70vw, 640px));
   transform: translate(-50%, -50%);
   z-index: 2;
 }
@@ -342,7 +371,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   /* Brush stroke: a soft edge sweeps left to right. */
   -webkit-mask: linear-gradient(100deg, #000 44%, transparent 56%) 100% 0 / 260% 100% no-repeat;
   mask: linear-gradient(100deg, #000 44%, transparent 56%) 100% 0 / 260% 100% no-repeat;
-  animation: ld-brush 0.8s cubic-bezier(0.5, 0, 0.3, 1) 3s both;
+  animation: ld-brush calc(0.8s * var(--k)) cubic-bezier(0.5, 0, 0.3, 1) calc(3s * var(--k)) both;
 }
 .ld-wordmark { display: block; width: 100%; height: auto; }
 @keyframes ld-brush {
@@ -358,7 +387,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   background: linear-gradient(100deg, transparent 38%, rgba(255, 244, 214, 0.9) 48%, rgba(255, 220, 150, 0.4) 53%, transparent 62%) 100% 0 / 300% 100% no-repeat;
   mix-blend-mode: screen;
   opacity: 0;
-  animation: ld-glint 0.75s ease-in-out 3.3s both;
+  animation: ld-glint calc(0.75s * var(--k)) ease-in-out calc(3.3s * var(--k)) both;
 }
 @keyframes ld-glint {
   0% { opacity: 1; background-position: 100% 0; }
@@ -373,7 +402,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
   height: auto;
   /* The divider art has wide transparent bands above and below the lotus. */
   margin: -9% 0 -8%;
-  animation: ld-unfurl 0.6s cubic-bezier(0.65, 0, 0.35, 1) 3.6s both;
+  animation: ld-unfurl calc(0.6s * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) calc(3.6s * var(--k)) both;
 }
 @keyframes ld-unfurl {
   from { clip-path: inset(0 50% 0 50%); opacity: 0.4; }
@@ -387,7 +416,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
 .site-loader.is-exit {
   -webkit-mask-image: radial-gradient(circle at var(--ld-mx, 50%) var(--ld-my, 30%), transparent var(--ld-iris), #000 calc(var(--ld-iris) + 6vmin));
   mask-image: radial-gradient(circle at var(--ld-mx, 50%) var(--ld-my, 30%), transparent var(--ld-iris), #000 calc(var(--ld-iris) + 6vmin));
-  animation: ld-iris 0.8s cubic-bezier(0.65, 0, 0.35, 1) both;
+  animation: ld-iris calc(0.8s * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both;
 }
 @keyframes ld-iris {
   from { --ld-iris: -6vmin; }
@@ -395,7 +424,7 @@ html:not([data-loader-skip]):has(.site-loader:not(.is-exit)) { overflow: hidden;
 }
 .is-exit .ld-caption,
 .is-exit .ld-brand,
-.is-exit .ld-figures { animation: ld-fade-out 0.4s ease-in both; }
+.is-exit .ld-figures { animation: ld-fade-out calc(0.4s * var(--k)) ease-in both; }
 
 /* ---------------------------------------------------------------------------
    Shared

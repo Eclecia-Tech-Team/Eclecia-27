@@ -12,7 +12,9 @@ const LAYERS = ["moon", "rays", "minisun"] as const;
  *  - otherwise pins the loader's eclipse onto the hero eclipse's viewport
  *    rect (--ld-{m,r,s}{x,y,w}: centre + width of moon, rays, mini sun),
  *    using the same cover-scale and layout-tier rules as app/page.tsx, so the
- *    exit iris hands over to an identical eclipse underneath.
+ *    exit iris hands over to an identical eclipse underneath;
+ *  - sets --ld-sunk, the painted sun's scale: below 1 when the eclipse sits so
+ *    high that the sun's crown (~0.43 x moon width) would cross the top edge.
  */
 export function loaderBootScript(): string {
   if (process.env.NEXT_PUBLIC_ENABLE_LOADER !== "true") {
@@ -46,6 +48,8 @@ r.style.setProperty("--ld-"+k+"x",ox+p[i][0]*s+"px");
 r.style.setProperty("--ld-"+k+"y",oy+p[i][1]*s+"px");
 r.style.setProperty("--ld-"+k+"w",p[i][2]*s+"px");
 });
+var my=oy+p[0][1]*s,mw=p[0][2]*s;
+r.style.setProperty("--ld-sunk",Math.max(.6,Math.min(1,(my-20)/(mw*.43))).toFixed(3));
 }
 fit();addEventListener("resize",fit);window.visualViewport&&visualViewport.addEventListener("resize",fit);
 })(${JSON.stringify(data)})`;

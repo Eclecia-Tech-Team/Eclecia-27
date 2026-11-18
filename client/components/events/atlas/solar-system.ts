@@ -149,20 +149,31 @@ export class SolarSystem {
     this.nodes.forEach((node) => node.remove());
   }
 
-  resize(w: number, h: number) {
+  /**
+   * `bottomReserve`: px the front world's caption needs under it. On short,
+   * wide desktop viewports the camera backs off until world + caption fit
+   * above the bottom edge, rather than the caption running off-screen.
+   */
+  resize(w: number, h: number, bottomReserve = 0) {
     this.small = w <= 760;
-    const distance = this.small ? Math.max(42, 21.5 / (w / h)) : Math.max(19, 27 / (w / h));
-    // Offset lifts the composition, reserving space for the larger foreground world.
-    this.project = makeCamera({
-      position: [0, distance * (this.small ? 0.4 : 0.31), distance],
-      target: [0, this.small ? 0 : 0.2, 0],
-      roll: this.small ? -0.58 : -0.16,
-      fov: this.small ? 49 : 48,
-      width: w,
-      height: h,
-      offsetY: h * (this.small ? -0.09 : 0.1),
-    });
-    this.layoutArtwork();
+    let distance = this.small ? Math.max(42, 21.5 / (w / h)) : Math.max(19, 27 / (w / h));
+    for (let attempt = 0; ; attempt++) {
+      // Offset lifts the composition, reserving space for the larger foreground world.
+      this.project = makeCamera({
+        position: [0, distance * (this.small ? 0.4 : 0.31), distance],
+        target: [0, this.small ? 0 : 0.2, 0],
+        roll: this.small ? -0.58 : -0.16,
+        fov: this.small ? 49 : 48,
+        width: w,
+        height: h,
+        offsetY: h * (this.small ? -0.09 : 0.1),
+      });
+      this.layoutArtwork();
+      if (this.small || !bottomReserve || attempt >= 12) break;
+      const front = this.frontSlot();
+      if (front.y + front.size / 2 + bottomReserve <= h - 14) break;
+      distance *= 1.04;
+    }
   }
 
   private layoutArtwork() {
