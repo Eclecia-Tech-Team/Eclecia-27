@@ -25,6 +25,13 @@ import { ASSETS } from "@/constants/assets";
 
 const FRAME = cfg.frame;
 
+/** Viewport px the hero keeps clear at the bottom for the scroll cue. */
+const CUE_RESERVE_PX = 64;
+/** Frame px of hero copy besides the wordmark: presenter line, "presents", gaps. */
+const HERO_COPY_PX = 64;
+/** Desktop hero wordmark height range, frame px. */
+const HERO_WORDMARK = { min: 170, max: 340 } as const;
+
 /** Natural placement of each asset (Figma rect, frame coords) + its source. */
 type Layer = {
   asset: AssetId;
@@ -619,6 +626,21 @@ export default function Home() {
         bottom: Math.min(FRAME.height, (h - frameTop) / scale),
       };
 
+  // Desktop hero: fill the band between the eclipse's lower rim and the scroll
+  // cue with the wordmark, instead of a fixed vh cap that leaves it small on
+  // wide, short laptop screens.
+  const heroLayout = (() => {
+    if (mobile) return null;
+    const moon = poseAt("moon", 0, mode);
+    const top = moon.y + moon.w * 0.36 + 10;
+    const bottom = Math.min(bounds.bottom, (h - CUE_RESERVE_PX - frameTop) / scale);
+    const wordmarkH = Math.min(
+      HERO_WORDMARK.max,
+      Math.max(HERO_WORDMARK.min, bottom - top - HERO_COPY_PX),
+    );
+    return { rect: { ...cfg.text.hero.rect, y: (top + bottom) / 2 }, wordmarkH };
+  })();
+
   // Tablets: phone markup, scaled up (see cfg.panelScaleMax). Phones: 1.
   const panelScale = mobile
     ? Math.min(cfg.panelScaleMax, Math.max(1, Math.min(w / 520, h / 720)))
@@ -647,7 +669,8 @@ export default function Home() {
       <HeroSection
         opacity={heroO}
         emerge={emergeFor(cfg.text.hero.fadeIn)}
-        rect={rectFor("hero")}
+        rect={heroLayout?.rect ?? rectFor("hero")}
+        wordmarkH={heroLayout?.wordmarkH}
         bounds={bounds}
         compact={mobile}
         scale={panelScale}

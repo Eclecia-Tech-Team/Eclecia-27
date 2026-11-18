@@ -27,10 +27,31 @@ const CATEGORY_ORDER = [
 export const eventLookup = (id: string) =>
   /^[a-f\d]{24}$/i.test(id) ? { _id: id } : { slug: id.toLowerCase() };
 
-/** The seven worlds — category copy from MongoDB, events from Mongo or canonical defaults. */
+/** How long one server instance reuses the atlas line-up before re-reading Mongo. */
+const ATLAS_TTL_MS = 60_000;
+let atlasCache: { at: number; value: Promise<AtlasCategory[]> } | null = null;
+
+/**
+ * The seven worlds — category copy from MongoDB, events from Mongo or
+ * canonical defaults. Rendered per request, but the database read is shared
+ * for a minute so navigating to /events doesn't wait on Mongo every time.
+ */
 export async function getAtlasCategories(): Promise<AtlasCategory[]> {
   // Read per request: a prerender would need the database at build time.
   await connection();
+  const now = Date.now();
+  if (!atlasCache || now - atlasCache.at > ATLAS_TTL_MS) {
+    const value = readAtlasCategories();
+    atlasCache = { at: now, value };
+    // Never keep a failed read: the next request retries.
+    value.catch(() => {
+      if (atlasCache?.value === value) atlasCache = null;
+    });
+  }
+  return atlasCache.value;
+}
+
+async function readAtlasCategories(): Promise<AtlasCategory[]> {
   await connect();
 
   // Fetch categories from MongoDB; fall back to constants if collection is empty.

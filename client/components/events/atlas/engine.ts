@@ -1,5 +1,6 @@
 import { atlasArt, type AtlasCategory } from "@/constants/events";
 import { clearAtlasSpot, readAtlasSpot } from "./atlas-spot";
+import { LOADER } from "@/constants/loader";
 import { SolarSystem, type OrbitPoint } from "./solar-system";
 
 /*
@@ -26,9 +27,11 @@ const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 export interface AtlasOptions {
   categories: AtlasCategory[];
   onDiscover: (categoryId: string, eventId: string) => void;
+  /** Called once the first view's art has decoded (or after 2.5 s). */
+  onReady?: () => void;
 }
 
-export function mountAtlas(root: HTMLElement, { categories: data, onDiscover }: AtlasOptions): () => void {
+export function mountAtlas(root: HTMLElement, { categories: data, onDiscover, onReady }: AtlasOptions): () => void {
   const controller = new AbortController();
   const { signal } = controller;
   const on = <T extends Event>(
@@ -195,11 +198,14 @@ export function mountAtlas(root: HTMLElement, { categories: data, onDiscover }: 
   const planetSize = () =>
     mobile() ? Math.min(innerWidth * 0.78, innerHeight * 0.44) : Math.min(innerWidth * 0.47, innerHeight * 0.76, 730);
 
+  let captionReserve = 0;
   function layout() {
     // A hidden or collapsing viewport can report 0 × 0; projecting with it
     // yields NaN geometry, so keep the last good layout until it is real.
     if (!innerWidth || !innerHeight) return;
-    solar?.resize(innerWidth, innerHeight);
+    // Caption sits 8px under the front world (see renderOrbit).
+    captionReserve = mobile() ? 0 : frontCaption.offsetHeight + 8;
+    solar?.resize(innerWidth, innerHeight, captionReserve);
     orbitReady = true;
     renderOrbit();
     if (category) {
@@ -251,6 +257,9 @@ export function mountAtlas(root: HTMLElement, { categories: data, onDiscover }: 
       const countEl = frontCaption.querySelector(".category-count");
       if (kindEl) kindEl.textContent = frontWorld.kind;
       if (countEl) countEl.textContent = `${frontWorld.events.length} events`;
+      // The first caption text (or a webfont swap) changes its height: refit
+      // the camera so it still clears the bottom edge.
+      if (!small && Math.abs(frontCaption.offsetHeight + 8 - captionReserve) > 4) requestAnimationFrame(layout);
     }
     if (solar) {
       const slot = solar.frontSlot();
@@ -895,20 +904,27 @@ export function mountAtlas(root: HTMLElement, { categories: data, onDiscover }: 
   }
 
   layout();
+  void document.fonts.ready.then(() => {
+    if (!disposed) layout();
+  });
   rafId = requestAnimationFrame(frame);
   const initialImages = [...root.querySelectorAll<HTMLImageElement>("#category-worlds img,.asset-eclipse img,.asset-orbits")];
   const imagesReady = decoded(initialImages, 2500).then(() => {
-    if (!disposed) loadStatus.hidden = true;
+    if (disposed) return;
+    loadStatus.hidden = true;
+    onReady?.();
   });
   loadTimeout = window.setTimeout(() => (loadStatus.hidden = true), 8000);
 
-  // The site's opening loader may still be covering the page on a first
-  // visit; start the entrance as its iris opens so the eclipses hand over.
+  // The site's opening loader (first visit) or the route curtain (arriving
+  // from another page) may still be covering the page; start the entrance as
+  // its iris opens so the eclipses hand over.
   const loaderDone = () =>
     new Promise<void>((resolve) => {
       const settled = () => {
         const loader = document.querySelector(".site-loader");
-        return !loader || loader.classList.contains("is-exit");
+        const curtain = document.querySelector<HTMLElement>(".route-curtain");
+        return (!loader || loader.classList.contains("is-exit")) && (!curtain || curtain.dataset.state === "opening");
       };
       if (settled()) return resolve();
       const observer = new MutationObserver(() => {
@@ -916,12 +932,12 @@ export function mountAtlas(root: HTMLElement, { categories: data, onDiscover }: 
         observer.disconnect();
         resolve();
       });
-      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "data-state"] });
       signal.addEventListener("abort", () => observer.disconnect());
       window.setTimeout(() => {
         observer.disconnect();
         resolve();
-      }, 7500);
+      }, LOADER.maxWaitMs + LOADER.exitMs);
     });
 
   /**

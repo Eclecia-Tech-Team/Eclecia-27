@@ -191,7 +191,11 @@ export function HeroSection({
   bounds,
   compact,
   scale,
-}: SectionProps) {
+  wordmarkH,
+}: SectionProps & {
+  /** Desktop wordmark height in frame px, sized to the free band by the page. */
+  wordmarkH?: number;
+}) {
   const c = cfg.text.hero;
   return (
     <Overlay
@@ -240,8 +244,11 @@ export function HeroSection({
             className={`relative select-none object-contain ${
               compact
                 ? "h-40 sm:h-48 w-auto max-w-[96vw] drop-shadow-xl"
-                : "h-48 md:h-56 lg:h-64 max-h-[24vh] w-auto drop-shadow-2xl"
+                : wordmarkH
+                  ? "w-auto drop-shadow-2xl"
+                  : "h-48 md:h-56 lg:h-64 max-h-[24vh] w-auto drop-shadow-2xl"
             }`}
+            style={!compact && wordmarkH ? { height: wordmarkH } : undefined}
           />
         </div>
       </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { curtainNavigate } from "@/lib/route-curtain";
 
 export interface TransitionLinkProps extends React.ComponentProps<typeof Link> {
   href: string;
@@ -30,17 +31,8 @@ export function TransitionLink({
     }
 
     e.preventDefault();
-
-    const doc = document as Document & {
-      startViewTransition?: (cb: () => void) => unknown;
-    };
-    if (typeof doc.startViewTransition === "function") {
-      doc.startViewTransition(() => {
-        router.push(href);
-      });
-    } else {
-      router.push(href);
-    }
+    // The route curtain covers the swap while the next page loads.
+    void curtainNavigate(href, () => router.push(href));
   };
 
   return (

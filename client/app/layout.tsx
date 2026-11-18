@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "@/styles/globals.css";
 import { ASSETS } from "@/constants/assets";
 import { SiteLoader } from "@/components/common/loader/SiteLoader";
+import { RouteCurtain } from "@/components/common/RouteCurtain";
 import { loaderBootScript } from "@/components/common/loader/bootScript";
 import { Providers } from "@/app/providers";
 import { SEO_KEYWORDS, getStructuredData, getBreadcrumbJsonLd } from "@/constants/seo";
@@ -192,7 +193,11 @@ export default function RootLayout({
           }
           fetchPriority="high"
         />
-        <link rel="preload" as="image" href={ASSETS.cloudinary.wordmarkBlacker} />
+        <link
+          rel="preload"
+          as="image"
+          href={ASSETS.cloudinary.wordmarkBlacker}
+        />
         <link rel="preload" as="image" href={ASSETS.cloudinary.blacksun} />
         <link rel="preload" as="image" href={ASSETS.cloudinary.minisun} />
         <link rel="preload" as="image" href={ASSETS.cloudinary.veena} />
@@ -202,6 +207,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <SiteLoader />
+        <RouteCurtain />
         <Providers>{children}</Providers>
       </body>
     </html>
