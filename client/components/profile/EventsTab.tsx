@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import ConfirmationModal from "./ConfirmationModal";
 import type { Registration } from "@/types/interface";
-import { GoldActionButton } from "@/components/common/GoldButton";
+import { ASSETS } from "@/constants/assets";
 
 export default function EventsTab() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -94,7 +94,7 @@ export default function EventsTab() {
             <span className="text-gold font-semibold">
               {modalReg?.eventId.eventName}
             </span>
-            ? This action cannot be undone.
+            ? This action cannot be reversed.
           </p>
         }
         onConfirm={handleDeregister}
@@ -102,134 +102,144 @@ export default function EventsTab() {
         loading={Boolean(deregisteringId)}
       />
 
-      <div className="relative rounded-2xl border border-gold/40 bg-[#070b0e]/90 p-5 sm:p-8 backdrop-blur-md shadow-[0_24px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(217,164,65,0.08)]">
-        <div className="pointer-events-none absolute inset-1.5 rounded-xl border border-gold/15" />
-
-        <div className="relative z-10 space-y-6">
-          <div className="text-center space-y-1">
+      <div className="profile-chamber-card p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gold/20 pb-4 gap-2">
+          <div>
             <h2 className="font-nasyhama text-2xl sm:text-3xl text-gold">
-              My Registered Events
+              Registered Quests
             </h2>
-            <p className="font-taiganja text-xs uppercase tracking-[0.25em] text-parchment/60">
-              The cosmic journeys you have embarked upon
+            <p className="font-taiganja text-[11px] uppercase tracking-[0.25em] text-parchment/60">
+              Active entries recorded in the festival ledger
             </p>
           </div>
+          <span className="font-mono text-xs text-gold/70 tracking-wider">
+            TOTAL: {registrations.length.toString().padStart(2, "0")}
+          </span>
+        </div>
 
-          {notification && (
-            <div
-              className={`p-3 rounded-lg text-sm text-center border font-taiganja tracking-wider ${
-                notification.type === "success"
-                  ? "bg-green-950/40 border-green-500/40 text-green-300"
-                  : "bg-red-950/40 border-red-500/40 text-red-300"
-              }`}
-            >
-              {notification.message}
-            </div>
-          )}
+        {notification && (
+          <div
+            className={`p-3 text-xs text-center border font-taiganja tracking-wider ${
+              notification.type === "success"
+                ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-300"
+                : "bg-red-950/40 border-red-500/40 text-red-300"
+            }`}
+          >
+            {notification.message}
+          </div>
+        )}
 
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              <div className="w-10 h-10 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-              <p className="font-taiganja text-xs uppercase tracking-widest text-parchment/60">
-                Summoning your event logs...
-              </p>
-            </div>
-          ) : registrations.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
-              {registrations.map((reg) => (
-                <div
-                  key={reg._id}
-                  className="relative rounded-xl border border-gold/30 bg-black/40 p-4 transition-all duration-300 hover:border-gold/60 hover:bg-black/60 flex flex-col justify-between"
-                >
-                  <div className="space-y-3">
-                    {reg.eventId.banner && (
-                      <div className="relative w-full h-36 rounded-lg overflow-hidden border border-gold/20">
-                        <img
-                          src={reg.eventId.banner}
-                          alt={reg.eventId.eventName}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-
-                    <div>
-                      <h3 className="font-nasyhama text-xl text-gold">
-                        {reg.eventId.eventName}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="px-2 py-0.5 rounded-full text-[11px] font-taiganja tracking-wider bg-gold/15 text-gold border border-gold/30">
-                          {reg.eventId.category}
-                        </span>
-                        {reg.isInTeam ? (
-                          <span className="px-2 py-0.5 rounded-full text-[11px] font-taiganja tracking-wider bg-cyan-950/40 text-cyan-300 border border-cyan-500/30">
-                            Team Event
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[11px] font-taiganja tracking-wider bg-parchment/10 text-parchment/70 border border-parchment/20">
-                            Solo
-                          </span>
-                        )}
-                      </div>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-3">
+            <div className="w-8 h-8 border-2 border-gold border-t-transparent animate-spin" />
+            <p className="font-taiganja text-[11px] uppercase tracking-widest text-parchment/60">
+              Retrieving ledger records...
+            </p>
+          </div>
+        ) : registrations.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+            {registrations.map((reg) => (
+              <div
+                key={reg._id}
+                className="relative border border-gold/30 bg-[#090d12]/70 p-4 transition-all duration-300 hover:border-gold/60 hover:bg-[#0d141c]/80 flex flex-col justify-between"
+              >
+                <div className="space-y-3">
+                  {reg.eventId.banner && (
+                    <div className="relative w-full h-36 overflow-hidden border border-gold/25">
+                      <img
+                        src={reg.eventId.banner}
+                        alt={reg.eventId.eventName}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
+                  )}
 
-                    <div className="space-y-1 text-xs text-parchment/80 font-serif">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gold">✦</span>
-                        <span>Date: {reg.eventId.date || "TBA"}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gold">✦</span>
-                        <span>Time: {reg.eventId.time || "TBA"}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gold">✦</span>
-                        <span>Venue: {reg.eventId.venue || "TBA"}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 mt-3 border-t border-gold/20 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-xs font-taiganja tracking-wider">
-                      <span className="text-parchment/50">
-                        {new Date(reg.createdAt).toLocaleDateString()}
+                  <div>
+                    <h3 className="font-nasyhama text-xl text-gold">
+                      {reg.eventId.eventName}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <span className="profile-arch-tag">
+                        {reg.eventId.category}
                       </span>
-                      {reg.verified ? (
-                        <span className="text-emerald-400 flex items-center gap-1">
-                          ✓ Verified
+                      {reg.isInTeam ? (
+                        <span className="profile-arch-tag text-cyan-300 border-cyan-500/40 bg-cyan-950/30">
+                          TEAM ENTRY
                         </span>
                       ) : (
-                        <span className="text-amber-300/80 flex items-center gap-1">
-                          ⏳ Pending
+                        <span className="profile-arch-tag text-parchment/70 border-parchment/30">
+                          SOLO
                         </span>
                       )}
                     </div>
+                  </div>
 
-                    {canDeregister(reg) && (
-                      <button
-                        type="button"
-                        onClick={() => setModalRegId(reg._id)}
-                        disabled={Boolean(deregisteringId)}
-                        className="mt-1 w-full py-1.5 rounded border border-red-500/30 bg-red-950/20 text-red-300 hover:bg-red-900/30 hover:border-red-500/50 text-xs font-taiganja uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        De-Register
-                      </button>
-                    )}
+                  <div className="space-y-1 text-xs text-parchment/80 font-serif pt-1 border-t border-gold/15">
+                    <div className="flex justify-between py-0.5">
+                      <span className="font-taiganja text-[10px] text-gold/60 uppercase tracking-wider">
+                        DATE
+                      </span>
+                      <span>{reg.eventId.date || "TBA"}</span>
+                    </div>
+                    <div className="flex justify-between py-0.5">
+                      <span className="font-taiganja text-[10px] text-gold/60 uppercase tracking-wider">
+                        TIME
+                      </span>
+                      <span>{reg.eventId.time || "TBA"}</span>
+                    </div>
+                    <div className="flex justify-between py-0.5">
+                      <span className="font-taiganja text-[10px] text-gold/60 uppercase tracking-wider">
+                        VENUE
+                      </span>
+                      <span>{reg.eventId.venue || "TBA"}</span>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 space-y-3 text-center">
-              <div className="text-4xl text-gold/60">✦</div>
-              <h3 className="font-nasyhama text-2xl text-parchment">
-                No Celestial Quests Yet
-              </h3>
-              <p className="font-taiganja text-xs uppercase tracking-widest text-parchment/50">
-                Explore the Events Atlas and register for competitions to see them here
-              </p>
-            </div>
-          )}
-        </div>
+
+                <div className="pt-3 mt-3 border-t border-gold/20 flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-[11px] font-taiganja tracking-wider">
+                    <span className="text-parchment/50">
+                      REG: {new Date(reg.createdAt).toLocaleDateString()}
+                    </span>
+                    <span
+                      className={`profile-arch-tag ${
+                        reg.verified ? "text-emerald-300 border-emerald-500/40" : "text-amber-300 border-amber-500/40"
+                      }`}
+                    >
+                      {reg.verified ? "VERIFIED" : "PENDING"}
+                    </span>
+                  </div>
+
+                  {canDeregister(reg) && (
+                    <button
+                      type="button"
+                      onClick={() => setModalRegId(reg._id)}
+                      disabled={Boolean(deregisteringId)}
+                      className="mt-1 w-full py-1.5 border border-red-500/40 bg-red-950/20 text-red-300 hover:bg-red-900/30 hover:border-red-500 text-[10px] font-taiganja uppercase tracking-[0.2em] transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      De-Register Entry
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 space-y-3 text-center">
+            <img
+              src={ASSETS.cloudinary.divider}
+              alt=""
+              aria-hidden
+              className="-my-2 w-48 opacity-60 pointer-events-none"
+            />
+            <h3 className="font-nasyhama text-2xl text-parchment">
+              No Quests Recorded
+            </h3>
+            <p className="font-taiganja text-[11px] uppercase tracking-widest text-parchment/50 max-w-sm">
+              Explore the Events Atlas to enlist in competitions and live showcases.
+            </p>
+          </div>
+        )}
       </div>
     </>
   );

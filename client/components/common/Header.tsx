@@ -9,6 +9,7 @@ import { GoldButton } from "./GoldButton";
 import { NAV_ITEMS, SOCIAL_LINKS } from "@/constants/navigation";
 import { ASSETS } from "@/constants/assets";
 import { getAvatarSrc } from "@/constants/avatars";
+import "@/styles/profile.css";
 
 export type SiteHeaderProps = {
   /** 0..1; landing fades it in with scroll. */
@@ -115,24 +116,32 @@ export function SiteHeader({ opacity = 1 }: SiteHeaderProps) {
           {/* Desktop Right Action */}
           <div className="hidden xl:block">
             {status === "loading" ? (
-              <div className="h-9 w-24 rounded-full bg-gold/10 border border-gold/20 animate-pulse" />
+              <div className="h-9 w-28 bg-gold/10 border border-gold/20 animate-pulse" />
             ) : user ? (
               <TransitionLink
                 href="/profile"
-                className="group relative flex items-center gap-2.5 rounded-full border border-gold/40 bg-black/60 py-1 pl-1.5 pr-4 transition-all duration-300 hover:border-gold hover:bg-gold/15 hover:shadow-[0_0_15px_rgba(217,164,65,0.3)]"
-                title="View Profile"
-                aria-label="View Profile"
+                className="header-profile-btn group"
+                title="View Profile Dossier"
+                aria-label="View Profile Dossier"
               >
-                <div className="relative h-8 w-8 overflow-hidden rounded-full border border-gold shadow-[0_0_8px_rgba(217,164,65,0.4)]">
+                <div className="relative h-7 w-7 overflow-hidden border border-gold/70 shadow-[0_0_8px_rgba(217,164,65,0.3)] bg-black shrink-0">
                   <img
                     src={getAvatarSrc(user.avatar)}
-                    alt={user.username || "Profile"}
+                    alt={user.username || user.name || "Profile"}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                   />
                 </div>
-                <span className="font-taiganja text-xs uppercase tracking-[0.2em] text-gold transition-colors group-hover:text-parchment max-w-[120px] truncate">
-                  {user.username || "Profile"}
-                </span>
+                <div className="flex flex-col text-left">
+                  <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 leading-none">
+                    Celestial Citizen
+                  </span>
+                  <span className="font-taiganja text-[12px] uppercase tracking-[0.18em] text-gold transition-colors group-hover:text-parchment max-w-[140px] truncate leading-tight pt-0.5">
+                    {user.username || user.name || "Profile"}
+                  </span>
+                </div>
+                {/* <span className="text-gold/70 text-xs pl-0.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-gold">
+                  →
+                </span> */}
               </TransitionLink>
             ) : (
               <GoldButton href="/login" variant="ghost" size="sm">
@@ -145,14 +154,14 @@ export function SiteHeader({ opacity = 1 }: SiteHeaderProps) {
           {user && (
             <TransitionLink
               href="/profile"
-              className="xl:hidden h-8.5 w-8.5 overflow-hidden rounded-full border border-gold shadow-[0_0_8px_rgba(217,164,65,0.3)] flex items-center justify-center bg-black"
+              className="header-profile-mobile-btn xl:hidden"
               aria-label="Open profile"
               title="Open profile"
             >
               <img
                 src={getAvatarSrc(user.avatar)}
-                alt="Profile"
-                className="h-full w-full object-cover"
+                alt={user.username || user.name || "Profile"}
+                className="h-6 w-6 object-cover"
               />
             </TransitionLink>
           )}
@@ -210,31 +219,9 @@ export function SiteHeader({ opacity = 1 }: SiteHeaderProps) {
           })}
         </nav>
 
-        {/* Join Us / Profile CTA in Mobile Drawer */}
-        <div className="mt-8 flex justify-center">
-          {user ? (
-            <TransitionLink
-              href="/profile"
-              onClick={() => setMobileMenuOpen(false)}
-              className="group flex items-center gap-3 rounded-full border border-gold/50 bg-black/80 px-6 py-2.5 shadow-[0_0_20px_rgba(217,164,65,0.25)] transition-all hover:border-gold hover:bg-gold/15"
-            >
-              <div className="h-9 w-9 overflow-hidden rounded-full border border-gold shadow-sm">
-                <img
-                  src={getAvatarSrc(user.avatar)}
-                  alt={user.username || "Profile"}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/70">
-                  Account
-                </span>
-                <span className="font-nasyhama text-lg text-gold group-hover:text-parchment">
-                  {user.username || "View Profile"}
-                </span>
-              </div>
-            </TransitionLink>
-          ) : (
+        {/* Join Us CTA in Mobile Drawer (Only shown when not signed in; mobile header already has the profile icon) */}
+        {!user && (
+          <div className="mt-8 flex justify-center">
             <GoldButton
               href="/login"
               variant="solid"
@@ -243,8 +230,8 @@ export function SiteHeader({ opacity = 1 }: SiteHeaderProps) {
             >
               Join Us
             </GoldButton>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </>
   );

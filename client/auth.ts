@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import type { Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import mongoose from "mongoose";
 import connect from "@/lib/mongoose";
 import User from "@/lib/models/User";
 import { signInSchema } from "@/lib/validations/auth";
@@ -150,7 +151,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return `${baseUrl}/profile`;
     },
-    async jwt({ token, user, trigger }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async jwt({ token, user, trigger, session }: any) {
       if (user) {
         token.id = user.id ? String(user.id) : undefined;
         token.username = user.name ?? undefined;
@@ -160,13 +162,58 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             : undefined;
         token.roles = toPlainRoles((user as { roles?: unknown }).roles);
       }
-      if (trigger === "update" && token.id) {
+
+      // If token is missing MongoDB id or username (e.g. initial Google sign-in), lookup by email
+      const rawId = (token.id as string) || (token.sub as string);
+      const isInvalidMongoId = !rawId || !mongoose.Types.ObjectId.isValid(rawId);
+      if ((isInvalidMongoId || !token.username) && token.email) {
         try {
           await connect();
-          const freshUser = (await User.findById(token.id)
+          const dbUser = (await User.findOne({ email: (token.email as string).toLowerCase() })
             .select("username avatar roles")
-            .lean()) as { username?: string; avatar?: number; roles?: unknown } | null;
+            .lean()) as { _id: { toString(): string }; username?: string; avatar?: number; roles?: unknown } | null;
+          if (dbUser) {
+            token.id = dbUser._id.toString();
+            token.username = dbUser.username;
+            if (typeof dbUser.avatar === "number") token.avatar = dbUser.avatar;
+            if (dbUser.roles) token.roles = toPlainRoles(dbUser.roles);
+          }
+        } catch (err) {
+          console.error("[auth] jwt email sync error:", err);
+        }
+      }
+
+      if (trigger === "update") {
+        // Fast direct update from client payload
+        if (session?.user?.username) {
+          token.username = session.user.username;
+        } else if (session?.username) {
+          token.username = session.username;
+        }
+
+        if (typeof session?.user?.avatar === "number") {
+          token.avatar = session.user.avatar;
+        } else if (typeof session?.avatar === "number") {
+          token.avatar = session.avatar;
+        }
+
+        // Fresh database verification
+        const userId = (token.id as string) || (token.sub as string);
+        try {
+          await connect();
+          let freshUser = null;
+          if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+            freshUser = (await User.findById(userId)
+              .select("username avatar roles")
+              .lean()) as { _id: { toString(): string }; username?: string; avatar?: number; roles?: unknown } | null;
+          }
+          if (!freshUser && token.email) {
+            freshUser = (await User.findOne({ email: (token.email as string).toLowerCase() })
+              .select("username avatar roles")
+              .lean()) as { _id: { toString(): string }; username?: string; avatar?: number; roles?: unknown } | null;
+          }
           if (freshUser) {
+            token.id = freshUser._id.toString();
             if (freshUser.username) token.username = freshUser.username;
             if (typeof freshUser.avatar === "number") token.avatar = freshUser.avatar;
             if (freshUser.roles) token.roles = toPlainRoles(freshUser.roles);
@@ -180,7 +227,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = (token.id as string) || (token.sub as string) || "";
-        session.user.username = token.username as string | undefined;
+        session.user.username = (token.username as string) || undefined;
+        session.user.name = (token.username as string) || session.user.name || undefined;
         session.user.avatar = token.avatar as number | undefined;
         session.user.roles = toPlainRoles(token.roles);
       }

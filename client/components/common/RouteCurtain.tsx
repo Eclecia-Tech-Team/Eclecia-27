@@ -1,27 +1,46 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { usePathname } from "next/navigation";
 import { ASSETS } from "@/constants/assets";
-import { curtainHeld, onCurtainRelease, registerCurtain } from "@/lib/route-curtain";
+import {
+  curtainHeld,
+  onCurtainRelease,
+  registerCurtain,
+} from "@/lib/route-curtain";
 import "@/styles/route-curtain.css";
 
 type Phase = "idle" | "closing" | "closed" | "opening";
 
-const CLOSE_MS = 620;
+const CLOSE_MS = 700; // CHANGED (was 620)
 /** Browser back/forward: the new page may already be rendering, so close faster. */
-const CLOSE_FAST_MS = 360;
-const OPEN_MS = 900;
+const CLOSE_FAST_MS = 400; // CHANGED (was 360)
+const OPEN_MS = 1000; // CHANGED (was 900)
 /** Once shut, stay shut at least this long so a fast page doesn't just blink. */
-const MIN_HOLD_MS = 450;
+const MIN_HOLD_MS = 300; // CHANGED (was 450)
 /** Open regardless after this long, loaded or not. */
 const MAX_WAIT_MS = 9000;
 
-const sleep = (ms: number) => new Promise<void>((res) => window.setTimeout(res, Math.max(0, ms)));
+// NEW: image list hoisted so preload + render share one source
+const CURTAIN_IMAGES = [
+  ASSETS.cloudinary.blacksun,
+  ASSETS.cloudinary.blacksun2,
+  ASSETS.cloudinary.minisun,
+];
+
+const sleep = (ms: number) =>
+  new Promise<void>((res) => window.setTimeout(res, Math.max(0, ms)));
 const frames = (n: number) =>
   new Promise<void>((res) => {
-    const step = (left: number) => (left ? requestAnimationFrame(() => step(left - 1)) : res());
+    const step = (left: number) =>
+      left ? requestAnimationFrame(() => step(left - 1)) : res();
     step(n);
   });
 
@@ -34,7 +53,10 @@ function untilReleased(deadline: number) {
       off();
       resolve();
     };
-    const timer = window.setTimeout(done, Math.max(0, deadline - performance.now()));
+    const timer = window.setTimeout(
+      done,
+      Math.max(0, deadline - performance.now()),
+    );
     const check = () => {
       if (curtainHeld()) return;
       void frames(2).then(() => {
@@ -67,7 +89,17 @@ export function RouteCurtain() {
     setPhase(next);
   }, []);
 
-  const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced = () =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // NEW: preload + decode the eclipse art so the first transition doesn't stutter
+  useEffect(() => {
+    CURTAIN_IMAGES.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+      img.decode?.().catch(() => {});
+    });
+  }, []);
 
   /** Waits for the page to be presentable, then opens. One run at a time. */
   const reveal = useCallback(async () => {
@@ -87,7 +119,8 @@ export function RouteCurtain() {
   const close = useCallback(
     (path: string, fast = false) => {
       target.current = path;
-      if (phaseRef.current === "closing" || phaseRef.current === "closed") return closed.current;
+      if (phaseRef.current === "closing" || phaseRef.current === "closed")
+        return closed.current;
       run.current += 1;
       const ms = reduced() ? 200 : fast ? CLOSE_FAST_MS : CLOSE_MS;
       setCloseMs(ms);
@@ -100,7 +133,8 @@ export function RouteCurtain() {
       });
       // Never strand the visitor behind the curtain (redirects, failed loads).
       void sleep(ms + MAX_WAIT_MS).then(() => {
-        if (target.current === path && phaseRef.current === "closed") void reveal();
+        if (target.current === path && phaseRef.current === "closed")
+          void reveal();
       });
       return closed.current;
     },
@@ -118,7 +152,8 @@ export function RouteCurtain() {
   // Browser back/forward bypasses links: cover the swap as it happens.
   useEffect(() => {
     const onPop = () => {
-      if (window.location.pathname !== pathnameRef.current) void close(window.location.pathname, true);
+      if (window.location.pathname !== pathnameRef.current)
+        void close(window.location.pathname, true);
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -132,13 +167,33 @@ export function RouteCurtain() {
       data-state={phase}
       role="status"
       aria-label="Loading"
-      style={{ "--rc-close": `${closeMs}ms`, "--rc-open": `${OPEN_MS}ms` } as CSSProperties}
+      style={
+        {
+          "--rc-close": `${closeMs}ms`,
+          "--rc-open": `${OPEN_MS}ms`,
+        } as CSSProperties
+      }
     >
       <div className="rc-eclipse" aria-hidden>
         <span className="rc-glow" />
-        <img src={ASSETS.cloudinary.blacksun} alt="" className="rc-rays" draggable={false} />
-        <img src={ASSETS.cloudinary.blacksun2} alt="" className="rc-moon" draggable={false} />
-        <img src={ASSETS.cloudinary.minisun} alt="" className="rc-minisun" draggable={false} />
+        <img
+          src={ASSETS.cloudinary.blacksun}
+          alt=""
+          className="rc-rays"
+          draggable={false}
+        />
+        <img
+          src={ASSETS.cloudinary.blacksun2}
+          alt=""
+          className="rc-moon"
+          draggable={false}
+        />
+        <img
+          src={ASSETS.cloudinary.minisun}
+          alt=""
+          className="rc-minisun"
+          draggable={false}
+        />
       </div>
     </div>
   );

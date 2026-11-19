@@ -28,28 +28,36 @@ export default function ConfirmationModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
       onClick={onCancel}
     >
       <div
-        className="relative w-full max-w-sm rounded-2xl border border-gold/40 bg-[#070b0e] p-6 text-center shadow-[0_24px_60px_rgba(0,0,0,0.9),0_0_35px_rgba(217,164,65,0.12)] overflow-hidden"
+        className="profile-chamber-card relative w-full max-w-sm p-6 text-center overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="pointer-events-none absolute inset-1.5 rounded-xl border border-gold/20" />
-
         <div className="relative z-10 space-y-4">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-gold/40 bg-gold/10 text-gold text-xl">
-            ✦
+          <div className="mx-auto flex h-10 w-10 items-center justify-center border border-gold/40 bg-black/60 text-gold">
+            <svg
+              viewBox="0 0 24 24"
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <polygon points="12 2 22 20 2 20" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
           </div>
 
           <h3 className="font-nasyhama text-2xl text-gold">{title}</h3>
 
-          <div className="text-sm text-parchment/80 font-serif">
+          <div className="text-xs text-parchment/80 font-serif leading-relaxed">
             {description ? (
               description
             ) : name ? (
               <p>
-                Are you sure you want to remove{" "}
+                Are you sure you wish to proceed with{" "}
                 <span className="text-gold font-semibold">{name}</span>?
               </p>
             ) : (
@@ -57,7 +65,7 @@ export default function ConfirmationModal({
             )}
           </div>
 
-          <div className="flex gap-3 pt-4 justify-center">
+          <div className="flex gap-3 pt-3 justify-center">
             <GoldActionButton
               variant="ghost"
               size="sm"

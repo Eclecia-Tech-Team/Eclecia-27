@@ -25,20 +25,29 @@
   mask-image: radial-gradient(circle at var(--rc-x) var(--rc-y), transparent var(--rc-iris), #000 calc(var(--rc-iris) + 8vmin));
 }
 .route-curtain[data-state="closing"] {
-  animation: rc-close var(--rc-close, 620ms) cubic-bezier(0.65, 0, 0.35, 1) both;
+  animation: rc-close var(--rc-close, 700ms) cubic-bezier(0.65, 0, 0.35, 1) both; /* CHANGED: fallback 700ms */
 }
-.route-curtain[data-state="closed"] { --rc-iris: -8vmin; }
+/* CHANGED: mask dropped while closed (it's fully opaque anyway), so the
+   rotating eclipse isn't composited under a mask every frame */
+.route-curtain[data-state="closed"] {
+  --rc-iris: -8vmin;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
 .route-curtain[data-state="opening"] {
   pointer-events: none;
-  animation: rc-open var(--rc-open, 900ms) cubic-bezier(0.65, 0, 0.35, 1) both;
+  /* CHANGED: stronger ease-out so the iris blooms and settles; fallback 1000ms */
+  animation: rc-open var(--rc-open, 1000ms) cubic-bezier(0.4, 0, 0.1, 1) both;
 }
+/* CHANGED: 130vmax -> 75vmax (full cover/reveal is reached around 65-70vmax,
+   so the extra range was dead time followed by a rush) */
 @keyframes rc-close {
-  from { --rc-iris: 130vmax; }
+  from { --rc-iris: 75vmax; }
   to { --rc-iris: -8vmin; }
 }
 @keyframes rc-open {
   from { --rc-iris: -8vmin; }
-  to { --rc-iris: 130vmax; }
+  to { --rc-iris: 75vmax; }
 }
 
 /* Eclipse, laid out like the hero's: moon, rays and the pendant mini sun. */
@@ -49,6 +58,7 @@
   width: var(--S);
   height: var(--S);
   opacity: 0;
+  will-change: transform, opacity; /* NEW */
 }
 .rc-eclipse > * { position: absolute; max-width: none; user-select: none; }
 /* Only surfaces once shut, so a quick page swap reads as a plain dark beat. */
@@ -57,11 +67,12 @@
 }
 .route-curtain[data-state="opening"] .rc-eclipse {
   opacity: 1;
-  animation: rc-recede calc(var(--rc-open, 900ms) * 0.5) ease-in both;
+  animation: rc-recede calc(var(--rc-open, 1000ms) * 0.5) ease-in both; /* CHANGED: fallback 1000ms */
 }
+/* CHANGED: blur(4px) removed, filter animation is costly next to rotating layers */
 @keyframes rc-surface {
-  from { opacity: 0; transform: scale(0.9); filter: blur(4px); }
-  to { opacity: 1; transform: none; filter: none; }
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: none; }
 }
 @keyframes rc-recede {
   to { opacity: 0; transform: scale(1.08); }
@@ -79,6 +90,8 @@
   width: 99%;
   height: 99%;
   animation: rc-turn 22s linear infinite;
+  will-change: rotate;          /* NEW */
+  backface-visibility: hidden;  /* NEW */
 }
 .rc-moon { inset: 0; width: 100%; height: 100%; }
 .rc-minisun {
