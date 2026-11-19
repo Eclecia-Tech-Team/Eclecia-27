@@ -35,22 +35,19 @@ export default function AvatarModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl border border-gold/40 bg-[#070b0e] p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(217,164,65,0.15)] overflow-hidden"
+        className="profile-chamber-card relative w-full max-w-lg p-6 sm:p-8 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Inner hairline */}
-        <div className="pointer-events-none absolute inset-1.5 rounded-xl border border-gold/20" />
-
         <div className="relative z-10 text-center">
           <h2 className="font-nasyhama text-2xl sm:text-3xl text-gold mb-1">
             Choose Your Celestial Crest
           </h2>
           <p className="font-taiganja text-[11px] uppercase tracking-[0.25em] text-parchment/60 mb-6">
-            Select an avatar representing your realm
+            Select an emblem to represent your presence in the festival
           </p>
 
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 sm:gap-5 my-6 justify-items-center">
@@ -64,13 +61,13 @@ export default function AvatarModal({
                     onSelect(avatar.id);
                     onClose();
                   }}
-                  className="group flex flex-col items-center gap-2 transition-all duration-300 focus:outline-none"
+                  className="group flex flex-col items-center gap-2 transition-all duration-300 focus:outline-none cursor-pointer"
                 >
                   <div
-                    className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 transition-all duration-300 group-hover:scale-110 ${
+                    className={`astrolabe-bezel relative w-16 h-16 sm:w-20 sm:h-20 p-1 transition-all duration-300 group-hover:scale-110 ${
                       isSelected
-                        ? "ring-2 ring-gold shadow-[0_0_18px_rgba(217,164,65,0.55)] scale-105"
-                        : "ring-1 ring-gold/30 hover:ring-gold/70"
+                        ? "border-gold shadow-[0_0_20px_rgba(217,164,65,0.6)] scale-105"
+                        : "opacity-75 hover:opacity-100"
                     }`}
                   >
                     <img

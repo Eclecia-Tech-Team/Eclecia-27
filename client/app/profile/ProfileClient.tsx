@@ -12,6 +12,7 @@ import type { ProfileData } from "@/types/interface";
 import AvatarModal from "./AvatarModal";
 import EventsTab from "@/components/profile/EventsTab";
 import TeamsTab from "@/components/profile/TeamsTab";
+import "@/styles/profile.css";
 
 export default function ProfileClient({
   initialUsername,
@@ -23,9 +24,9 @@ export default function ProfileClient({
   initialEmail: string;
 }) {
   const tabs = [
-    { id: "details", label: "Details" },
-    { id: "teams", label: "Teams" },
-    { id: "events", label: "Events" },
+    { id: "details", label: "Dossier" },
+    { id: "teams", label: "Guilds" },
+    { id: "events", label: "Quests" },
   ] as const;
 
   const [profile, setProfile] = useState<ProfileData>({
@@ -54,7 +55,7 @@ export default function ProfileClient({
   } | null>(null);
 
   const hasTriggeredAutoLogout = useRef(false);
-  const { update: updateSession } = useSession();
+  const { data: session, update: updateSession } = useSession();
 
   const triggerAutoLogout = () => {
     if (hasTriggeredAutoLogout.current) return;
@@ -66,10 +67,10 @@ export default function ProfileClient({
     if (qrModalOpen) {
       document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = "";
     }
     return () => {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = "";
     };
   }, [qrModalOpen]);
 
@@ -114,6 +115,19 @@ export default function ProfileClient({
           college: data.college ?? "",
           stream: data.stream ?? "",
         });
+
+        // Automatically sync header session if username or avatar in session cookie was stale
+        if (
+          session?.user &&
+          (session.user.username !== data.username || session.user.avatar !== data.avatar)
+        ) {
+          void updateSession({
+            user: {
+              username: data.username,
+              avatar: data.avatar,
+            },
+          });
+        }
       } catch (err) {
         console.error("Failed to load profile details:", err);
       }
@@ -148,15 +162,20 @@ export default function ProfileClient({
         setIsEditing(false);
         setNotification({
           type: "success",
-          message: "Profile details updated successfully",
+          message: "Dossier credentials saved successfully",
         });
-        if (formData.username !== undefined) {
-          await updateSession();
+        if (formData.username !== undefined || data.username !== undefined) {
+          await updateSession({
+            user: {
+              username: data.username,
+              avatar: data.avatar ?? profile.avatar,
+            },
+          });
         }
       } else {
         setNotification({
           type: "error",
-          message: data.error || "Failed to update profile",
+          message: data.error || "Failed to update dossier",
         });
       }
     } catch (err) {
@@ -187,8 +206,14 @@ export default function ProfileClient({
 
       if (res.ok) {
         const data = await res.json();
-        setProfile((p) => ({ ...p, avatar: data.avatar ?? avatarId }));
-        await updateSession();
+        const nextAvatar = data.avatar ?? avatarId;
+        setProfile((p) => ({ ...p, avatar: nextAvatar }));
+        await updateSession({
+          user: {
+            username: profile.username,
+            avatar: nextAvatar,
+          },
+        });
         setNotification({
           type: "success",
           message: "Celestial Crest updated",
@@ -217,12 +242,12 @@ export default function ProfileClient({
 
         <SiteHeader />
 
-        <main className="relative z-10 flex flex-1 flex-col items-center justify-start px-4 pt-28 pb-16 md:pt-32 max-w-4xl w-full mx-auto space-y-8">
+        <main className="relative z-10 flex flex-1 flex-col items-center justify-start px-3 sm:px-4 pt-24 pb-16 md:pt-28 max-w-4xl w-full mx-auto space-y-4 sm:space-y-6">
           {notification && (
             <div
-              className={`w-full max-w-2xl p-3.5 rounded-xl text-center text-sm font-taiganja tracking-wider border shadow-lg transition-all ${
+              className={`w-full p-2.5 text-center text-xs font-taiganja tracking-wider border shadow-lg transition-all ${
                 notification.type === "success"
-                  ? "bg-green-950/60 border-green-500/40 text-green-300"
+                  ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
                   : "bg-red-950/60 border-red-500/40 text-red-300"
               }`}
             >
@@ -230,352 +255,429 @@ export default function ProfileClient({
             </div>
           )}
 
-          {/* Top Profile Card */}
-          <div className="relative w-full rounded-2xl border border-gold/40 bg-[#070b0e]/95 p-6 sm:p-8 backdrop-blur-md shadow-[0_24px_60px_rgba(0,0,0,0.9),0_0_45px_rgba(217,164,65,0.12)] overflow-hidden">
-            <div className="pointer-events-none absolute inset-1.5 rounded-xl border border-gold/20" />
-
-            <div className="absolute top-4 right-4 z-20">
-              <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-taiganja uppercase tracking-[0.2em] border ${
-                  profile.isProfileComplete
-                    ? "border-emerald-500/40 bg-emerald-950/40 text-emerald-300"
-                    : "border-amber-500/40 bg-amber-950/40 text-amber-300"
-                }`}
-              >
-                ✦ {profile.isProfileComplete ? "PROFILE COMPLETE" : "PROFILE INCOMPLETE"}
-              </span>
-            </div>
-
-            <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 sm:gap-8 pt-4 sm:pt-0">
-              {/* Avatar circle with action buttons */}
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0">
+          {/* ── Citizen Identity Card ─────────────────────────────────────── */}
+          <div className="profile-chamber-card w-full p-4 sm:p-6 md:p-8">
+            {/* ── Desktop View (Locked in: spacious architectural identity deck) ── */}
+            <div className="hidden sm:flex sm:flex-row items-stretch gap-6 md:gap-8">
+              {/* Left Column: Avatar + Merged Segmented Controller */}
+              <div className="flex flex-col items-center justify-center gap-3 shrink-0">
                 <div
-                  role="button"
+                  className="astrolabe-bezel relative w-24 h-24 md:w-26 md:h-26 cursor-pointer group shrink-0"
                   onClick={() => setAvatarModalOpen(true)}
-                  className="w-full h-full rounded-full overflow-hidden border-2 border-gold shadow-[0_0_20px_rgba(217,164,65,0.4)] cursor-pointer group relative bg-black"
-                  title="Click to change avatar"
+                  title="Change Celestial Crest"
                 >
-                  <img
-                    src={getAvatarSrc(displayAvatar)}
-                    alt="Celestial Crest"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-gold text-xs font-taiganja tracking-wider uppercase">
-                    Change
+                  <div className="w-full h-full rounded-full overflow-hidden bg-black">
+                    <img
+                      src={getAvatarSrc(displayAvatar)}
+                      alt="Celestial Crest"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-[10px] font-taiganja tracking-widest uppercase text-gold">
+                    Edit Crest
                   </div>
                 </div>
 
-                {/* Edit avatar button */}
+                {/* Unified Segmented Controller (Change Crest | Pass QR) */}
+                <div className="crest-qr-segmented-bar">
+                  <button
+                    type="button"
+                    onClick={() => setAvatarModalOpen(true)}
+                    className="crest-qr-seg-btn"
+                    title="Change Celestial Avatar"
+                  >
+                    Change Crest
+                  </button>
+                  <div className="crest-qr-seg-divider" />
+                  <button
+                    type="button"
+                    onClick={() => setQrModalOpen(true)}
+                    className="crest-qr-seg-btn"
+                    title="View Festival Pass QR"
+                  >
+                    Pass QR
+                  </button>
+                </div>
+              </div>
+
+              {/* Subtle vertical separator on desktop */}
+              <div className="w-px bg-gradient-to-b from-transparent via-gold/25 to-transparent self-stretch my-1" aria-hidden />
+
+              {/* Right Column: Citizen Metadata & Dossier Overview */}
+              <div className="flex-1 min-w-0 flex flex-col justify-between text-left space-y-2">
+                <div>
+                  {/* Header Row: Registry Breadcrumb & Status */}
+                  <div className="flex flex-row items-center justify-between gap-2 border-b border-gold/15 pb-2">
+                    <span className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/70">
+                      Citizen Registry // Tier 01
+                    </span>
+                    <span
+                      className="profile-arch-tag text-[9px] whitespace-nowrap"
+                      data-variant={profile.isProfileComplete ? "complete" : "pending"}
+                    >
+                      [ {profile.isProfileComplete ? "DOSSIER COMPLETE" : "DOSSIER INCOMPLETE"} ]
+                    </span>
+                  </div>
+
+                  {/* Citizen Name & Credentials */}
+                  <div className="pt-2">
+                    <h1 className="font-display text-2xl md:text-3xl text-parchment tracking-wide font-normal truncate leading-tight">
+                      {profile.fullName || profile.username}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                      <span className="font-mono text-xs text-gold/80 tracking-wider">
+                        @{profile.username}
+                      </span>
+                      <span className="text-gold/30 text-xs">•</span>
+                      <span className="font-serif text-xs text-parchment/60 truncate">
+                        {profile.email || "No email bound"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ornamental accent line */}
+                <div className="pt-2 flex items-center gap-3">
+                  <div className="h-px flex-1 bg-gradient-to-r from-gold/30 via-gold/15 to-transparent" />
+                  <img
+                    src={ASSETS.cloudinary.divider}
+                    alt=""
+                    aria-hidden
+                    className="w-36 opacity-60 pointer-events-none -my-2"
+                  />
+                  <div className="h-px flex-1 bg-gradient-to-l from-gold/30 via-gold/15 to-transparent" />
+                </div>
+              </div>
+            </div>
+
+            {/* ── Mobile View (Streamlined, balanced avatar, high-visibility Pass QR) ── */}
+            <div className="sm:hidden flex flex-col gap-3">
+              {/* Top Row: Generous Avatar + Identity Info side by side */}
+              <div className="flex items-center gap-3.5">
+                {/* Properly sized avatar filling space */}
+                <div
+                  className="astrolabe-bezel relative w-20 h-20 shrink-0 cursor-pointer group"
+                  onClick={() => setAvatarModalOpen(true)}
+                  title="Change Celestial Crest"
+                >
+                  <div className="w-full h-full rounded-full overflow-hidden bg-black">
+                    <img
+                      src={getAvatarSrc(displayAvatar)}
+                      alt="Celestial Crest"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-[8px] font-taiganja tracking-widest uppercase text-gold">
+                    Edit
+                  </div>
+                </div>
+
+                {/* Identity Metadata */}
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center justify-between gap-1 border-b border-gold/15 pb-1">
+                    <span className="font-taiganja text-[8px] uppercase tracking-[0.2em] text-gold/70 truncate">
+                      Citizen Registry
+                    </span>
+                    <span
+                      className="profile-arch-tag text-[7.5px] px-1.5 py-0.5 whitespace-nowrap"
+                      data-variant={profile.isProfileComplete ? "complete" : "pending"}
+                    >
+                      {profile.isProfileComplete ? "Complete" : "Incomplete"}
+                    </span>
+                  </div>
+
+                  <h1 className="font-display text-xl text-parchment tracking-wide font-normal truncate leading-tight pt-0.5">
+                    {profile.fullName || profile.username}
+                  </h1>
+                  <p className="font-mono text-[11px] text-gold/80 tracking-wider leading-tight">
+                    @{profile.username}
+                  </p>
+                  <p className="font-serif text-[11px] text-parchment/55 truncate leading-tight">
+                    {profile.email || "No email bound"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Mobile Separated Action Buttons: High-visibility Festival Pass QR */}
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gold/15">
                 <button
                   type="button"
                   onClick={() => setAvatarModalOpen(true)}
-                  disabled={loading}
-                  className="absolute bottom-0 left-0 -translate-x-1/4 translate-y-1/4 sm:top-0 sm:right-0 sm:bottom-auto sm:left-auto sm:translate-x-1/4 sm:-translate-y-1/4 z-20 w-9 h-9 rounded-full bg-gold text-black border border-black shadow-md hover:scale-110 transition-transform flex items-center justify-center cursor-pointer"
-                  title="Change Crest"
-                  aria-label="Change Crest"
+                  className="py-2 px-2.5 border border-gold/30 bg-black/70 hover:border-gold hover:text-white text-parchment/80 text-[10px] font-taiganja uppercase tracking-wider transition-colors cursor-pointer text-center"
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="w-4 h-4"
-                    fill="currentColor"
-                  >
-                    <path d="M3 17.25V21h3.75l11-11-3.75-3.75-11 11Zm14.71-9.04a1 1 0 0 0 0-1.42l-1.5-1.5a1 1 0 0 0-1.42 0l-1.13 1.13 3.75 3.75 1.3-1.3Z" />
-                  </svg>
+                  Change Crest
                 </button>
-
-                {/* Show QR button */}
                 <button
                   type="button"
                   onClick={() => setQrModalOpen(true)}
-                  className="absolute bottom-0 right-0 translate-y-1/4 translate-x-1/4 z-20 w-9 h-9 rounded-full bg-[#111922] text-gold border border-gold/50 shadow-md hover:bg-gold hover:text-black hover:scale-110 transition-all flex items-center justify-center cursor-pointer"
-                  title="Show Entry QR"
-                  aria-label="Show Entry QR"
+                  className="py-2 px-2.5 border border-gold/60 bg-gold/15 hover:bg-gold/25 text-gold text-[10px] font-taiganja uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="w-4 h-4"
-                    fill="currentColor"
-                  >
-                    <path d="M3 3h7v7H3V3Zm2 2v3h3V5H5Zm9-2h7v7h-7V3Zm2 2v3h3V5h-3ZM3 14h7v7H3v-7Zm2 2v3h3v-3H5Zm9-2h2v2h-2v-2Zm3 0h4v2h-4v-2Zm-3 3h2v4h-2v-4Zm3 3h4v1h-4v-1Zm2-3h2v2h-2v-2Z" />
+                  <svg className="w-3.5 h-3.5 text-[#ffd875] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="5" height="5" x="3" y="3" rx="1"/>
+                    <rect width="5" height="5" x="16" y="3" rx="1"/>
+                    <rect width="5" height="5" x="3" y="16" rx="1"/>
+                    <path d="M21 16h-3a2 2 0 0 0-2 2v3"/>
+                    <path d="M21 21v.01"/>
+                    <path d="M12 7v3a2 2 0 0 1-2 2H7"/>
+                    <path d="M3 12h.01"/>
+                    <path d="M12 3h.01"/>
+                    <path d="M12 16v.01"/>
+                    <path d="M16 12h1"/>
+                    <path d="M21 12v.01"/>
+                    <path d="M12 21v-1"/>
                   </svg>
+                  <span>Pass QR</span>
                 </button>
-              </div>
-
-              {/* User details */}
-              <div className="flex flex-col text-center sm:text-left min-w-0 flex-1 space-y-1">
-                <span className="font-taiganja text-[11px] uppercase tracking-[0.3em] text-gold/70">
-                  Eclecia Participant
-                </span>
-                <h1 className="font-nasyhama text-3xl sm:text-5xl text-gold truncate">
-                  {profile.username}
-                </h1>
-                <p className="font-serif text-sm sm:text-base text-parchment/70 break-all">
-                  {profile.email || "No email linked"}
-                </p>
               </div>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <div className="flex justify-center gap-3 w-full">
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
+          {/* ── Tab Navigation Bar ──────────────────────────────────────────── */}
+          <div className="w-full">
+            <div className="profile-tab-track">
+              {tabs.map((tab, i) => (
                 <button
                   key={tab.id}
                   type="button"
+                  data-active={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-2.5 rounded-xl font-taiganja uppercase tracking-[0.25em] text-xs transition-all duration-300 cursor-pointer ${
-                    isActive
-                      ? "bg-gold text-black font-semibold shadow-[0_0_20px_rgba(217,164,65,0.4)] scale-105"
-                      : "border border-gold/30 text-parchment/70 bg-black/40 hover:border-gold/60 hover:text-parchment hover:bg-black/60"
-                  }`}
+                  className="profile-tab-item"
                 >
+                  <span className="profile-tab-index">{String(i + 1).padStart(2, "0")} //</span>
                   {tab.label}
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
 
-          {/* Active Tab Panel */}
-          <div className="w-full">
+          {/* ── Active Tab Chamber ──────────────────────────────────────────── */}
+          <div key={activeTab} className="profile-tab-pane w-full">
             {activeTab === "details" && (
-              <div className="relative rounded-2xl border border-gold/40 bg-[#070b0e]/90 p-6 sm:p-8 backdrop-blur-md shadow-[0_24px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(217,164,65,0.08)]">
-                <div className="pointer-events-none absolute inset-1.5 rounded-xl border border-gold/15" />
+              <div className="profile-chamber-card p-4 sm:p-6 space-y-5">
+                <div className="flex items-start justify-between border-b border-gold/20 pb-3">
+                  <div>
+                    <h2 className="font-nasyhama text-xl sm:text-2xl text-gold leading-tight">
+                      Personal Dossier
+                    </h2>
+                    <p className="font-taiganja text-[10px] uppercase tracking-[0.2em] text-parchment/50 mt-0.5">
+                      Registration Credentials & Details
+                    </p>
+                  </div>
+                </div>
 
-                <div className="relative z-10 space-y-6">
-                  <div className="flex items-center justify-between border-b border-gold/20 pb-4">
-                    <div>
-                      <h2 className="font-nasyhama text-2xl sm:text-3xl text-gold">
-                        Personal Dossier
-                      </h2>
-                      <p className="font-taiganja text-xs uppercase tracking-[0.2em] text-parchment/60">
-                        Registration credentials & details
-                      </p>
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-1 md:col-span-2">
+                        <label className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/80 block">
+                          Username
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.username || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, username: e.target.value })
+                          }
+                          className="w-full px-3 py-2 bg-black/70 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none"
+                          placeholder="Handle"
+                          minLength={3}
+                          maxLength={30}
+                        />
+                        <p className="text-[10px] text-parchment/35 font-mono">
+                          3–30 chars · letters, numbers, underscores, hyphens
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/80 block">
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.fullName || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, fullName: e.target.value })
+                          }
+                          className="w-full px-3 py-2 bg-black/70 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none"
+                          placeholder="Your legal name"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/80 block">
+                          Phone Number
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.phoneNumber || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, phoneNumber: e.target.value })
+                          }
+                          className="w-full px-3 py-2 bg-black/70 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none"
+                          placeholder="10-digit number"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/80 block">
+                          College / Institute
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.college || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, college: e.target.value })
+                          }
+                          className="w-full px-3 py-2 bg-black/70 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none"
+                          placeholder="College name"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/80 block">
+                          Stream / Department
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.stream || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, stream: e.target.value })
+                          }
+                          className="w-full px-3 py-2 bg-black/70 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none"
+                          placeholder="e.g. Computer Science & Engineering"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Action row: Cancel (left) & Save Dossier (right), inset from edges */}
+                    <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-4 px-3 sm:px-8 md:px-10">
+                      <GoldActionButton
+                        size="md"
+                        variant="ghost"
+                        onClick={() => setIsEditing(false)}
+                        type="button"
+                        className="w-56 max-w-[85%] sm:w-auto"
+                      >
+                        Cancel
+                      </GoldActionButton>
+                      <GoldActionButton
+                        size="md"
+                        variant="solid"
+                        onClick={handleSaveProfile}
+                        disabled={loading}
+                        type="button"
+                        className="w-56 max-w-[85%] sm:w-auto"
+                      >
+                        {loading ? "Saving..." : "Save Dossier"}
+                      </GoldActionButton>
                     </div>
                   </div>
-
-                  {isEditing ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5 md:col-span-2">
-                          <label className="font-taiganja text-xs uppercase tracking-wider text-gold/80 block">
-                            Username
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.username || ""}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                username: e.target.value,
-                              })
-                            }
-                            className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50"
-                            placeholder="Enter username"
-                            minLength={3}
-                            maxLength={30}
-                          />
-                          <p className="text-[11px] text-parchment/50 font-serif">
-                            3-30 characters (letters, numbers, underscores, hyphens)
-                          </p>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="font-taiganja text-xs uppercase tracking-wider text-gold/80 block">
-                            Full Name
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.fullName || ""}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                fullName: e.target.value,
-                              })
-                            }
-                            className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50"
-                            placeholder="Your full name"
-                          />
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="font-taiganja text-xs uppercase tracking-wider text-gold/80 block">
-                            Phone Number
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.phoneNumber || ""}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                phoneNumber: e.target.value,
-                              })
-                            }
-                            className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50"
-                            placeholder="10-digit mobile number"
-                          />
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="font-taiganja text-xs uppercase tracking-wider text-gold/80 block">
-                            College / Institute
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.college || ""}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                college: e.target.value,
-                              })
-                            }
-                            className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50"
-                            placeholder="Your college or university"
-                          />
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="font-taiganja text-xs uppercase tracking-wider text-gold/80 block">
-                            Stream / Department
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.stream || ""}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                stream: e.target.value,
-                              })
-                            }
-                            className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50"
-                            placeholder="e.g. Computer Science, Arts, Commerce"
-                          />
-                        </div>
+                ) : (
+                  <div className="space-y-5">
+                    {/* Dossier fields — 2 col on sm+, 1 col on mobile */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="dossier-cell">
+                        <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 block mb-1">
+                          Username
+                        </span>
+                        <p className="font-mono text-sm text-parchment font-light">
+                          {profile.username || (
+                            <span className="text-parchment/35">— Not set —</span>
+                          )}
+                        </p>
                       </div>
 
-                      <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center">
-                        <GoldActionButton
-                          size="md"
-                          variant="solid"
-                          onClick={handleSaveProfile}
-                          disabled={loading}
-                          type="button"
-                        >
-                          {loading ? "Saving..." : "Save Dossier"}
-                        </GoldActionButton>
-                        <GoldActionButton
-                          size="md"
-                          variant="ghost"
-                          onClick={() => setIsEditing(false)}
-                          type="button"
-                        >
-                          Cancel
-                        </GoldActionButton>
+                      <div className="dossier-cell">
+                        <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 block mb-1">
+                          Full Name
+                        </span>
+                        <p className="font-serif text-sm text-parchment font-light">
+                          {profile.fullName || (
+                            <span className="text-parchment/35">— Not set —</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="dossier-cell">
+                        <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 block mb-1">
+                          Phone Number
+                        </span>
+                        <p className="font-mono text-sm text-parchment font-light">
+                          {profile.phoneNumber || (
+                            <span className="text-parchment/35">— Not set —</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="dossier-cell">
+                        <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 block mb-1">
+                          College / Institute
+                        </span>
+                        <p className="font-serif text-sm text-parchment font-light">
+                          {profile.college || (
+                            <span className="text-parchment/35">— Not set —</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="dossier-cell sm:col-span-2">
+                        <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 block mb-1">
+                          Stream / Department
+                        </span>
+                        <p className="font-serif text-sm text-parchment font-light">
+                          {profile.stream || (
+                            <span className="text-parchment/35">— Not set —</span>
+                          )}
+                        </p>
                       </div>
                     </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-5 gap-x-8">
-                        <div>
-                          <span className="font-taiganja text-[11px] uppercase tracking-[0.2em] text-gold/70 block mb-1">
-                            Username
-                          </span>
-                          <p className="font-serif text-lg text-parchment">
-                            {profile.username || (
-                              <span className="text-parchment/30 italic">Not set</span>
-                            )}
-                          </p>
-                        </div>
 
-                        <div>
-                          <span className="font-taiganja text-[11px] uppercase tracking-[0.2em] text-gold/70 block mb-1">
-                            Full Name
-                          </span>
-                          <p className="font-serif text-lg text-parchment">
-                            {profile.fullName || (
-                              <span className="text-parchment/30 italic">Not set</span>
-                            )}
-                          </p>
-                        </div>
-
-                        <div>
-                          <span className="font-taiganja text-[11px] uppercase tracking-[0.2em] text-gold/70 block mb-1">
-                            Phone Number
-                          </span>
-                          <p className="font-serif text-lg text-parchment">
-                            {profile.phoneNumber || (
-                              <span className="text-parchment/30 italic">Not set</span>
-                            )}
-                          </p>
-                        </div>
-
-                        <div>
-                          <span className="font-taiganja text-[11px] uppercase tracking-[0.2em] text-gold/70 block mb-1">
-                            College / Institute
-                          </span>
-                          <p className="font-serif text-lg text-parchment">
-                            {profile.college || (
-                              <span className="text-parchment/30 italic">Not set</span>
-                            )}
-                          </p>
-                        </div>
-
-                        <div>
-                          <span className="font-taiganja text-[11px] uppercase tracking-[0.2em] text-gold/70 block mb-1">
-                            Stream / Department
-                          </span>
-                          <p className="font-serif text-lg text-parchment">
-                            {profile.stream || (
-                              <span className="text-parchment/30 italic">Not set</span>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="pt-4 border-t border-gold/15">
-                        {profile.isProfileComplete ? (
-                          <div className="flex items-center gap-2 text-emerald-400 font-taiganja text-xs tracking-wider uppercase">
-                            <span>✓</span> Profile Complete. You are eligible to register for all events.
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 text-amber-300 font-taiganja text-xs tracking-wider uppercase">
-                            <span>✦</span> Complete all dossier fields to qualify for event registration.
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
-                        <GoldActionButton
-                          size="md"
-                          variant="solid"
-                          onClick={() => {
-                            setFormData({
-                              username: profile.username,
-                              fullName: profile.fullName,
-                              phoneNumber: profile.phoneNumber,
-                              college: profile.college,
-                              stream: profile.stream,
-                            });
-                            setIsEditing(true);
-                          }}
-                          type="button"
-                        >
-                          Edit Details
-                        </GoldActionButton>
-
-                        <GoldActionButton
-                          size="md"
-                          variant="ghost"
-                          onClick={() => signOut({ callbackUrl: "/login" })}
-                          type="button"
-                        >
-                          Sign Out
-                        </GoldActionButton>
-                      </div>
+                    {/* Eligibility notice */}
+                    <div className="border-t border-gold/15 pt-3">
+                      {profile.isProfileComplete ? (
+                        <p className="text-emerald-400 font-taiganja text-[10px] tracking-widest uppercase">
+                          Dossier verified — eligible for all event registrations.
+                        </p>
+                      ) : (
+                        <p className="text-amber-300/80 font-taiganja text-[10px] tracking-widest uppercase">
+                          Complete all dossier fields to qualify for event registration.
+                        </p>
+                      )}
                     </div>
-                  )}
-                </div>
+
+                    {/* Action row: Sign Out (left) & Edit Dossier (right), inset from edges */}
+                    <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-4 px-3 sm:px-8 md:px-10">
+                      <GoldActionButton
+                        size="md"
+                        variant="ghost"
+                        onClick={() => signOut({ callbackUrl: "/login" })}
+                        type="button"
+                        className="w-56 max-w-[85%] sm:w-auto"
+                      >
+                        Sign Out
+                      </GoldActionButton>
+
+                      <GoldActionButton
+                        size="md"
+                        variant="solid"
+                        onClick={() => {
+                          setFormData({
+                            username: profile.username,
+                            fullName: profile.fullName,
+                            phoneNumber: profile.phoneNumber,
+                            college: profile.college,
+                            stream: profile.stream,
+                          });
+                          setIsEditing(true);
+                        }}
+                        type="button"
+                        className="w-56 max-w-[85%] sm:w-auto"
+                      >
+                        Edit Dossier
+                      </GoldActionButton>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -584,8 +686,8 @@ export default function ProfileClient({
             {activeTab === "events" && <EventsTab />}
           </div>
 
-          {/* Return Home Button */}
-          <div className="pt-4">
+          {/* Return Home */}
+          <div className="pt-2">
             <GoldButton href="/" variant="ghost" size="sm">
               ← Return to Cosmos
             </GoldButton>
@@ -606,41 +708,39 @@ export default function ProfileClient({
       {/* Profile QR Code Modal */}
       {qrModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
           onClick={() => setQrModalOpen(false)}
         >
           <div
-            className="relative w-full max-w-sm rounded-2xl border border-gold/40 bg-[#070b0e] p-6 text-center shadow-[0_24px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(217,164,65,0.15)] overflow-hidden"
+            className="profile-chamber-card relative w-full max-w-sm p-6 text-center overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="pointer-events-none absolute inset-1.5 rounded-xl border border-gold/20" />
-
             <div className="relative z-10 space-y-4">
               <h3 className="font-nasyhama text-3xl text-gold">
                 Celestial Pass
               </h3>
-              <p className="font-taiganja text-xs uppercase tracking-wider text-parchment/70">
-                Present this QR code to event volunteers at venue checkpoints
+              <p className="font-taiganja text-[11px] uppercase tracking-wider text-parchment/70">
+                Official Checkpoint Token
               </p>
 
               {profile.qrPayload ? (
                 <div className="flex flex-col items-center gap-3 py-2">
-                  <div className="p-3 bg-white rounded-xl shadow-lg border-2 border-gold/60">
+                  <div className="p-3 bg-white border-2 border-gold/70 shadow-[0_0_20px_rgba(217,164,65,0.3)]">
                     <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
                         profile.qrPayload
                       )}`}
-                      alt="Participant QR Code"
+                      alt="Festival Pass QR"
                       className="w-48 h-48 object-contain"
                     />
                   </div>
-                  <p className="font-mono text-[10px] text-parchment/40 break-all select-all">
-                    {profile.qrPayload}
+                  <p className="font-taiganja text-[10px] tracking-widest uppercase text-parchment/50">
+                    Scan at festival venue gates for check-in
                   </p>
                 </div>
               ) : (
                 <p className="font-serif text-sm text-parchment/50 py-8">
-                  Preparing your celestial token...
+                  Generating checkpoint token...
                 </p>
               )}
 
