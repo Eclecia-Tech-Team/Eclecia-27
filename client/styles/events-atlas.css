@@ -120,12 +120,12 @@ html:has(.events-atlas)::-webkit-scrollbar{display:none}
 .events-atlas[data-mode=atlas] .dust{animation:dust-drift 70s ease-in-out infinite alternate}
 @keyframes dust-drift{to{translate:-26px -14px}}
 /* Single caption, pinned under the front slot. */
-.events-atlas #front-caption{position:absolute;left:0;top:0;z-index:95;transform:translate3d(var(--x,50vw),var(--y,80vh),0) translateX(-50%);text-align:center;padding:0;width:max-content;text-shadow:0 2px 9px #001014,0 0 20px #001014;cursor:pointer}
+.events-atlas #front-caption{position:absolute;left:0;top:0;z-index:95;transform:translate3d(var(--x,50vw),var(--y,80vh),0) translateX(-50%);text-align:center;padding:0;width:max-content;cursor:pointer}
 .events-atlas #front-caption .category-name{font-size:28px}
 .events-atlas #front-caption .category-kind{font-size:12px;color:#c4baa1;margin-top:6px}
 .events-atlas #front-caption .world-enter{position:static;display:block;margin-top:10px;opacity:.8;translate:none;font-size:9px}
 .events-atlas #front-caption:hover .world-enter{opacity:1}
-.events-atlas #front-caption:hover .category-name{color:#edc679}
+.events-atlas #front-caption:hover .category-name{}
 @media(max-width:760px){.events-atlas #front-caption .category-name{font-size:21px}.events-atlas #front-caption .world-enter{display:none}}
 @media(prefers-reduced-motion:reduce){.events-atlas #overview .category-world .world-art{transform:rotateY(var(--turn,0rad))!important}}
 /* Event mode makes the page scrollable; a visible scrollbar appearing (and
@@ -649,20 +649,14 @@ html:has(.events-atlas)::-webkit-scrollbar{display:none}
   line-height: 1.12 !important;
   letter-spacing: 0.015em !important;
   color: #fff2d1 !important;
-  text-shadow:
-    0 2px 14px rgba(0, 0, 0, 0.98),
-    0 0 24px rgba(217, 164, 65, 0.6),
-    0 0 45px rgba(217, 164, 65, 0.25) !important;
-  transition: color 0.3s ease, text-shadow 0.3s ease, transform 0.3s ease !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95) !important;
+  transition: transform 0.3s ease !important;
 }
 
 .events-atlas #front-caption:hover .category-name {
-  color: #ffd875 !important;
-  text-shadow:
-    0 2px 16px rgba(0, 0, 0, 1),
-    0 0 30px rgba(255, 216, 117, 0.9),
-    0 0 60px rgba(217, 164, 65, 0.5) !important;
-  transform: scale(1.02) !important;
+  color: #fff2d1 !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95) !important;
+  transform: none !important;
 }
 
 /* Metadata Row: e.g. "FASHION · 2 EVENTS" */
@@ -677,7 +671,7 @@ html:has(.events-atlas)::-webkit-scrollbar{display:none}
   letter-spacing: 0.22em !important;
   text-transform: uppercase !important;
   color: #cfc2a5 !important;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.8) !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95) !important;
 }
 
 .events-atlas #front-caption .category-kind {
@@ -708,10 +702,8 @@ html:has(.events-atlas)::-webkit-scrollbar{display:none}
   letter-spacing: 0.32em !important;
   text-transform: uppercase !important;
   color: #e5c378 !important;
-  text-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.95),
-    0 0 12px rgba(217, 164, 65, 0.45) !important;
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95) !important;
+  transition: opacity 0.3s ease !important;
 }
 
 .events-atlas #front-caption .world-enter::before,
@@ -720,22 +712,21 @@ html:has(.events-atlas)::-webkit-scrollbar{display:none}
   display: inline-block !important;
   color: rgba(217, 164, 65, 0.5) !important;
   letter-spacing: 0 !important;
-  transition: color 0.3s ease, transform 0.3s ease !important;
+  transition: opacity 0.3s ease !important;
 }
 
 .events-atlas #front-caption:hover .world-enter {
-  color: #ffffff !important;
-  text-shadow:
-    0 2px 12px rgba(0, 0, 0, 1),
-    0 0 20px rgba(255, 216, 117, 0.85) !important;
+  color: #e5c378 !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95) !important;
+  opacity: 1 !important;
 }
 
 .events-atlas #front-caption:hover .world-enter::before {
-  color: #ffd875 !important;
-  transform: translateX(-3px) !important;
+  color: rgba(217, 164, 65, 0.7) !important;
+  transform: none !important;
 }
 
 .events-atlas #front-caption:hover .world-enter::after {
-  color: #ffd875 !important;
-  transform: translateX(3px) !important;
+  color: rgba(217, 164, 65, 0.7) !important;
+  transform: none !important;
 }

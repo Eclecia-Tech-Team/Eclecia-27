@@ -133,7 +133,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       user.name = created.username;
       (user as { avatar?: number }).avatar = created.avatar;
       (user as { roles?: string[] }).roles = toPlainRoles(created.roles);
-      await sendWelcomeEmail(email).catch((err) =>
+      await sendWelcomeEmail(email, created.username).catch((err) =>
         console.error("[auth] welcome_mail_failed", err)
       );
       return true;
