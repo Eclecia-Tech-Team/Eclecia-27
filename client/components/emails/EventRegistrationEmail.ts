@@ -1,4 +1,4 @@
-import { getEmailLayout } from "./EmailLayout";
+import { esc, getEmailLayout } from "./EmailLayout";
 
 interface EventRegistrationEmailProps {
   participantName: string;
@@ -30,11 +30,11 @@ export function getEventRegistrationEmailHtml({
 
   const content = `
     <p style="margin: 0 0 16px; font-size: 16px; line-height: 26px; color: #ece4d2;">
-      Salutations, <strong style="color: #ffd875;">${participantName}</strong>.
+      Salutations, <strong style="color: #ffd875;">${esc(participantName)}</strong>.
     </p>
 
     <p style="margin: 0 0 20px; font-size: 15px; line-height: 26px; color: rgba(236,228,210,0.85);">
-      Your enrollment in the celestial trial has been officially sanctioned. You are registered to compete in <strong>${eventName}</strong> under the realm of <strong>${category}</strong>.
+      Your enrollment in the celestial trial has been officially sanctioned. You are registered to compete in <strong>${esc(eventName)}</strong> under the realm of <strong>${esc(category)}</strong>.
     </p>
 
     <!-- Event Dossier Certificate Box -->
@@ -46,17 +46,17 @@ export function getEventRegistrationEmailHtml({
       <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
         <tr>
           <td style="padding: 6px 0; font-size: 13px; color: rgba(236,228,210,0.6); width: 40%;">EVENT:</td>
-          <td style="padding: 6px 0; font-size: 14px; color: #ffffff; font-weight: bold;">${eventName}</td>
+          <td style="padding: 6px 0; font-size: 14px; color: #ffffff; font-weight: bold;">${esc(eventName)}</td>
         </tr>
         <tr>
           <td style="padding: 6px 0; font-size: 13px; color: rgba(236,228,210,0.6);">CREATIVE REALM:</td>
-          <td style="padding: 6px 0; font-size: 14px; color: #ffd875;">${category}</td>
+          <td style="padding: 6px 0; font-size: 14px; color: #ffd875;">${esc(category)}</td>
         </tr>
         ${
           teamName
             ? `<tr>
                 <td style="padding: 6px 0; font-size: 13px; color: rgba(236,228,210,0.6);">GUILD / TEAM:</td>
-                <td style="padding: 6px 0; font-size: 14px; color: #ffffff; font-weight: bold;">${teamName} ${
+                <td style="padding: 6px 0; font-size: 14px; color: #ffffff; font-weight: bold;">${esc(teamName)} ${
                 isTeamLeader ? '<span style="color:#6ee7b7; font-size:11px;">[LEADER]</span>' : ""
               }</td>
               </tr>`
@@ -66,17 +66,17 @@ export function getEventRegistrationEmailHtml({
           teamCode
             ? `<tr>
                 <td style="padding: 6px 0; font-size: 13px; color: rgba(236,228,210,0.6);">TEAM CODE:</td>
-                <td style="padding: 6px 0; font-family: 'Courier New', monospace; font-size: 15px; color: #6ee7b7; font-weight: bold; letter-spacing: 0.15em;">${teamCode}</td>
+                <td style="padding: 6px 0; font-family: 'Courier New', monospace; font-size: 15px; color: #6ee7b7; font-weight: bold; letter-spacing: 0.15em;">${esc(teamCode)}</td>
               </tr>`
             : ""
         }
         <tr>
           <td style="padding: 6px 0; font-size: 13px; color: rgba(236,228,210,0.6);">LOCATION:</td>
-          <td style="padding: 6px 0; font-size: 13px; color: #ece4d2;">${venue}</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #ece4d2;">${esc(venue)}</td>
         </tr>
         <tr>
           <td style="padding: 6px 0; font-size: 13px; color: rgba(236,228,210,0.6);">DATES:</td>
-          <td style="padding: 6px 0; font-size: 13px; color: #ece4d2;">${schedule}</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #ece4d2;">${esc(schedule)}</td>
         </tr>
       </table>
     </div>

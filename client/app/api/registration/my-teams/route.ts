@@ -24,7 +24,8 @@ export async function GET() {
       .populate("team", "username fullName")
       .lean();
 
-    const serializedTeams = teams.map((team: any) => {
+    type Member = { _id: mongoose.Types.ObjectId; username?: string; fullName?: string };
+    const serializedTeams = (teams as unknown as (Record<string, unknown> & { teamLeader: Member; team?: Member[] })[]).map((team) => {
       const teamLeader = team.teamLeader as {
         _id: mongoose.Types.ObjectId;
         username?: string;
@@ -32,7 +33,7 @@ export async function GET() {
       };
       const teamMembers = Array.isArray(team.team) ? team.team : [];
 
-      const normalizedMembersMap = new Map<string, any>();
+      const normalizedMembersMap = new Map<string, Member>();
       if (teamLeader?._id) {
         normalizedMembersMap.set(String(teamLeader._id), teamLeader);
       }
@@ -44,7 +45,7 @@ export async function GET() {
       return {
         ...team,
         teamSize: normalizedMembersMap.size,
-        members: Array.from(normalizedMembersMap.values()).map((member: any) => ({
+        members: Array.from(normalizedMembersMap.values()).map((member) => ({
           _id: String(member._id),
           username: member.username || "",
           fullName: member.fullName || "",

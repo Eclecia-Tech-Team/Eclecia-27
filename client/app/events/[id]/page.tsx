@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ComingSoon } from "@/components/common/ComingSoon";
-import { getEventSummary } from "@/lib/events";
+import { auth } from "@/auth";
+import { EventDetail } from "@/components/events/detail/EventDetail";
+import { getEventPage, getEventRecord } from "@/lib/event-page";
 
 type EventPageProps = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: EventPageProps): Promise<Metadata> {
   const { id } = await params;
-  const event = await getEventSummary(id);
+  const event = await getEventRecord(id);
   if (!event) return {};
 
   const title = `${event.eventName}: Eclecia'27 | Heritage Institute of Technology, Kolkata`;
@@ -22,15 +23,9 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
 
 export default async function EventPage({ params }: EventPageProps) {
   const { id } = await params;
-  const event = await getEventSummary(id);
-  if (!event) notFound();
+  const session = await auth();
+  const data = await getEventPage(id, session?.user?.id);
+  if (!data) notFound();
 
-  return (
-    <ComingSoon
-      eyebrow={event.eventName}
-      note="Event details and registration are coming soon."
-      backHref="/events"
-      backLabel="Back to events"
-    />
-  );
+  return <EventDetail data={data} />;
 }

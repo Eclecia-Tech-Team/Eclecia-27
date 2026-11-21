@@ -12,6 +12,8 @@ import { curtainNavigate, holdCurtain } from "@/lib/route-curtain";
 import { mountAtlas } from "./atlas/engine";
 import { MobileEventsAtlas } from "./MobileEventsAtlas";
 import "@/styles/events-atlas.css";
+import { Meteors } from "@/components/common/Meteors";
+import { depth } from "@/lib/depth";
 
 const phoneQuery = "(max-width: 1024px)";
 const subscribePhone = (notify: () => void) => {
@@ -63,13 +65,16 @@ export function EventsAtlas({ categories }: { categories: AtlasCategory[] }) {
         <div className="sky" aria-hidden>
           <div
             className="sky-texture"
-            style={
-              ASSETS.cloudinary.eventsBackground
+            style={{
+              ...(ASSETS.cloudinary.eventsBackground
                 ? { backgroundImage: `url(${ASSETS.cloudinary.eventsBackground})` }
-                : undefined
-            }
+                : undefined),
+              // Mouse depth; the texture's -4% inset hides its edges.
+              ...depth(14),
+            }}
           />
           <img className="dust" src={atlasArt.shared("gold-dust")} alt="" draggable={false} />
+          <Meteors style={depth(14)} />
           <div className="vignette" />
         </div>
 

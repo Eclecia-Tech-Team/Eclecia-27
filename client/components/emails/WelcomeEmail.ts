@@ -1,4 +1,4 @@
-import { getEmailLayout } from "./EmailLayout";
+import { esc, getEmailLayout } from "./EmailLayout";
 
 interface WelcomeEmailProps {
   email: string;
@@ -16,7 +16,7 @@ export function getWelcomeEmailHtml({ email, username }: WelcomeEmailProps): str
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.eclecia-hitk.in").replace(/\/+$/, "");
   const profileUrl = `${siteUrl}/profile`;
   const eventsUrl = `${siteUrl}/events`;
-  const citizenName = username || email.split("@")[0] || "Citizen";
+  const citizenName = esc(username || email.split("@")[0] || "Citizen");
 
   const content = `
     <p style="margin: 0 0 16px; font-size: 16px; line-height: 26px; color: #ece4d2;">

@@ -5,6 +5,7 @@ import "@/styles/globals.css";
 import { ASSETS } from "@/constants/assets";
 import { SiteLoader } from "@/components/common/loader/SiteLoader";
 import { RouteCurtain } from "@/components/common/RouteCurtain";
+import { PointerDepth } from "@/components/common/PointerDepth";
 import { loaderBootScript } from "@/components/common/loader/bootScript";
 import { Providers } from "@/app/providers";
 import { SEO_KEYWORDS, getStructuredData, getBreadcrumbJsonLd } from "@/constants/seo";
@@ -208,6 +209,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <SiteLoader />
         <RouteCurtain />
+        <PointerDepth />
         <Providers>{children}</Providers>
       </body>
     </html>

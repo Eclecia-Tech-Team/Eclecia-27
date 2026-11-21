@@ -1,4 +1,4 @@
-import { getEmailLayout } from "./EmailLayout";
+import { esc, getEmailLayout } from "./EmailLayout";
 
 interface TeamInvitationEmailProps {
   recipientEmail: string;
@@ -27,7 +27,7 @@ export function getTeamInvitationEmailHtml({
     </p>
 
     <p style="margin: 0 0 20px; font-size: 15px; line-height: 26px; color: rgba(236,228,210,0.85);">
-      Guild Leader <strong style="color: #ffd875;">${leaderName}</strong> has summoned you to join their guild <strong>${teamName}</strong> for the upcoming battle in <strong>${eventName}</strong> at Eclecia'27.
+      Guild Leader <strong style="color: #ffd875;">${esc(leaderName)}</strong> has summoned you to join their guild <strong>${esc(teamName)}</strong> for the upcoming battle in <strong>${esc(eventName)}</strong> at Eclecia'27.
     </p>
 
     <!-- Team Code Invitation Box -->
@@ -36,10 +36,10 @@ export function getTeamInvitationEmailHtml({
         GUILD RECRUITMENT CIPHER
       </p>
       <p style="margin: 0 0 12px; font-family: 'Courier New', Courier, monospace; font-size: 32px; font-weight: bold; letter-spacing: 0.3em; color: #ffd875;">
-        ${teamCode}
+        ${esc(teamCode)}
       </p>
       <p style="margin: 0; font-size: 13px; color: #6ee7b7;">
-        Event: <strong>${eventName}</strong> &bull; Guild: <strong>${teamName}</strong>
+        Event: <strong>${esc(eventName)}</strong> &bull; Guild: <strong>${esc(teamName)}</strong>
       </p>
     </div>
 
@@ -55,7 +55,7 @@ export function getTeamInvitationEmailHtml({
         2. Navigate to your <strong>Profile Dashboard &rarr; Guilds</strong> tab.
       </p>
       <p style="margin: 0; font-size: 13px; line-height: 22px; color: #ece4d2;">
-        3. Enter your team code <strong>${teamCode}</strong> to join the squad roster.
+        3. Enter your team code <strong>${esc(teamCode)}</strong> to join the squad roster.
       </p>
     </div>
 

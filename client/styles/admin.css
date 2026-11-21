@@ -1,0 +1,128 @@
+/* === Admin panel (/admin, components/admin) ===================================
+   Work surface, not a showcase: near-black, gold hairlines, mono labels.
+   ============================================================================ */
+
+.adm {
+  min-height: 100dvh;
+  background: #060709;
+  color: var(--parchment);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.adm-panel {
+  background: rgba(14, 17, 21, 0.92);
+  border: 1px solid rgba(217, 164, 65, 0.2);
+}
+
+.adm-label {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(236, 228, 210, 0.5);
+}
+
+.adm-input {
+  width: 100%;
+  border: 1px solid rgba(236, 228, 210, 0.16);
+  background: rgba(0, 0, 0, 0.4);
+  padding: 9px 12px;
+  font-size: 14px;
+  color: var(--parchment);
+  outline: none;
+  border-radius: 2px;
+  transition: border-color 0.15s;
+}
+.adm-input::placeholder { color: rgba(236, 228, 210, 0.3); }
+.adm-input:focus { border-color: var(--gold); }
+.adm-input:disabled { opacity: 0.5; }
+select.adm-input { appearance: none; background-image: linear-gradient(45deg, transparent 50%, rgba(217,164,65,.8) 50%), linear-gradient(135deg, rgba(217,164,65,.8) 50%, transparent 50%); background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 30px; }
+select.adm-input option { background: #0e1115; }
+textarea.adm-input { resize: vertical; line-height: 1.55; }
+
+.adm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid rgba(236, 228, 210, 0.2);
+  color: var(--parchment);
+  border-radius: 2px;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+}
+.adm-btn:hover:not(:disabled) { border-color: rgba(236, 228, 210, 0.45); background: rgba(236, 228, 210, 0.05); }
+.adm-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.adm-btn[data-variant="primary"] { background: var(--gold); border-color: var(--gold); color: #0b0b0b; }
+.adm-btn[data-variant="primary"]:hover:not(:disabled) { background: #e7b65a; }
+.adm-btn[data-variant="danger"] { border-color: rgba(229, 115, 99, 0.45); color: #f0a093; }
+.adm-btn[data-variant="danger"]:hover:not(:disabled) { background: rgba(229, 115, 99, 0.1); border-color: #e57363; }
+.adm-btn[data-variant="ghost"] { border-color: transparent; }
+.adm-btn[data-size="sm"] { padding: 4px 9px; font-size: 12px; }
+
+.adm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.adm-badge[data-tone="ok"] { color: #8fc79a; }
+.adm-badge[data-tone="warn"] { color: #e6c06a; }
+.adm-badge[data-tone="bad"] { color: #f0a093; }
+.adm-badge[data-tone="info"] { color: #8fb7c9; }
+.adm-badge[data-tone="mute"] { color: rgba(236, 228, 210, 0.45); }
+
+.adm-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.adm-table th {
+  text-align: left;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(236, 228, 210, 0.45);
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(217, 164, 65, 0.2);
+  white-space: nowrap;
+}
+.adm-table td { padding: 10px 12px; border-bottom: 1px solid rgba(236, 228, 210, 0.07); vertical-align: top; }
+.adm-table tbody tr:hover td { background: rgba(236, 228, 210, 0.025); }
+
+.adm-switch {
+  position: relative;
+  width: 34px;
+  height: 19px;
+  flex: none;
+  border-radius: 999px;
+  background: rgba(236, 228, 210, 0.18);
+  transition: background 0.15s;
+}
+.adm-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--parchment);
+  transition: transform 0.15s;
+}
+.adm-switch[aria-checked="true"] { background: var(--gold); }
+.adm-switch[aria-checked="true"]::after { transform: translateX(15px); background: #0b0b0b; }
+.adm-switch:disabled { opacity: 0.45; }
+
+.adm-nav a[aria-current="page"] { color: var(--gold); background: rgba(217, 164, 65, 0.08); border-color: var(--gold); }
+
+@keyframes adm-toast-in { from { opacity: 0; transform: translateY(8px); } }
+.adm-toast { animation: adm-toast-in 0.2s ease-out; }

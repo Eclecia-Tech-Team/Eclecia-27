@@ -20,6 +20,7 @@ import {
 import { ASSETS } from "@/constants/assets";
 import { clearAtlasSpot, readAtlasSpot } from "./atlas/atlas-spot";
 import "@/styles/mobile-events.css";
+import { Meteors } from "@/components/common/Meteors";
 
 type Selection = {
   mode: "categories" | "events";
@@ -365,6 +366,9 @@ export function MobileEventsAtlas({
             : undefined
         }
       />
+      <div className="m-meteors" aria-hidden="true">
+        <Meteors />
+      </div>
       <div className="m-figures" aria-hidden="true">
         <img
           className="m-figure m-figure--veena"
@@ -635,7 +639,7 @@ export function MobileEventsAtlas({
                         />
                         <img
                           className="m-world-art"
-                          src={atlasArt.event(c.id, item.id)}
+                          src={atlasArt.event(c.id, item.id, item.image)}
                           alt=""
                           draggable={false}
                           onError={imageFailed}

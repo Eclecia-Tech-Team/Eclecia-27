@@ -105,6 +105,7 @@ export interface IRegistration {
   checkedIn: boolean;
   checkedInAt?: Date;
   checkedInBy?: Types.ObjectId;
+  checkedInByEmail?: string;
   foodServedCount: number;
   lastFoodServedAt?: Date;
   createdAt: Date;

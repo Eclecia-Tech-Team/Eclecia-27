@@ -361,7 +361,7 @@ export function mountAtlas(root: HTMLElement, { categories: data, onDiscover, on
         image(atlasArt.shared("corona-halo"), "planet-halo"),
         image(atlasArt.shared("event-orbit"), "planet-ring rear"),
         image(atlasArt.shared("planet-base"), "planet-base"),
-        image(atlasArt.event(c.id, event.id), "planet-artwork", i === 0),
+        image(atlasArt.event(c.id, event.id, event.image), "planet-artwork", i === 0),
         image(atlasArt.shared("event-orbit"), "planet-ring front"),
       );
       on(node, "click", () => (Math.abs(progress - i) < 0.35 || i === active ? discover() : goTo(i)));

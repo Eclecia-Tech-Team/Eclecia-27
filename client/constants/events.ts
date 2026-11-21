@@ -10,6 +10,8 @@ export interface AtlasEvent {
   description: string;
   kind: string;
   club?: string;
+  /** Artwork URL set in the admin panel (Event.banner); else the bundled art by id. */
+  image?: string;
 }
 
 export interface AtlasCategory {
@@ -339,6 +341,9 @@ export const atlasArt = {
     if (dbImage) return dbImage;
     const catEvents = ASSETS.cloudinary.events[categoryId];
     const cloudUrl = catEvents ? catEvents[eventId] : "";
-    return cloudUrl || `${ATLAS_MEDIA}/events/${categoryId}/${eventId}.webp`;
+    if (cloudUrl) return cloudUrl;
+    // Events added in the admin panel without artwork have no bundled file: use the plain planet.
+    const bundled = ATLAS_CATEGORIES.some((c) => c.id === categoryId && c.events.some((e) => e.id === eventId));
+    return bundled ? `${ATLAS_MEDIA}/events/${categoryId}/${eventId}.webp` : atlasArt.shared("planet-base");
   },
 } as const;

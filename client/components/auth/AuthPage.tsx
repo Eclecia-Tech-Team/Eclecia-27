@@ -9,6 +9,8 @@ import { PageFade } from "@/components/common/PageFade";
 import { ASSETS } from "@/constants/assets";
 import { AuthPanel } from "./AuthPanel";
 import "@/styles/auth.css";
+import { Meteors } from "@/components/common/Meteors";
+import { depth } from "@/lib/depth";
 
 /** Server shell for the (auth) layout: reads the session, renders the panel. */
 export async function AuthPage({ children }: { children: ReactNode }) {
@@ -38,7 +40,11 @@ export async function AuthPage({ children }: { children: ReactNode }) {
           alt=""
           aria-hidden
           className="pointer-events-none fixed inset-0 h-full w-full object-cover opacity-60"
+          style={depth(14, 1.06)}
         />
+        <div className="pointer-events-none fixed inset-0" aria-hidden style={depth(14)}>
+          <Meteors />
+        </div>
         <SiteHeader />
         <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-14 pt-24 md:pb-10 md:pt-24">
           <Suspense fallback={null}>

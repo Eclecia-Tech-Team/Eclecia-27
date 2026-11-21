@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import {
+  getEmailLayout,
   getWelcomeEmailHtml,
   getOtpEmailHtml,
   getEventRegistrationEmailHtml,
@@ -124,4 +125,71 @@ export async function sendAnnouncementEmail(
     html,
     `announcement=${params.headline}`
   );
+}
+
+/** Panel sign-in code. */
+export async function sendAdminOtpEmail(to: string, otp: string) {
+  const html = getEmailLayout({
+    previewText: `Your Eclecia'27 control room code: ${otp}`,
+    badge: "CONTROL ROOM",
+    headline: "Your sign-in code",
+    subheadline: "Someone (hopefully you) is signing in to the Eclecia'27 admin panel.",
+    content: `
+      <p style="margin: 24px 0; text-align: center; font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: bold; letter-spacing: 0.35em; color: #ffd875;">${otp}</p>
+      <p style="margin: 0; font-size: 14px; line-height: 24px; text-align: center; color: rgba(236,228,210,0.7);">It works once and expires in 10 minutes. If this wasn't you, change your password and tell the tech team.</p>`,
+    footerNote: "Eclecia'27 control room",
+  });
+  return send(to, `Eclecia'27 control room code: ${otp}`, html, `admin_otp=${otp}`);
+}
+
+/** Invitation to the admin panel. */
+export async function sendAdminInviteEmail(to: string, role: string, loginUrl: string) {
+  const html = getEmailLayout({
+    previewText: "You've been added to the Eclecia'27 control room",
+    badge: "CONTROL ROOM",
+    headline: "You're on the crew",
+    subheadline: `You've been added to the Eclecia'27 admin panel as ${role}.`,
+    content: `
+      <p style="margin: 0 0 12px; font-size: 15px; line-height: 26px; color: #ece4d2;">Open the panel, sign in with this email address and choose a password (8+ characters). We'll email you a one-time code to confirm it's you.</p>`,
+    actionButton: { label: "Open the control room", url: loginUrl },
+    footerNote: "Eclecia'27 control room",
+  });
+  return send(to, "You've been added to the Eclecia'27 control room", html, `admin_invite=${loginUrl}`);
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export interface BroadcastMessage {
+  to: string;
+  subject: string;
+  html: string;
+}
+
+/**
+ * Many personalised emails in Resend batches of 100. Returns how many went
+ * out; stops at the first failed batch so a retry doesn't double-send much.
+ */
+export async function sendBroadcast(messages: BroadcastMessage[]): Promise<{ sent: number; error?: string }> {
+  if (!resend) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error('Invalid/Missing environment variable: "RESEND_API_KEY"');
+    }
+    for (const m of messages) console.info(`[mail:dev] to=${m.to} subject="${m.subject}" broadcast`);
+    return { sent: messages.length };
+  }
+  let sent = 0;
+  for (let i = 0; i < messages.length; i += 100) {
+    const chunk = messages.slice(i, i + 100).map((m) => ({ from, to: [m.to], subject: m.subject, html: m.html }));
+    // Resend allows a couple of requests a second: pace batches, and back off on rate limits.
+    if (i > 0) await sleep(700);
+    let error: { message: string; name?: string } | null = null;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      ({ error } = await resend.batch.send(chunk));
+      if (!error || !/rate|429|too many/i.test(`${error.name} ${error.message}`)) break;
+      await sleep(1500 * (attempt + 1));
+    }
+    if (error) return { sent, error: error.message };
+    sent += chunk.length;
+  }
+  return { sent };
 }

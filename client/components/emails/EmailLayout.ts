@@ -19,6 +19,10 @@ interface EmailLayoutProps {
  * Optimized for broad email client support (Gmail, Outlook, Apple Mail, mobile).
  * Features Eclecia's gold (#d9a441) and parchment (#ece4d2) architectural palette on obsidian/black (#07090c).
  */
+/** Escape text for HTML. Every name, title and team that reaches an email goes through this. */
+export const esc = (v: unknown) =>
+  String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
 export function getEmailLayout({
   previewText = "Eclecia'27 — The Annual Cultural Festival of Heritage Institute of Technology",
   badge = "OFFICIAL DISPATCH",
@@ -41,7 +45,7 @@ export function getEmailLayout({
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="color-scheme" content="dark only">
   <meta name="supported-color-schemes" content="dark only">
-  <title>${headline}</title>
+  <title>${esc(headline)}</title>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -109,7 +113,7 @@ export function getEmailLayout({
 <body style="margin: 0; padding: 24px 8px; background-color: #030406; color: #ece4d2; -webkit-font-smoothing: antialiased;">
   <!-- Hidden Preheader Preview Text -->
   <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all;">
-    ${previewText}
+    ${esc(previewText)}
     &#847; &zwnj; &nbsp; &#8199; &shy; &#847; &zwnj; &nbsp; &#8199; &shy; &#847; &zwnj; &nbsp; &#8199; &shy;
   </div>
 
@@ -173,7 +177,7 @@ export function getEmailLayout({
                       <tr>
                         <td style="border: 1px solid rgba(217,164,65,0.4); background-color: rgba(217,164,65,0.08); padding: 4px 14px; text-align: center;">
                           <span style="font-family: 'Courier New', Courier, monospace; font-size: 10px; font-weight: bold; letter-spacing: 0.25em; color: #ffd875; text-transform: uppercase;">
-                            ✦ ${badge} ✦
+                            ✦ ${esc(badge)} ✦
                           </span>
                         </td>
                       </tr>
@@ -181,14 +185,14 @@ export function getEmailLayout({
 
                     <!-- Headline Title -->
                     <h1 class="headline-text" style="margin: 0 0 10px; text-align: center; font-family: 'Georgia', 'Times New Roman', serif; font-size: 30px; font-weight: normal; line-height: 38px; color: #ffffff; letter-spacing: 0.04em;">
-                      ${headline}
+                      ${esc(headline)}
                     </h1>
 
                     <!-- Subheadline (if provided) -->
                     ${
                       subheadline
                         ? `<p style="margin: 0 0 20px; text-align: center; font-family: 'Georgia', serif; font-size: 15px; line-height: 24px; color: rgba(217,164,65,0.85); font-style: italic;">
-                            ${subheadline}
+                            ${esc(subheadline)}
                           </p>`
                         : ""
                     }

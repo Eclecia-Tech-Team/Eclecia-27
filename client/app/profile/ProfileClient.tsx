@@ -1,5 +1,6 @@
 "use client";
 
+import { PassQr } from "@/components/profile/PassQr";
 import { useState, useEffect, useRef } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { SiteHeader } from "@/components/common/Header";
@@ -13,15 +14,20 @@ import AvatarModal from "./AvatarModal";
 import EventsTab from "@/components/profile/EventsTab";
 import TeamsTab from "@/components/profile/TeamsTab";
 import "@/styles/profile.css";
+import { Meteors } from "@/components/common/Meteors";
+import { depth } from "@/lib/depth";
 
 export default function ProfileClient({
   initialUsername,
   initialAvatar,
   initialEmail,
+  returnTo,
 }: {
   initialUsername: string;
   initialAvatar: number | null;
   initialEmail: string;
+  /** Event page that sent the visitor here to finish their profile. */
+  returnTo?: string;
 }) {
   const tabs = [
     { id: "details", label: "Dossier" },
@@ -238,11 +244,29 @@ export default function ProfileClient({
           alt=""
           aria-hidden
           className="pointer-events-none fixed inset-0 h-full w-full object-cover opacity-60"
+          style={depth(14, 1.06)}
         />
+        <div className="pointer-events-none fixed inset-0" aria-hidden style={depth(14)}>
+          <Meteors />
+        </div>
 
         <SiteHeader />
 
         <main className="relative z-10 flex flex-1 flex-col items-center justify-start px-3 sm:px-4 pt-24 pb-16 md:pt-28 max-w-4xl w-full mx-auto space-y-4 sm:space-y-6">
+          {returnTo && (
+            <div className="flex w-full flex-col items-center justify-between gap-3 border border-gold/40 bg-black/60 px-4 py-3 text-center sm:flex-row sm:text-left">
+              <p className="text-[14px] text-parchment/85">
+                {profile.isProfileComplete
+                  ? "Your profile is complete. You can register now."
+                  : "Fill in your full name, phone and college, then save to register for the event."}
+              </p>
+              {profile.isProfileComplete && (
+                <GoldButton href={returnTo} size="sm">
+                  Back to the event
+                </GoldButton>
+              )}
+            </div>
+          )}
           {notification && (
             <div
               className={`w-full p-2.5 text-center text-xs font-taiganja tracking-wider border shadow-lg transition-all ${
@@ -443,7 +467,7 @@ export default function ProfileClient({
                   onClick={() => setActiveTab(tab.id)}
                   className="profile-tab-item"
                 >
-                  <span className="profile-tab-index">{String(i + 1).padStart(2, "0")} //</span>
+                  <span className="profile-tab-index">{String(i + 1).padStart(2, "0")} {"//"}</span>
                   {tab.label}
                 </button>
               ))}
@@ -726,13 +750,7 @@ export default function ProfileClient({
               {profile.qrPayload ? (
                 <div className="flex flex-col items-center gap-3 py-2">
                   <div className="p-3 bg-white border-2 border-gold/70 shadow-[0_0_20px_rgba(217,164,65,0.3)]">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
-                        profile.qrPayload
-                      )}`}
-                      alt="Festival Pass QR"
-                      className="w-48 h-48 object-contain"
-                    />
+                    <PassQr payload={profile.qrPayload} className="w-48 h-48" />
                   </div>
                   <p className="font-taiganja text-[10px] tracking-widest uppercase text-parchment/50">
                     Scan at festival venue gates for check-in

@@ -8,7 +8,7 @@ const LAYERS = ["moon", "rays", "minisun"] as const;
 
 /**
  * Inline <head> script, runs before first paint:
- *  - skips the loader if it already played this tab session;
+ *  - skips the loader on /admin, or if it already played this tab session;
  *  - otherwise pins the loader's eclipse onto the hero eclipse's viewport
  *    rect (--ld-{m,r,s}{x,y,w}: centre + width of moon, rays, mini sun),
  *    using the same cover-scale and layout-tier rules as app/page.tsx, so the
@@ -38,6 +38,7 @@ export function loaderBootScript(): string {
   };
   return `(function(d){
 var r=document.documentElement;
+if(/^\\/admin(\\/|$)/.test(location.pathname)){r.dataset.loaderSkip="1";return}
 try{if(d.once&&sessionStorage.getItem(d.key)&&!/[?&]loader(=|&|$)/.test(location.search)){r.dataset.loaderSkip="1";return}}catch(e){}
 function mode(){var q=d.queries;return matchMedia(q[0]).matches?"tablet":matchMedia(q[1]).matches?"tabletPortrait":matchMedia(q[2]).matches?"mobile":"desktop"}
 function fit(){

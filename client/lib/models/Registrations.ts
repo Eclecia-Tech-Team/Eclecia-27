@@ -39,9 +39,13 @@ const registrationSchema = new Schema(
     checkedInAt: {
       type: Date,
     },
+    // Who scanned them in: an AdminUser id (absent for master-key sessions), plus the email for the record.
     checkedInBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "AdminUser",
+    },
+    checkedInByEmail: {
+      type: String,
     },
     foodServedCount: {
       type: Number,
@@ -54,6 +58,9 @@ const registrationSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// One entry per person per event; also the guard against double-submits.
+registrationSchema.index({ eventId: 1, participant: 1 }, { unique: true });
 
 const Registration =
   models.Registration ||

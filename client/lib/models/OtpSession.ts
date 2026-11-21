@@ -10,6 +10,7 @@ const otpSessionSchema = new Schema({
   email: { type: String, required: true },
   otpHash: { type: String, required: true },
   attempts: { type: Number, default: 0 },
+  payload: { type: String, default: null },
   expiresAt: { type: Date, required: true, index: { expires: 0 } },
 });
 

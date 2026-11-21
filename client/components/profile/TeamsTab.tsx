@@ -144,11 +144,11 @@ export default function TeamsTab() {
         message: data.message || "Member dismissed successfully",
       });
       setMemberToRemove(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
       setNotification({
         type: "error",
-        message: error.message || "Error removing member",
+        message: (error instanceof Error && error.message) || "Error removing member",
       });
     } finally {
       setUpdating(false);
