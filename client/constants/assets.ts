@@ -154,8 +154,8 @@ export const ASSETS = {
           "https://res.cloudinary.com/ajpcnwvo/image/upload/v1793485887/headline-hustle.webp",
         pentathlon:
           "https://res.cloudinary.com/ajpcnwvo/image/upload/v1793485888/pentathlon.webp",
-        "kavi-sammelan":
-          "https://res.cloudinary.com/ajpcnwvo/image/upload/v1793485889/kavi-sammelan.webp",
+        rifaqat:
+          "https://res.cloudinary.com/ajpcnwvo/image/upload/v1795203699/rifaqat.webp",
       },
     } as Record<string, Record<string, string>>,
   },
