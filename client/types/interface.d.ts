@@ -125,6 +125,7 @@ export interface ITeam {
 
 export interface RegiEventProps {
   _id: string;
+  slug?: string;
   eventName: string;
   category: EventCategory;
   banner?: string | null;

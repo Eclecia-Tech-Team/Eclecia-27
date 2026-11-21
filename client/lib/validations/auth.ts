@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+/** Names that would let someone pass as staff or the fest itself. Matched ignoring case, _ and -. */
+const RESERVED = ["admin", "administrator", "eclecia", "hitk", "heritage", "official", "support", "staff", "team", "organizer", "organiser", "moderator", "mod", "root", "system", "help", "null", "undefined"];
+
+export function reservedUsername(name: string) {
+  const flat = name.toLowerCase().replace(/[_-]/g, "");
+  return RESERVED.some((r) => flat === r || (r.length >= 5 && flat.includes(r)));
+}
+
 export const usernameSchema = z
   .string()
   .trim()
@@ -8,7 +16,8 @@ export const usernameSchema = z
   .regex(
     /^[a-zA-Z0-9_-]+$/,
     "Username can only contain letters, numbers, underscores and hyphens"
-  );
+  )
+  .refine((v) => !reservedUsername(v), "That username is reserved. Pick another.");
 
 export const registerApiSchema = z.object({
   username: usernameSchema,

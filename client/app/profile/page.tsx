@@ -10,9 +10,11 @@ const safeReturn = (value?: string) => (value && value.startsWith("/") && !value
 export default async function ProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ returnTo?: string }>;
+  searchParams: Promise<{ returnTo?: string; tab?: string }>;
 }) {
-  const returnTo = safeReturn((await searchParams).returnTo);
+  const sp = await searchParams;
+  const returnTo = safeReturn(sp.returnTo);
+  const initialTab = sp.tab === "events" || sp.tab === "teams" ? sp.tab : "details";
   const self = returnTo ? `/profile?returnTo=${encodeURIComponent(returnTo)}` : "/profile";
   const session = await auth();
   if (!session?.user?.id) {
@@ -31,10 +33,12 @@ export default async function ProfilePage({
 
   return (
     <ProfileClient
+      key={initialTab}
       initialUsername={user.username}
       initialAvatar={user.avatar ?? null}
       initialEmail={user.email}
       returnTo={returnTo}
+      initialTab={initialTab}
     />
   );
 }

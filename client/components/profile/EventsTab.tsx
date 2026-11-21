@@ -1,9 +1,11 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useEffect, useState } from "react";
 import ConfirmationModal from "./ConfirmationModal";
 import type { Registration } from "@/types/interface";
-import { ASSETS } from "@/constants/assets";
+import { TransitionLink } from "@/components/common/TransitionLink";
 
 export default function EventsTab() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -58,13 +60,13 @@ export default function EventsTab() {
         setRegistrations((prev) => prev.filter((r) => r._id !== modalRegId));
         setNotification({
           type: "success",
-          message: data.message || "Successfully de-registered from event",
+          message: data.message || "You've withdrawn from the event.",
         });
         setModalRegId(null);
       } else {
         setNotification({
           type: "error",
-          message: data.error || "Failed to de-register",
+          message: data.error || "Couldn't withdraw. Try again.",
         });
       }
     } catch (error) {
@@ -85,16 +87,13 @@ export default function EventsTab() {
     <>
       <ConfirmationModal
         isOpen={Boolean(modalRegId)}
-        title="De-Register Event"
+        title="Withdraw from this event?"
         name={modalReg?.eventId.eventName}
-        confirmLabel="De-Register"
+        confirmLabel="Withdraw"
         description={
           <p>
-            Are you sure you want to de-register from{" "}
-            <span className="text-gold font-semibold">
-              {modalReg?.eventId.eventName}
-            </span>
-            ? This action cannot be reversed.
+            You&apos;ll lose your place in <span className="text-parchment">{modalReg?.eventId.eventName}</span>. You can register
+            again later while registrations are open.
           </p>
         }
         onConfirm={handleDeregister}
@@ -102,142 +101,69 @@ export default function EventsTab() {
         loading={Boolean(deregisteringId)}
       />
 
-      <div className="profile-chamber-card p-6 sm:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gold/20 pb-4 gap-2">
-          <div>
-            <h2 className="font-nasyhama text-2xl sm:text-3xl text-gold">
-              Registered Quests
-            </h2>
-            <p className="font-taiganja text-[11px] uppercase tracking-[0.25em] text-parchment/60">
-              Active entries recorded in the festival ledger
-            </p>
-          </div>
-          <span className="font-mono text-xs text-gold/70 tracking-wider">
-            TOTAL: {registrations.length.toString().padStart(2, "0")}
-          </span>
-        </div>
-
+      <div>
         {notification && (
-          <div
-            className={`p-3 text-xs text-center border font-taiganja tracking-wider ${
-              notification.type === "success"
-                ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-300"
-                : "bg-red-950/40 border-red-500/40 text-red-300"
-            }`}
-          >
+          <p role="status" className={`pt-5 text-[14px] ${notification.type === "success" ? "text-parchment/80" : "text-[#f6b7ab]"}`}>
             {notification.message}
-          </div>
+          </p>
         )}
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-12 space-y-3">
-            <div className="w-8 h-8 border-2 border-gold border-t-transparent animate-spin" />
-            <p className="font-taiganja text-[11px] uppercase tracking-widest text-parchment/60">
-              Retrieving ledger records...
-            </p>
-          </div>
-        ) : registrations.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
-            {registrations.map((reg) => (
-              <div
-                key={reg._id}
-                className="relative border border-gold/30 bg-[#090d12]/70 p-4 transition-all duration-300 hover:border-gold/60 hover:bg-[#0d141c]/80 flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  {reg.eventId.banner && (
-                    <div className="relative w-full h-36 overflow-hidden border border-gold/25">
-                      <img
-                        src={reg.eventId.banner}
-                        alt={reg.eventId.eventName}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-
-                  <div>
-                    <h3 className="font-nasyhama text-xl text-gold">
-                      {reg.eventId.eventName}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      <span className="profile-arch-tag">
-                        {reg.eventId.category}
-                      </span>
-                      {reg.isInTeam ? (
-                        <span className="profile-arch-tag text-cyan-300 border-cyan-500/40 bg-cyan-950/30">
-                          TEAM ENTRY
-                        </span>
-                      ) : (
-                        <span className="profile-arch-tag text-parchment/70 border-parchment/30">
-                          SOLO
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1 text-xs text-parchment/80 font-serif pt-1 border-t border-gold/15">
-                    <div className="flex justify-between py-0.5">
-                      <span className="font-taiganja text-[10px] text-gold/60 uppercase tracking-wider">
-                        DATE
-                      </span>
-                      <span>{reg.eventId.date || "TBA"}</span>
-                    </div>
-                    <div className="flex justify-between py-0.5">
-                      <span className="font-taiganja text-[10px] text-gold/60 uppercase tracking-wider">
-                        TIME
-                      </span>
-                      <span>{reg.eventId.time || "TBA"}</span>
-                    </div>
-                    <div className="flex justify-between py-0.5">
-                      <span className="font-taiganja text-[10px] text-gold/60 uppercase tracking-wider">
-                        VENUE
-                      </span>
-                      <span>{reg.eventId.venue || "TBA"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-3 mt-3 border-t border-gold/20 flex flex-col gap-2">
-                  <div className="flex items-center justify-between text-[11px] font-taiganja tracking-wider">
-                    <span className="text-parchment/50">
-                      REG: {new Date(reg.createdAt).toLocaleDateString()}
-                    </span>
-                    <span
-                      className={`profile-arch-tag ${
-                        reg.verified ? "text-emerald-300 border-emerald-500/40" : "text-amber-300 border-amber-500/40"
-                      }`}
-                    >
-                      {reg.verified ? "VERIFIED" : "PENDING"}
-                    </span>
-                  </div>
-
-                  {canDeregister(reg) && (
-                    <button
-                      type="button"
-                      onClick={() => setModalRegId(reg._id)}
-                      disabled={Boolean(deregisteringId)}
-                      className="mt-1 w-full py-1.5 border border-red-500/40 bg-red-950/20 text-red-300 hover:bg-red-900/30 hover:border-red-500 text-[10px] font-taiganja uppercase tracking-[0.2em] transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      De-Register Entry
-                    </button>
-                  )}
+          <div className="flex flex-col gap-0" aria-busy="true">
+            {[0, 1].map((i) => (
+              <div key={i} className="pf-row">
+                <div className="pf-thumb animate-pulse" />
+                <div className="space-y-2">
+                  <div className="h-5 w-40 animate-pulse bg-parchment/10" />
+                  <div className="h-3 w-56 animate-pulse bg-parchment/5" />
                 </div>
               </div>
             ))}
           </div>
+        ) : registrations.length > 0 ? (
+          <ul>
+            {registrations.map((reg) => {
+              const ev = reg.eventId;
+              const href = `/events/${ev.slug ?? ev._id}`;
+              const known = (v?: string) => (v && !/^(tba|tbd)$/i.test(v.trim()) ? v : "");
+              const when = [known(ev.date), known(ev.time)].filter(Boolean).join(" · ") || "Schedule to be announced";
+              return (
+                <li key={reg._id} className="pf-row">
+                  <TransitionLink href={href} className="pf-thumb block" aria-hidden tabIndex={-1}>
+                    {ev.banner && <img src={ev.banner} alt="" className="h-full w-full object-cover" />}
+                  </TransitionLink>
+                  <div className="min-w-0">
+                    <TransitionLink href={href} className="font-display text-[24px] font-semibold leading-tight text-parchment transition-colors hover:text-gold">
+                      {ev.eventName}
+                    </TransitionLink>
+                    <p className="mt-1 text-[13.5px] text-parchment/55">
+                      {ev.category} · {reg.isInTeam ? "Team" : "Solo"} · {when}
+                      {known(ev.venue) && ` · ${ev.venue}`}
+                    </p>
+                  </div>
+                  <div className="pf-row-end flex flex-col items-end gap-2.5 max-sm:items-start">
+                    <span className="pf-status" data-tone={reg.verified ? "ok" : "wait"}>
+                      {reg.verified ? "Confirmed" : "Payment pending"}
+                    </span>
+                    {canDeregister(reg) && (
+                      <button type="button" className="pf-link" data-tone="danger" disabled={Boolean(deregisteringId)} onClick={() => setModalRegId(reg._id)}>
+                        Withdraw
+                      </button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 space-y-3 text-center">
-            <img
-              src={ASSETS.cloudinary.divider}
-              alt=""
-              aria-hidden
-              className="-my-2 w-48 opacity-60 pointer-events-none"
-            />
-            <h3 className="font-nasyhama text-2xl text-parchment">
-              No Quests Recorded
-            </h3>
-            <p className="font-taiganja text-[11px] uppercase tracking-widest text-parchment/50 max-w-sm">
-              Explore the Events Atlas to enlist in competitions and live showcases.
+          <div className="py-14">
+            <p className="font-display text-[26px] text-parchment">You haven&apos;t registered for anything yet.</p>
+            <p className="mt-2 max-w-md text-[15px] leading-relaxed text-parchment/55">
+              Seven worlds of theatre, dance, music, art and words. Pick one and make an entrance.
             </p>
+            <TransitionLink href="/events" className="pf-link mt-6 inline-block text-gold">
+              Explore events →
+            </TransitionLink>
           </div>
         )}
       </div>

@@ -6,14 +6,6 @@
   --auth-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Inner hairline, echoing the double line on GoldButton's frame. */
-.auth-card::after {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  border: 1px solid rgba(217, 164, 65, 0.16);
-  pointer-events: none;
-}
 
 /* Collapse: animates to the content's real height with no measuring. */
 .auth-collapse {
@@ -74,11 +66,23 @@
 
 /* Art pane: the eclipse rises over the hills for register and sets for sign-in. */
 .auth-eclipse {
-  transform: translate(-50%, 16%);
+  transform: translate(-50%, 30%);
   transition: transform 700ms var(--auth-ease);
 }
-.auth-card[data-tab="register"] .auth-eclipse {
-  transform: translate(-50%, -8%);
+@media (min-width: 768px) {
+  .auth-eclipse { transform: translate(-50%, 12%); }
+  .auth-card[data-tab="register"] .auth-eclipse { transform: translate(-50%, -6%); }
+}
+
+/* Slow, almost imperceptible life: the dust drifts. */
+.auth-dust { animation: auth-drift 30s ease-in-out infinite alternate; }
+@keyframes auth-drift { from { transform: scale(1.04) translateY(0); } to { transform: scale(1.04) translateY(-14px); } }
+.auth-banner {
+  opacity: 0.9;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.8));
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-dust { animation: none; }
 }
 .auth-art-piece {
   opacity: 0;
@@ -105,88 +109,160 @@
   }
 }
 
-/* =========================================================================
-   Luxury Celestial Auth Box Overhauls (Bespoke Eclecia Aesthetic)
-   ========================================================================= */
+/* ===== Look (2026): foil-edged card, editorial header, underline fields ===== */
 
-/* Atmospheric card background with cosmic glow & filigree corner anchors */
 .auth-card {
-  background: radial-gradient(circle at 75% 20%, rgba(20, 26, 32, 0.94), rgba(6, 9, 12, 0.98) 75%) !important;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(165deg, rgba(19, 17, 13, 0.97) 0%, rgba(8, 9, 11, 0.98) 55%, rgba(6, 7, 8, 0.99) 100%) padding-box,
+    linear-gradient(150deg, rgba(255, 220, 140, 0.8), rgba(217, 164, 65, 0.18) 32%, rgba(217, 164, 65, 0.08) 60%, rgba(255, 216, 117, 0.55)) border-box;
   box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.9),
-    0 0 45px rgba(217, 164, 65, 0.12),
-    inset 0 0 35px rgba(217, 164, 65, 0.04) !important;
-  border: 1px solid rgba(217, 164, 65, 0.45) !important;
-  backdrop-filter: blur(14px) !important;
+    0 50px 120px -40px rgba(0, 0, 0, 0.95),
+    0 0 80px -30px rgba(217, 164, 65, 0.22);
+  backdrop-filter: blur(14px);
 }
-
-/* Double gold hairline framing */
 .auth-card::after {
   content: "";
   position: absolute;
-  inset: 6px;
-  border: 1px solid rgba(217, 164, 65, 0.22) !important;
+  inset: 9px;
+  border: 1px solid rgba(217, 164, 65, 0.12);
   pointer-events: none;
 }
 
-/* Filigree corner brackets on the card frame */
-.auth-card::before {
+/* Art pane: deep night behind the eclipse, a thin foil seam on the inside edge. */
+.auth-art {
+  background:
+    radial-gradient(ellipse at 50% 62%, rgba(217, 164, 65, 0.16), transparent 58%),
+    linear-gradient(180deg, #07080a 0%, #0b0a08 100%);
+}
+@media (min-width: 768px) {
+  .auth-art::after {
+    content: "";
+    position: absolute;
+    top: 9px;
+    bottom: 9px;
+    right: 0;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba(217, 164, 65, 0.35) 20%, rgba(217, 164, 65, 0.35) 80%, transparent);
+  }
+}
+
+.auth-eyebrow {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(217, 164, 65, 0.8);
+}
+
+/* Tabs: two serif words, a gold line that slides between them. */
+.auth-tab-btn {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(236, 228, 210, 0.45);
+  transition: color 0.3s;
+}
+.auth-tab-btn:hover { color: rgba(236, 228, 210, 0.8); }
+.auth-tab-btn[aria-selected="true"] { color: var(--parchment); }
+.auth-tab-line {
+  background: linear-gradient(90deg, transparent, #ffd875 18%, #ffd875 82%, transparent);
+}
+
+/* Fields */
+.auth-label {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(236, 228, 210, 0.45);
+  transition: color 0.25s;
+}
+.auth-field:focus-within .auth-label { color: rgba(255, 216, 117, 0.9); }
+.auth-input {
+  width: 100%;
+  padding: 9px 0 10px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(236, 228, 210, 0.16);
+  border-radius: 0;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 16px;
+  color: var(--parchment);
+  outline: none;
+  transition: border-color 0.25s;
+}
+.auth-input::placeholder { color: rgba(236, 228, 210, 0.24); }
+.auth-input:hover { border-bottom-color: rgba(236, 228, 210, 0.3); }
+.auth-input:focus { border-bottom-color: #ffd875; }
+/* Autofill keeps the dark paper instead of Chrome's yellow. */
+.auth-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--parchment);
+  -webkit-box-shadow: 0 0 0 1000px #0b0b0b inset;
+  caret-color: var(--parchment);
+}
+.auth-code {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 26px;
+  letter-spacing: 0.55em;
+  text-align: center;
+  padding-left: 0.55em;
+}
+
+/* Primary: a solid foil bar. Disabled is a quiet outline, never a muddy fill. */
+.auth-submit {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 52px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #e9b958 0%, #d39d3b 100%);
+  color: #120e07;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.55), 0 14px 30px -14px rgba(217, 164, 65, 0.6);
+  transition: filter 0.25s, box-shadow 0.25s, transform 0.25s;
+}
+.auth-submit::after {
   content: "";
   position: absolute;
-  inset: 2px;
-  border: 1px dashed rgba(217, 164, 65, 0.16);
-  pointer-events: none;
-  z-index: 2;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 250, 230, 0.45) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-
-/* Inputs: refined parchment-slate field with gold accenting */
-.auth-field-input {
-  background: rgba(10, 16, 22, 0.65) !important;
-  border: 1px solid rgba(217, 164, 65, 0.28) !important;
-  color: #f3ebd8 !important;
-  transition: all 260ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6) !important;
+.auth-submit:hover:not(:disabled) { filter: brightness(1.06); box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.6), 0 18px 40px -14px rgba(217, 164, 65, 0.75); }
+.auth-submit:hover:not(:disabled)::after { transform: translateX(120%); }
+.auth-submit:active:not(:disabled) { transform: translateY(1px); }
+.auth-submit:disabled {
+  background: transparent;
+  color: rgba(217, 164, 65, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(217, 164, 65, 0.28);
+  cursor: not-allowed;
 }
+.auth-submit:focus-visible { outline: 1px solid #ffd875; outline-offset: 3px; }
 
-.auth-field-input:hover {
-  border-color: rgba(217, 164, 65, 0.5) !important;
-  background: rgba(13, 20, 27, 0.8) !important;
-}
-
-.auth-field-input:focus {
-  border-color: #f1c970 !important;
-  background: rgba(15, 23, 31, 0.92) !important;
-  box-shadow:
-    0 0 16px rgba(217, 164, 65, 0.22),
-    inset 0 2px 4px rgba(0, 0, 0, 0.8) !important;
-}
-
-/* Tabs styling */
-.auth-tab-btn {
-  position: relative;
-  transition: all 280ms ease;
-}
-
-.auth-tab-btn[aria-selected="true"] {
-  color: #f5d288 !important;
-  text-shadow: 0 0 14px rgba(217, 164, 65, 0.5) !important;
-}
-
-/* Google OAuth button elevated styling */
 .auth-google-btn {
-  background: linear-gradient(180deg, rgba(14, 20, 26, 0.8), rgba(8, 12, 16, 0.9)) !important;
-  border: 1px solid rgba(217, 164, 65, 0.32) !important;
-  box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(217, 164, 65, 0.2) !important;
-  transition: all 280ms ease !important;
+  border: 1px solid rgba(236, 228, 210, 0.16);
+  background: rgba(255, 255, 255, 0.015);
+  transition: border-color 0.25s, background-color 0.25s;
 }
+.auth-google-btn:hover:not(:disabled) { border-color: rgba(236, 228, 210, 0.4); background: rgba(255, 255, 255, 0.04); }
 
-.auth-google-btn:hover:not(:disabled) {
-  border-color: #ffd875 !important;
-  background: linear-gradient(180deg, rgba(22, 32, 42, 0.9), rgba(12, 18, 24, 0.95)) !important;
-  box-shadow:
-    0 0 22px rgba(217, 164, 65, 0.25),
-    0 6px 18px rgba(0, 0, 0, 0.7) !important;
-  transform: translateY(-1px);
+.auth-link {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(236, 228, 210, 0.5);
+  transition: color 0.2s;
 }
+.auth-link:hover:not(:disabled) { color: var(--gold); }
+.auth-link:disabled { opacity: 0.45; }

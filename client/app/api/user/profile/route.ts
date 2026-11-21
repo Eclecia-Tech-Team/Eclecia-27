@@ -150,6 +150,10 @@ export async function PATCH(request: Request) {
       qrPayload: buildProfileQrPayload(session.user.id),
     });
   } catch (error) {
+    // Two people grabbing the same name at once: the unique index wins, say it plainly.
+    if ((error as { code?: number })?.code === 11000) {
+      return NextResponse.json({ error: "Username is already taken" }, { status: 409 });
+    }
     console.error("PATCH /api/user/profile error:", error);
     return NextResponse.json(
       { error: "Failed to update profile" },

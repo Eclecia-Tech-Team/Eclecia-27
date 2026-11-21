@@ -1,40 +1,68 @@
 "use client";
 
-import { PassQr } from "@/components/profile/PassQr";
-import { useState, useEffect, useRef } from "react";
+import { signOutHome } from "@/lib/sign-out";
+
+/* eslint-disable @next/next/no-img-element */
+import { useEffect, useRef, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { SiteHeader } from "@/components/common/Header";
 import { SiteFooter } from "@/components/common/Footer";
 import { PageFade } from "@/components/common/PageFade";
 import { GoldButton, GoldActionButton } from "@/components/common/GoldButton";
-import { ASSETS } from "@/constants/assets";
-import { getAvatarSrc } from "@/constants/avatars";
-import type { ProfileData } from "@/types/interface";
-import AvatarModal from "./AvatarModal";
+import { Meteors } from "@/components/common/Meteors";
+import { PassQr } from "@/components/profile/PassQr";
 import EventsTab from "@/components/profile/EventsTab";
 import TeamsTab from "@/components/profile/TeamsTab";
-import "@/styles/profile.css";
-import { Meteors } from "@/components/common/Meteors";
+import { ASSETS } from "@/constants/assets";
+import { getAvatarSrc } from "@/constants/avatars";
 import { depth } from "@/lib/depth";
+import { canCopyImage, copyImage, downloadImage, isTouchDevice, renderPass, renderShareCard, shareImage, toBlob, type PassInfo } from "@/lib/pass-image";
+import type { ProfileData } from "@/types/interface";
+import AvatarModal from "./AvatarModal";
+import "@/styles/profile.css";
+
+type FieldKey = "fullName" | "phoneNumber" | "college" | "stream" | "username";
+
+/** The four details coordinators need before anyone can register. Username is always set. */
+const REQUIRED: FieldKey[] = ["fullName", "phoneNumber", "college", "stream"];
+
+const FIELDS: { key: FieldKey; label: string; placeholder: string; inputMode?: "numeric"; wide?: boolean }[] = [
+  { key: "fullName", label: "Full name", placeholder: "As on your college ID" },
+  { key: "phoneNumber", label: "Phone", placeholder: "10-digit mobile number", inputMode: "numeric" },
+  { key: "college", label: "College", placeholder: "Your college or institute" },
+  { key: "stream", label: "Stream", placeholder: "e.g. Computer Science & Engineering" },
+  { key: "username", label: "Username", placeholder: "3–30 letters, numbers, _ or -" },
+];
+
+const TABS = [
+  { id: "details", label: "Details" },
+  { id: "events", label: "Events" },
+  { id: "teams", label: "Teams" },
+] as const;
+type Tab = (typeof TABS)[number]["id"];
+
+function greeting() {
+  const hour = Number(new Intl.DateTimeFormat("en-IN", { hour: "numeric", hourCycle: "h23", timeZone: "Asia/Kolkata" }).format(new Date()));
+  return hour < 5 ? "Good evening" : hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+}
+
+const formatPhone = (p: string) => (/^\d{10}$/.test(p) ? `+91 ${p.slice(0, 5)} ${p.slice(5)}` : p);
 
 export default function ProfileClient({
   initialUsername,
   initialAvatar,
   initialEmail,
   returnTo,
+  initialTab = "details",
 }: {
   initialUsername: string;
   initialAvatar: number | null;
   initialEmail: string;
   /** Event page that sent the visitor here to finish their profile. */
   returnTo?: string;
+  /** Opened from the header menu ("My events" / "My teams"). */
+  initialTab?: "details" | "events" | "teams";
 }) {
-  const tabs = [
-    { id: "details", label: "Dossier" },
-    { id: "teams", label: "Guilds" },
-    { id: "events", label: "Quests" },
-  ] as const;
-
   const [profile, setProfile] = useState<ProfileData>({
     username: initialUsername,
     avatar: initialAvatar ?? 1,
@@ -46,20 +74,21 @@ export default function ProfileClient({
     isProfileComplete: false,
     qrPayload: "",
   });
-
-  const [activeTab, setActiveTab] = useState<"details" | "teams" | "events">(
-    "details"
-  );
+  const [loaded, setLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [isEditing, setIsEditing] = useState(false);
+  const [focusKey, setFocusKey] = useState<FieldKey | null>(null);
   const [formData, setFormData] = useState<Partial<ProfileData>>({});
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
+  const [exporting, setExporting] = useState<"save" | "share" | "copy" | null>(null);
+  const [shareMenu, setShareMenu] = useState(false);
+  const shareCard = useRef<Blob | null>(null);
+  const [nameCheck, setNameCheck] = useState<{ for: string; available: boolean; reason?: string } | null>(null);
+  const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
+  const inputs = useRef<Partial<Record<FieldKey, HTMLInputElement | null>>>({});
   const hasTriggeredAutoLogout = useRef(false);
   const { data: session, update: updateSession } = useSession();
 
@@ -69,39 +98,33 @@ export default function ProfileClient({
     void signOut({ callbackUrl: "/login" });
   };
 
+  const notify = (type: "success" | "error", message: string, ms = 3500) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), ms);
+  };
+
   useEffect(() => {
-    if (qrModalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = qrModalOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [qrModalOpen]);
 
   useEffect(() => {
-    let cancelled = false;
+    if (isEditing && focusKey) inputs.current[focusKey]?.focus();
+  }, [isEditing, focusKey]);
 
+  useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
-        const sessionRes = await fetch("/api/auth/session", {
-          cache: "no-store",
-        });
-        if (sessionRes.status === 404) {
-          triggerAutoLogout();
-          return;
-        }
-
+        const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
+        if (sessionRes.status === 404) return triggerAutoLogout();
         const res = await fetch("/api/user/profile");
-        if (res.status === 404) {
-          triggerAutoLogout();
-          return;
-        }
+        if (res.status === 404) return triggerAutoLogout();
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled) return;
-
         setProfile({
           username: data.username,
           avatar: data.avatar ?? 1,
@@ -113,36 +136,69 @@ export default function ProfileClient({
           isProfileComplete: data.isProfileComplete ?? false,
           qrPayload: data.qrPayload ?? "",
         });
-
-        setFormData({
-          username: data.username ?? "",
-          fullName: data.fullName ?? "",
-          phoneNumber: data.phoneNumber ?? "",
-          college: data.college ?? "",
-          stream: data.stream ?? "",
-        });
-
-        // Automatically sync header session if username or avatar in session cookie was stale
-        if (
-          session?.user &&
-          (session.user.username !== data.username || session.user.avatar !== data.avatar)
-        ) {
-          void updateSession({
-            user: {
-              username: data.username,
-              avatar: data.avatar,
-            },
-          });
+        setLoaded(true);
+        // Keep the header in step if the session cookie had an old username or avatar.
+        if (session?.user && (session.user.username !== data.username || session.user.avatar !== data.avatar)) {
+          void updateSession({ user: { username: data.username, avatar: data.avatar } });
         }
       } catch (err) {
         console.error("Failed to load profile details:", err);
       }
     })();
-
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Username: instant format check, then a debounced "is it free?" against the server.
+  const draftName = ((formData.username as string) ?? "").trim();
+  const nameChanged = isEditing && draftName.toLowerCase() !== profile.username.toLowerCase();
+  const nameFormatError = !nameChanged
+    ? ""
+    : draftName.length < 3 || draftName.length > 30
+      ? "3–30 characters"
+      : !/^[a-zA-Z0-9_-]+$/.test(draftName)
+        ? "Letters, numbers, _ and - only"
+        : "";
+  useEffect(() => {
+    if (!nameChanged || nameFormatError) return;
+    let live = true;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/user/username?name=${encodeURIComponent(draftName)}`);
+        const data = await res.json();
+        if (live && res.ok) setNameCheck({ for: draftName, available: Boolean(data.available), reason: data.reason });
+      } catch {}
+    }, 350);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [draftName, nameChanged, nameFormatError]);
+  const nameStatus: { tone: "ok" | "wait" | "bad"; text: string } | null = !nameChanged
+    ? null
+    : nameFormatError
+      ? { tone: "bad", text: nameFormatError }
+      : nameCheck?.for !== draftName
+        ? { tone: "wait", text: "Checking…" }
+        : nameCheck.available
+          ? { tone: "ok", text: "Available" }
+          : { tone: "bad", text: nameCheck.reason ?? "Already taken" };
+  const nameBlocks = Boolean(nameStatus && nameStatus.tone !== "ok");
+
+  const startEditing = (key: FieldKey | null = null) => {
+    setFormData({
+      username: profile.username,
+      fullName: profile.fullName,
+      phoneNumber: profile.phoneNumber,
+      college: profile.college,
+      stream: profile.stream,
+    });
+    setFocusKey(key ?? REQUIRED.find((k) => !profile[k]) ?? "fullName");
+    setActiveTab("details");
+    setIsEditing(true);
+  };
 
   const handleSaveProfile = async () => {
     setLoading(true);
@@ -152,624 +208,473 @@ export default function ProfileClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
-      if (res.status === 404) {
-        triggerAutoLogout();
-        return;
-      }
-
+      if (res.status === 404) return triggerAutoLogout();
       const data = await res.json();
-
-      if (res.ok) {
-        setProfile((prev) => ({
-          ...prev,
-          ...data,
-        }));
-        setIsEditing(false);
-        setNotification({
-          type: "success",
-          message: "Dossier credentials saved successfully",
-        });
-        if (formData.username !== undefined || data.username !== undefined) {
-          await updateSession({
-            user: {
-              username: data.username,
-              avatar: data.avatar ?? profile.avatar,
-            },
-          });
-        }
-      } else {
-        setNotification({
-          type: "error",
-          message: data.error || "Failed to update dossier",
-        });
-      }
+      if (!res.ok) return notify("error", data.error || "Couldn't save your details.", 5000);
+      setProfile((prev) => ({ ...prev, ...data }));
+      setIsEditing(false);
+      notify("success", data.isProfileComplete ? "Saved. You're all set to register." : "Saved.");
+      await updateSession({ user: { username: data.username, avatar: data.avatar ?? profile.avatar } });
     } catch (err) {
       console.error(err);
-      setNotification({
-        type: "error",
-        message: "Failed to update profile. Please try again.",
-      });
+      notify("error", "Couldn't save your details. Try again.", 5000);
     } finally {
       setLoading(false);
-      setTimeout(() => setNotification(null), 4000);
     }
   };
 
   const handleAvatarSelect = async (avatarId: number) => {
-    setLoading(true);
     try {
       const res = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ avatar: avatarId }),
       });
-
-      if (res.status === 404) {
-        triggerAutoLogout();
-        return;
-      }
-
-      if (res.ok) {
-        const data = await res.json();
-        const nextAvatar = data.avatar ?? avatarId;
-        setProfile((p) => ({ ...p, avatar: nextAvatar }));
-        await updateSession({
-          user: {
-            username: profile.username,
-            avatar: nextAvatar,
-          },
-        });
-        setNotification({
-          type: "success",
-          message: "Celestial Crest updated",
-        });
-      }
+      if (res.status === 404) return triggerAutoLogout();
+      if (!res.ok) return notify("error", "Couldn't change your crest.");
+      const data = await res.json();
+      const nextAvatar = data.avatar ?? avatarId;
+      setProfile((p) => ({ ...p, avatar: nextAvatar }));
+      await updateSession({ user: { username: profile.username, avatar: nextAvatar } });
+      notify("success", "Crest changed.");
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
-      setTimeout(() => setNotification(null), 3000);
     }
   };
 
-  const displayAvatar = profile.avatar ?? 1;
+  useEffect(() => {
+    shareCard.current = null;
+  }, [profile.fullName, profile.username, profile.college, profile.stream, profile.avatar]);
+
+  const passInfo = (): PassInfo => ({
+    name: profile.fullName || profile.username,
+    username: profile.username,
+    college: profile.college ?? "",
+    stream: profile.stream ?? "",
+    avatarSrc: getAvatarSrc(profile.avatar ?? 1),
+    qrPayload: profile.qrPayload,
+    ready: Boolean(profile.isProfileComplete),
+  });
+
+  const site = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.eclecia-hitk.in").replace(/\/+$/, "");
+  const caption = `I'm going to Eclecia’27, 15–17 January at HITK, Kolkata. ${site}`;
+
+  /** Save: the full pass with QR, for the holder's own phone. Phones: share sheet ("Save image"). Desktop: download. */
+  const savePass = async () => {
+    setExporting("save");
+    try {
+      const blob = await toBlob(await renderPass(passInfo(), { withQr: true }));
+      const name = `eclecia-27-pass-${profile.username}.png`;
+      if (isTouchDevice() && (await shareImage(blob, name)) !== "unsupported") return;
+      downloadImage(blob, name);
+      notify("success", "Pass saved. Keep it handy for the gate.");
+    } catch (err) {
+      console.error(err);
+      notify("error", "Couldn't make the image. Try again.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  /** The story card (never the QR). Rendered once per visit and reused by every share option. */
+  const getShareCard = async () => {
+    if (!shareCard.current) shareCard.current = await toBlob(await renderShareCard(passInfo()));
+    return shareCard.current;
+  };
+
+  /** Share: phones get the native sheet with just the image; desktops get a small menu. */
+  const sharePass = async () => {
+    if (!isTouchDevice()) return setShareMenu((o) => !o);
+    setExporting("share");
+    try {
+      const blob = await getShareCard();
+      const how = await shareImage(blob, `eclecia-27-${profile.username}.png`);
+      if (how === "unsupported") setShareMenu(true);
+    } catch (err) {
+      console.error(err);
+      notify("error", "Couldn't make the image. Try again.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const shareAction = async (kind: "copy" | "download" | "caption") => {
+    setShareMenu(false);
+    try {
+      if (kind === "caption") {
+        await navigator.clipboard.writeText(caption);
+        return notify("success", "Caption copied.");
+      }
+      setExporting(kind === "copy" ? "copy" : "share");
+      const blob = await getShareCard();
+      if (kind === "copy") {
+        await copyImage(blob);
+        notify("success", "Image copied. Paste it anywhere.");
+      } else {
+        downloadImage(blob, `eclecia-27-${profile.username}.png`);
+        notify("success", "Story card saved. Your QR isn't on it.");
+      }
+    } catch (err) {
+      console.error(err);
+      notify("error", kind === "copy" ? "This browser won't copy images. Download it instead." : "Couldn't do that. Try again.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const filled = REQUIRED.filter((k) => Boolean(profile[k]));
+  const missing = REQUIRED.length - filled.length;
+  const first = (profile.fullName || profile.username).split(/\s+/)[0];
+  const firstName = first.charAt(0).toUpperCase() + first.slice(1);
+  const displayName = profile.fullName || profile.username;
+  const avatarSrc = getAvatarSrc(profile.avatar ?? 1);
 
   return (
     <PageFade className="min-h-dvh">
-      <div className="relative flex min-h-dvh flex-col justify-between overflow-x-hidden bg-black text-parchment">
-        {/* Celestial Background Artwork */}
+      <div className="relative flex min-h-dvh flex-col overflow-x-clip bg-black text-parchment">
         <img
           src={ASSETS.cloudinary.bg}
           alt=""
           aria-hidden
-          className="pointer-events-none fixed inset-0 h-full w-full object-cover opacity-60"
+          className="pointer-events-none fixed inset-0 h-full w-full object-cover opacity-45"
           style={depth(14, 1.06)}
         />
         <div className="pointer-events-none fixed inset-0" aria-hidden style={depth(14)}>
           <Meteors />
         </div>
+        <div aria-hidden className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_30%_30%,transparent_20%,rgba(2,4,6,0.75)_80%)]" />
 
         <SiteHeader />
 
-        <main className="relative z-10 flex flex-1 flex-col items-center justify-start px-3 sm:px-4 pt-24 pb-16 md:pt-28 max-w-4xl w-full mx-auto space-y-4 sm:space-y-6">
-          {returnTo && (
-            <div className="flex w-full flex-col items-center justify-between gap-3 border border-gold/40 bg-black/60 px-4 py-3 text-center sm:flex-row sm:text-left">
-              <p className="text-[14px] text-parchment/85">
-                {profile.isProfileComplete
-                  ? "Your profile is complete. You can register now."
-                  : "Fill in your full name, phone and college, then save to register for the event."}
-              </p>
-              {profile.isProfileComplete && (
-                <GoldButton href={returnTo} size="sm">
-                  Back to the event
-                </GoldButton>
-              )}
-            </div>
-          )}
-          {notification && (
-            <div
-              className={`w-full p-2.5 text-center text-xs font-taiganja tracking-wider border shadow-lg transition-all ${
-                notification.type === "success"
-                  ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
-                  : "bg-red-950/60 border-red-500/40 text-red-300"
-              }`}
-            >
-              {notification.message}
-            </div>
-          )}
+        {notification && (
+          <div
+            role="status"
+            className={`pf-toast fixed left-1/2 top-24 z-40 -translate-x-1/2 border px-5 py-2.5 text-[14px] backdrop-blur-md ${
+              notification.type === "success" ? "border-gold/40 bg-black/80 text-parchment" : "border-[#e57363]/50 bg-black/85 text-[#f6b7ab]"
+            }`}
+          >
+            {notification.message}
+          </div>
+        )}
 
-          {/* ── Citizen Identity Card ─────────────────────────────────────── */}
-          <div className="profile-chamber-card w-full p-4 sm:p-6 md:p-8">
-            {/* ── Desktop View (Locked in: spacious architectural identity deck) ── */}
-            <div className="hidden sm:flex sm:flex-row items-stretch gap-6 md:gap-8">
-              {/* Left Column: Avatar + Merged Segmented Controller */}
-              <div className="flex flex-col items-center justify-center gap-3 shrink-0">
-                <div
-                  className="astrolabe-bezel relative w-24 h-24 md:w-26 md:h-26 cursor-pointer group shrink-0"
-                  onClick={() => setAvatarModalOpen(true)}
-                  title="Change Celestial Crest"
-                >
-                  <div className="w-full h-full rounded-full overflow-hidden bg-black">
-                    <img
-                      src={getAvatarSrc(displayAvatar)}
-                      alt="Celestial Crest"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-[10px] font-taiganja tracking-widest uppercase text-gold">
-                    Edit Crest
-                  </div>
+        <main className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 gap-12 px-5 pb-24 pt-28 md:px-8 md:pt-36 lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-16">
+          {/* ── The pass ─────────────────────────────────────────────── */}
+          <aside className="mx-auto w-full max-w-[400px] lg:sticky lg:top-28 lg:self-start">
+            <div className="pf-pass">
+              <div className="pf-pass-halo" aria-hidden />
+              <div className="px-8 pb-8 pt-7">
+                <div className="flex items-baseline justify-between">
+                  <span className="font-taiganja text-[13px] tracking-[0.22em] text-gold">ECLECIA<span className="ml-1.5 font-display text-[17px] font-semibold italic tracking-normal">’27</span></span>
+                  <span className="pf-label">Festival pass</span>
                 </div>
 
-                {/* Unified Segmented Controller (Change Crest | Pass QR) */}
-                <div className="crest-qr-segmented-bar">
+                <div className="mt-7 flex flex-col items-center text-center">
                   <button
                     type="button"
                     onClick={() => setAvatarModalOpen(true)}
-                    className="crest-qr-seg-btn"
-                    title="Change Celestial Avatar"
+                    className="pf-crest group h-[132px] w-[132px] cursor-pointer"
+                    aria-label="Change your crest"
                   >
-                    Change Crest
+                    <span className="pf-crest-inner block h-full w-full">
+                      <img src={avatarSrc} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]" />
+                    </span>
+                    <span className="absolute inset-[5px] flex items-center justify-center rounded-full bg-black/55 font-mono text-[10px] uppercase tracking-[0.25em] text-gold opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      Change
+                    </span>
                   </button>
-                  <div className="crest-qr-seg-divider" />
-                  <button
-                    type="button"
-                    onClick={() => setQrModalOpen(true)}
-                    className="crest-qr-seg-btn"
-                    title="View Festival Pass QR"
-                  >
-                    Pass QR
-                  </button>
+
+                  <h2 className="mt-6 max-w-full font-display text-[34px] font-semibold leading-[1.05] text-parchment [overflow-wrap:anywhere]">{displayName}</h2>
+                  <p className="mt-2 font-mono text-[12px] tracking-[0.08em] text-gold/75">@{profile.username}</p>
                 </div>
+
+                <dl className="mt-7 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-gold/15 pt-5">
+                  <div className="min-w-0">
+                    <dt className="pf-label">College</dt>
+                    <dd className="mt-1.5 line-clamp-2 font-display text-[17px] leading-snug text-parchment/90" title={profile.college}>
+                      {profile.college || <span className="text-parchment/30">—</span>}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="pf-label">Stream</dt>
+                    <dd className="mt-1.5 line-clamp-2 font-display text-[17px] leading-snug text-parchment/90" title={profile.stream}>
+                      {profile.stream || <span className="text-parchment/30">—</span>}
+                    </dd>
+                  </div>
+                </dl>
               </div>
 
-              {/* Subtle vertical separator on desktop */}
-              <div className="w-px bg-gradient-to-b from-transparent via-gold/25 to-transparent self-stretch my-1" aria-hidden />
+              <div className="pf-perf" aria-hidden />
 
-              {/* Right Column: Citizen Metadata & Dossier Overview */}
-              <div className="flex-1 min-w-0 flex flex-col justify-between text-left space-y-2">
-                <div>
-                  {/* Header Row: Registry Breadcrumb & Status */}
-                  <div className="flex flex-row items-center justify-between gap-2 border-b border-gold/15 pb-2">
-                    <span className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/70">
-                      Citizen Registry // Tier 01
-                    </span>
-                    <span
-                      className="profile-arch-tag text-[9px] whitespace-nowrap"
-                      data-variant={profile.isProfileComplete ? "complete" : "pending"}
-                    >
-                      [ {profile.isProfileComplete ? "DOSSIER COMPLETE" : "DOSSIER INCOMPLETE"} ]
-                    </span>
-                  </div>
-
-                  {/* Citizen Name & Credentials */}
-                  <div className="pt-2">
-                    <h1 className="font-display text-2xl md:text-3xl text-parchment tracking-wide font-normal truncate leading-tight">
-                      {profile.fullName || profile.username}
-                    </h1>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
-                      <span className="font-mono text-xs text-gold/80 tracking-wider">
-                        @{profile.username}
-                      </span>
-                      <span className="text-gold/30 text-xs">•</span>
-                      <span className="font-serif text-xs text-parchment/60 truncate">
-                        {profile.email || "No email bound"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ornamental accent line */}
-                <div className="pt-2 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-gradient-to-r from-gold/30 via-gold/15 to-transparent" />
-                  <img
-                    src={ASSETS.cloudinary.divider}
-                    alt=""
-                    aria-hidden
-                    className="w-36 opacity-60 pointer-events-none -my-2"
-                  />
-                  <div className="h-px flex-1 bg-gradient-to-l from-gold/30 via-gold/15 to-transparent" />
-                </div>
-              </div>
-            </div>
-
-            {/* ── Mobile View (Streamlined, balanced avatar, high-visibility Pass QR) ── */}
-            <div className="sm:hidden flex flex-col gap-3">
-              {/* Top Row: Generous Avatar + Identity Info side by side */}
-              <div className="flex items-center gap-3.5">
-                {/* Properly sized avatar filling space */}
-                <div
-                  className="astrolabe-bezel relative w-20 h-20 shrink-0 cursor-pointer group"
-                  onClick={() => setAvatarModalOpen(true)}
-                  title="Change Celestial Crest"
-                >
-                  <div className="w-full h-full rounded-full overflow-hidden bg-black">
-                    <img
-                      src={getAvatarSrc(displayAvatar)}
-                      alt="Celestial Crest"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-[8px] font-taiganja tracking-widest uppercase text-gold">
-                    Edit
-                  </div>
-                </div>
-
-                {/* Identity Metadata */}
-                <div className="flex-1 min-w-0 space-y-1">
-                  <div className="flex items-center justify-between gap-1 border-b border-gold/15 pb-1">
-                    <span className="font-taiganja text-[8px] uppercase tracking-[0.2em] text-gold/70 truncate">
-                      Citizen Registry
-                    </span>
-                    <span
-                      className="profile-arch-tag text-[7.5px] px-1.5 py-0.5 whitespace-nowrap"
-                      data-variant={profile.isProfileComplete ? "complete" : "pending"}
-                    >
-                      {profile.isProfileComplete ? "Complete" : "Incomplete"}
-                    </span>
-                  </div>
-
-                  <h1 className="font-display text-xl text-parchment tracking-wide font-normal truncate leading-tight pt-0.5">
-                    {profile.fullName || profile.username}
-                  </h1>
-                  <p className="font-mono text-[11px] text-gold/80 tracking-wider leading-tight">
-                    @{profile.username}
-                  </p>
-                  <p className="font-serif text-[11px] text-parchment/55 truncate leading-tight">
-                    {profile.email || "No email bound"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Mobile Separated Action Buttons: High-visibility Festival Pass QR */}
-              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gold/15">
-                <button
-                  type="button"
-                  onClick={() => setAvatarModalOpen(true)}
-                  className="py-2 px-2.5 border border-gold/30 bg-black/70 hover:border-gold hover:text-white text-parchment/80 text-[10px] font-taiganja uppercase tracking-wider transition-colors cursor-pointer text-center"
-                >
-                  Change Crest
-                </button>
+              {/* Stub */}
+              <div className="flex items-center gap-6 px-8 py-7">
                 <button
                   type="button"
                   onClick={() => setQrModalOpen(true)}
-                  className="py-2 px-2.5 border border-gold/60 bg-gold/15 hover:bg-gold/25 text-gold text-[10px] font-taiganja uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                  className="pf-qr-tile shrink-0 cursor-zoom-in transition-transform duration-300 hover:scale-[1.03]"
+                  aria-label="Show your pass QR larger"
+                  disabled={!profile.qrPayload}
                 >
-                  <svg className="w-3.5 h-3.5 text-[#ffd875] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="5" height="5" x="3" y="3" rx="1"/>
-                    <rect width="5" height="5" x="16" y="3" rx="1"/>
-                    <rect width="5" height="5" x="3" y="16" rx="1"/>
-                    <path d="M21 16h-3a2 2 0 0 0-2 2v3"/>
-                    <path d="M21 21v.01"/>
-                    <path d="M12 7v3a2 2 0 0 1-2 2H7"/>
-                    <path d="M3 12h.01"/>
-                    <path d="M12 3h.01"/>
-                    <path d="M12 16v.01"/>
-                    <path d="M16 12h1"/>
-                    <path d="M21 12v.01"/>
-                    <path d="M12 21v-1"/>
-                  </svg>
-                  <span>Pass QR</span>
+                  {profile.qrPayload ? <PassQr payload={profile.qrPayload} className="h-[92px] w-[92px]" /> : <div className="h-[92px] w-[92px] animate-pulse bg-black/10" />}
                 </button>
+                <div className="min-w-0">
+                  <span className="pf-status" data-tone={!loaded ? "wait" : profile.isProfileComplete ? "ok" : "wait"}>
+                    {!loaded ? "Loading" : profile.isProfileComplete ? "Ready" : "Incomplete"}
+                  </span>
+                  <p className="mt-2.5 text-[13.5px] leading-snug text-parchment/65">Show this at the gate and food counters.</p>
+                  <button type="button" onClick={() => setQrModalOpen(true)} className="pf-link mt-3" disabled={!profile.qrPayload}>
+                    Enlarge
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* ── Tab Navigation Bar ──────────────────────────────────────────── */}
-          <div className="w-full">
-            <div className="profile-tab-track">
-              {tabs.map((tab, i) => (
-                <button
-                  key={tab.id}
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={savePass}
+                disabled={!loaded || exporting !== null}
+                className="flex items-center justify-center gap-2.5 border border-gold/30 bg-black/40 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-parchment/80 backdrop-blur transition-colors hover:border-gold/70 hover:text-parchment disabled:opacity-50"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4 text-gold" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" />
+                </svg>
+                {exporting === "save" ? "Making…" : "Save pass"}
+              </button>
+              <div className="relative">
+              <button
                   type="button"
-                  data-active={activeTab === tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className="profile-tab-item"
+                  onClick={sharePass}
+                  aria-haspopup="menu"
+                  aria-expanded={shareMenu}
+                  disabled={!loaded || exporting !== null}
+                  className="flex w-full items-center justify-center gap-2.5 border border-gold/30 bg-black/40 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-parchment/80 backdrop-blur transition-colors hover:border-gold/70 hover:text-parchment disabled:opacity-50"
                 >
-                  <span className="profile-tab-index">{String(i + 1).padStart(2, "0")} {"//"}</span>
-                  {tab.label}
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 text-gold" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V4m0 0L8 8m4-4l4 4M6 12H5v8h14v-8h-1" />
+                  </svg>
+                  {exporting === "share" || exporting === "copy" ? "Making…" : "Share"}
                 </button>
-              ))}
+                {shareMenu && (
+                  <>
+                    <button type="button" aria-hidden tabIndex={-1} className="fixed inset-0 z-20 cursor-default" onClick={() => setShareMenu(false)} />
+                    <div role="menu" className="pf-modal absolute right-0 top-[calc(100%+8px)] z-30 w-60 py-2">
+                      {canCopyImage() && (
+                        <button type="button" role="menuitem" className="block w-full px-4 py-2.5 text-left text-[14px] text-parchment/85 hover:bg-gold/10 hover:text-parchment" onClick={() => shareAction("copy")}>
+                          Copy image
+                        </button>
+                      )}
+                      <button type="button" role="menuitem" className="block w-full px-4 py-2.5 text-left text-[14px] text-parchment/85 hover:bg-gold/10 hover:text-parchment" onClick={() => shareAction("download")}>
+                        Download image
+                      </button>
+                      <button type="button" role="menuitem" className="block w-full px-4 py-2.5 text-left text-[14px] text-parchment/85 hover:bg-gold/10 hover:text-parchment" onClick={() => shareAction("caption")}>
+                        Copy caption
+                      </button>
+                      <p className="mx-4 mt-1 border-t border-gold/15 pt-2.5 text-[12px] leading-snug text-parchment/45">A 1080×1920 story card. Your QR isn&apos;t on it.</p>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+            <p className="mt-3 text-center text-[12.5px] leading-snug text-parchment/40">Saved pass includes your QR. The shared card never does.</p>
+          </aside>
 
-          {/* ── Active Tab Chamber ──────────────────────────────────────────── */}
-          <div key={activeTab} className="profile-tab-pane w-full">
-            {activeTab === "details" && (
-              <div className="profile-chamber-card p-4 sm:p-6 space-y-5">
-                <div className="flex items-start justify-between border-b border-gold/20 pb-3">
-                  <div>
-                    <h2 className="font-nasyhama text-xl sm:text-2xl text-gold leading-tight">
-                      Personal Dossier
-                    </h2>
-                    <p className="font-taiganja text-[10px] uppercase tracking-[0.2em] text-parchment/50 mt-0.5">
-                      Registration Credentials & Details
+          {/* ── Account ──────────────────────────────────────────────── */}
+          <section className="min-w-0">
+            <p className="pf-eyebrow">Your account</p>
+            <h1 className="mt-4 font-display text-[44px] font-semibold leading-[1] tracking-[-0.01em] text-parchment md:text-[60px]" suppressHydrationWarning>
+              {greeting()}, <em className="font-medium text-gold">{firstName}</em>
+            </h1>
+            <p className="mt-4 text-[15px] text-parchment/55">{profile.email}</p>
+
+            {/* Readiness */}
+            {loaded && (
+              <div className="mt-10 max-w-xl">
+                {profile.isProfileComplete ? (
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+                    <p className="text-[15.5px] leading-relaxed text-parchment/75">
+                      Your profile is complete. You can register for any event.
                     </p>
-                  </div>
-                </div>
-
-                {isEditing ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="space-y-1 md:col-span-2">
-                        <label className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/80 block">
-                          Username
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.username || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, username: e.target.value })
-                          }
-                          className="w-full px-3 py-2 bg-black/70 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none"
-                          placeholder="Handle"
-                          minLength={3}
-                          maxLength={30}
-                        />
-                        <p className="text-[10px] text-parchment/35 font-mono">
-                          3–30 chars · letters, numbers, underscores, hyphens
-                        </p>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/80 block">
-                          Full Name
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.fullName || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, fullName: e.target.value })
-                          }
-                          className="w-full px-3 py-2 bg-black/70 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none"
-                          placeholder="Your legal name"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/80 block">
-                          Phone Number
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.phoneNumber || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, phoneNumber: e.target.value })
-                          }
-                          className="w-full px-3 py-2 bg-black/70 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none"
-                          placeholder="10-digit number"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/80 block">
-                          College / Institute
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.college || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, college: e.target.value })
-                          }
-                          className="w-full px-3 py-2 bg-black/70 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none"
-                          placeholder="College name"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="font-taiganja text-[10px] uppercase tracking-[0.25em] text-gold/80 block">
-                          Stream / Department
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.stream || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, stream: e.target.value })
-                          }
-                          className="w-full px-3 py-2 bg-black/70 border border-gold/40 text-parchment text-sm focus:border-gold focus:outline-none"
-                          placeholder="e.g. Computer Science & Engineering"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Action row: Cancel (left) & Save Dossier (right), inset from edges */}
-                    <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-4 px-3 sm:px-8 md:px-10">
-                      <GoldActionButton
-                        size="md"
-                        variant="ghost"
-                        onClick={() => setIsEditing(false)}
-                        type="button"
-                        className="w-56 max-w-[85%] sm:w-auto"
-                      >
-                        Cancel
-                      </GoldActionButton>
-                      <GoldActionButton
-                        size="md"
-                        variant="solid"
-                        onClick={handleSaveProfile}
-                        disabled={loading}
-                        type="button"
-                        className="w-56 max-w-[85%] sm:w-auto"
-                      >
-                        {loading ? "Saving..." : "Save Dossier"}
-                      </GoldActionButton>
-                    </div>
+                    {returnTo ? (
+                      <GoldButton href={returnTo} size="sm">
+                        Back to the event
+                      </GoldButton>
+                    ) : (
+                      <GoldButton href="/events" size="sm" variant="ghost">
+                        Browse events
+                      </GoldButton>
+                    )}
                   </div>
                 ) : (
-                  <div className="space-y-5">
-                    {/* Dossier fields — 2 col on sm+, 1 col on mobile */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="dossier-cell">
-                        <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 block mb-1">
-                          Username
-                        </span>
-                        <p className="font-mono text-sm text-parchment font-light">
-                          {profile.username || (
-                            <span className="text-parchment/35">— Not set —</span>
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="dossier-cell">
-                        <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 block mb-1">
-                          Full Name
-                        </span>
-                        <p className="font-serif text-sm text-parchment font-light">
-                          {profile.fullName || (
-                            <span className="text-parchment/35">— Not set —</span>
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="dossier-cell">
-                        <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 block mb-1">
-                          Phone Number
-                        </span>
-                        <p className="font-mono text-sm text-parchment font-light">
-                          {profile.phoneNumber || (
-                            <span className="text-parchment/35">— Not set —</span>
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="dossier-cell">
-                        <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 block mb-1">
-                          College / Institute
-                        </span>
-                        <p className="font-serif text-sm text-parchment font-light">
-                          {profile.college || (
-                            <span className="text-parchment/35">— Not set —</span>
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="dossier-cell sm:col-span-2">
-                        <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 block mb-1">
-                          Stream / Department
-                        </span>
-                        <p className="font-serif text-sm text-parchment font-light">
-                          {profile.stream || (
-                            <span className="text-parchment/35">— Not set —</span>
-                          )}
-                        </p>
-                      </div>
+                  <>
+                    <div className="flex items-baseline justify-between gap-4">
+                      <p className="font-display text-[22px] leading-snug text-parchment">
+                        {missing === REQUIRED.length
+                          ? "Four details and you're ready to register."
+                          : `${missing === 1 ? "One detail" : `${["", "", "Two", "Three"][missing]} details`} left before you can register.`}
+                      </p>
+                      <span className="shrink-0 font-mono text-[11px] tracking-[0.18em] text-parchment/45">
+                        {filled.length}/{REQUIRED.length}
+                      </span>
                     </div>
-
-                    {/* Eligibility notice */}
-                    <div className="border-t border-gold/15 pt-3">
-                      {profile.isProfileComplete ? (
-                        <p className="text-emerald-400 font-taiganja text-[10px] tracking-widest uppercase">
-                          Dossier verified — eligible for all event registrations.
-                        </p>
-                      ) : (
-                        <p className="text-amber-300/80 font-taiganja text-[10px] tracking-widest uppercase">
-                          Complete all dossier fields to qualify for event registration.
-                        </p>
-                      )}
+                    <div className="pf-progress mt-4" aria-hidden>
+                      {REQUIRED.map((k) => (
+                        <span key={k} data-on={Boolean(profile[k])} />
+                      ))}
                     </div>
-
-                    {/* Action row: Sign Out (left) & Edit Dossier (right), inset from edges */}
-                    <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-4 px-3 sm:px-8 md:px-10">
-                      <GoldActionButton
-                        size="md"
-                        variant="ghost"
-                        onClick={() => signOut({ callbackUrl: "/login" })}
-                        type="button"
-                        className="w-56 max-w-[85%] sm:w-auto"
-                      >
-                        Sign Out
+                    {!isEditing && (
+                      <GoldActionButton size="sm" className="mt-6" type="button" onClick={() => startEditing()}>
+                        Complete profile
                       </GoldActionButton>
-
-                      <GoldActionButton
-                        size="md"
-                        variant="solid"
-                        onClick={() => {
-                          setFormData({
-                            username: profile.username,
-                            fullName: profile.fullName,
-                            phoneNumber: profile.phoneNumber,
-                            college: profile.college,
-                            stream: profile.stream,
-                          });
-                          setIsEditing(true);
-                        }}
-                        type="button"
-                        className="w-56 max-w-[85%] sm:w-auto"
-                      >
-                        Edit Dossier
-                      </GoldActionButton>
-                    </div>
-                  </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
 
-            {activeTab === "teams" && <TeamsTab />}
+            {/* Tabs */}
+            <div className="pf-tabs mt-14" role="tablist" aria-label="Profile sections">
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  id={`tab-${t.id}`}
+                  aria-selected={activeTab === t.id}
+                  aria-controls={`panel-${t.id}`}
+                  onClick={() => setActiveTab(t.id)}
+                  className="pf-tab"
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
 
-            {activeTab === "events" && <EventsTab />}
-          </div>
+            <div key={activeTab} id={`panel-${activeTab}`} role="tabpanel" aria-labelledby={`tab-${activeTab}`} className="profile-tab-pane pt-2">
+              {activeTab === "details" && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void handleSaveProfile();
+                  }}
+                >
+                  <div className="pf-fields">
+                    {FIELDS.map((f) => {
+                      const value = profile[f.key];
+                      const needed = REQUIRED.includes(f.key) && !value;
+                      return (
+                        <div key={f.key} className={`pf-field ${isEditing ? "border-transparent" : ""}`}>
+                          <label htmlFor={`pf-${f.key}`} className="pf-label flex items-center gap-2">
+                            {f.label}
+                            {needed && !isEditing && <span className="h-1 w-1 rounded-full bg-gold" aria-label="required" />}
+                          </label>
+                          {isEditing ? (
+                            <>
+                            <input
+                              id={`pf-${f.key}`}
+                              ref={(el) => {
+                                inputs.current[f.key] = el;
+                              }}
+                              className="pf-input"
+                              value={(formData[f.key] as string) ?? ""}
+                              placeholder={f.placeholder}
+                              inputMode={f.inputMode}
+                              maxLength={f.key === "phoneNumber" ? 10 : f.key === "username" ? 30 : 120}
+                              autoComplete={f.key === "fullName" ? "name" : f.key === "phoneNumber" ? "tel-national" : f.key === "college" ? "organization" : "off"}
+                              onChange={(e) =>
+                                setFormData({ ...formData, [f.key]: f.key === "phoneNumber" ? e.target.value.replace(/\D/g, "") : e.target.value })
+                              }
+                              aria-describedby={f.key === "username" ? "pf-username-status" : undefined}
+                              aria-invalid={f.key === "username" && nameStatus?.tone === "bad" ? true : undefined}
+                            />
+                            {f.key === "username" && (
+                              <p id="pf-username-status" aria-live="polite" className="mt-2 min-h-[16px]">
+                                {nameStatus && (
+                                  <span className="pf-status" data-tone={nameStatus.tone}>
+                                    {nameStatus.text}
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                            </>
+                          ) : value ? (
+                            <p className="pf-field-value">
+                              {f.key === "phoneNumber" ? formatPhone(value) : value}
+                            </p>
+                          ) : (
+                            <button type="button" className="pf-add mt-2" onClick={() => startEditing(f.key)}>
+                              Add {f.label.toLowerCase()}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <div className={`pf-field ${isEditing ? "border-transparent" : ""}`}>
+                      <span className="pf-label flex items-center gap-2">Email</span>
+                      <p className="pf-field-value" style={{ color: "rgba(236,228,210,0.62)" }}>
+                        {profile.email}
+                      </p>
+                    </div>
+                  </div>
 
-          {/* Return Home */}
-          <div className="pt-2">
-            <GoldButton href="/" variant="ghost" size="sm">
-              ← Return to Cosmos
-            </GoldButton>
-          </div>
+                  <div className="mt-10 flex flex-wrap items-center justify-between gap-6">
+                    {isEditing ? (
+                      <>
+                        <button type="button" className="pf-link" onClick={() => setIsEditing(false)}>
+                          Cancel
+                        </button>
+                        <GoldActionButton size="sm" type="submit" disabled={loading || nameBlocks}>
+                          {loading ? "Saving…" : "Save details"}
+                        </GoldActionButton>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" className="pf-link" data-tone="danger" onClick={() => void signOutHome()}>
+                          Sign out
+                        </button>
+                        <GoldActionButton size="sm" variant="ghost" type="button" onClick={() => startEditing(null)}>
+                          Edit details
+                        </GoldActionButton>
+                      </>
+                    )}
+                  </div>
+                </form>
+              )}
+              {activeTab === "events" && <EventsTab />}
+              {activeTab === "teams" && <TeamsTab />}
+            </div>
+          </section>
         </main>
 
         <SiteFooter />
       </div>
 
-      {/* Avatar Selection Modal */}
-      <AvatarModal
-        open={avatarModalOpen}
-        onClose={() => setAvatarModalOpen(false)}
-        currentAvatar={displayAvatar}
-        onSelect={handleAvatarSelect}
-      />
+      <AvatarModal open={avatarModalOpen} onClose={() => setAvatarModalOpen(false)} currentAvatar={profile.avatar ?? 1} onSelect={handleAvatarSelect} />
 
-      {/* Profile QR Code Modal */}
       {qrModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
-          onClick={() => setQrModalOpen(false)}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-5 backdrop-blur-md" onClick={() => setQrModalOpen(false)}>
           <div
-            className="profile-chamber-card relative w-full max-w-sm p-6 text-center overflow-hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Your festival pass"
+            className="pf-modal w-full max-w-[360px] px-8 pb-8 pt-7 text-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative z-10 space-y-4">
-              <h3 className="font-nasyhama text-3xl text-gold">
-                Celestial Pass
-              </h3>
-              <p className="font-taiganja text-[11px] uppercase tracking-wider text-parchment/70">
-                Official Checkpoint Token
-              </p>
-
-              {profile.qrPayload ? (
-                <div className="flex flex-col items-center gap-3 py-2">
-                  <div className="p-3 bg-white border-2 border-gold/70 shadow-[0_0_20px_rgba(217,164,65,0.3)]">
-                    <PassQr payload={profile.qrPayload} className="w-48 h-48" />
-                  </div>
-                  <p className="font-taiganja text-[10px] tracking-widest uppercase text-parchment/50">
-                    Scan at festival venue gates for check-in
-                  </p>
-                </div>
-              ) : (
-                <p className="font-serif text-sm text-parchment/50 py-8">
-                  Generating checkpoint token...
-                </p>
-              )}
-
-              <GoldActionButton
-                size="sm"
-                variant="ghost"
-                onClick={() => setQrModalOpen(false)}
-                type="button"
-              >
-                Close Pass
-              </GoldActionButton>
+            <div className="flex items-baseline justify-between">
+              <span className="font-taiganja text-[13px] tracking-[0.22em] text-gold">ECLECIA<span className="ml-1.5 font-display text-[17px] font-semibold italic tracking-normal">’27</span></span>
+              <span className="pf-label">Festival pass</span>
+            </div>
+            <div className="pf-qr-tile mx-auto mt-7 w-fit">
+              {profile.qrPayload && <PassQr payload={profile.qrPayload} className="h-[232px] w-[232px]" />}
+            </div>
+            <p className="mt-6 font-display text-[26px] font-semibold leading-tight text-parchment">{displayName}</p>
+            <p className="mt-1 font-mono text-[12px] tracking-[0.08em] text-gold/75">@{profile.username}</p>
+            <p className="mt-4 text-[13.5px] text-parchment/55">Turn your brightness up and hold it steady.</p>
+            <div className="mt-6 flex items-center justify-center gap-8">
+              <button type="button" className="pf-link text-gold" onClick={savePass} disabled={exporting !== null}>
+                {exporting === "save" ? "Making…" : "Save to photos"}
+              </button>
+              <button type="button" className="pf-link" onClick={() => setQrModalOpen(false)}>
+                Close
+              </button>
             </div>
           </div>
         </div>

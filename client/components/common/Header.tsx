@@ -1,14 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { signOutHome } from "@/lib/sign-out";
+
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { TransitionLink } from "./TransitionLink";
 import { GoldButton } from "./GoldButton";
+import { AccountMenu } from "./AccountMenu";
 import { NAV_ITEMS, SOCIAL_LINKS } from "@/constants/navigation";
 import { ASSETS } from "@/constants/assets";
-import { getAvatarSrc } from "@/constants/avatars";
 import "@/styles/profile.css";
 
 export type SiteHeaderProps = {
@@ -113,57 +115,16 @@ export function SiteHeader({ opacity = 1 }: SiteHeaderProps) {
 
         {/* Right Side: Profile / Join Us & Custom Animated Hamburger */}
         <div className="flex items-center gap-3 pr-1 md:pr-2">
-          {/* Desktop Right Action */}
-          <div className="hidden xl:block">
-            {status === "loading" ? (
-              <div className="h-9 w-28 bg-gold/10 border border-gold/20 animate-pulse" />
-            ) : user ? (
-              <TransitionLink
-                href="/profile"
-                className="header-profile-btn group"
-                title="View Profile Dossier"
-                aria-label="View Profile Dossier"
-              >
-                <div className="relative h-7 w-7 overflow-hidden border border-gold/70 shadow-[0_0_8px_rgba(217,164,65,0.3)] bg-black shrink-0">
-                  <img
-                    src={getAvatarSrc(user.avatar)}
-                    alt={user.username || user.name || "Profile"}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="font-taiganja text-[9px] uppercase tracking-[0.25em] text-gold/60 leading-none">
-                    Celestial Citizen
-                  </span>
-                  <span className="font-taiganja text-[12px] uppercase tracking-[0.18em] text-gold transition-colors group-hover:text-parchment max-w-[140px] truncate leading-tight pt-0.5">
-                    {user.username || user.name || "Profile"}
-                  </span>
-                </div>
-                {/* <span className="text-gold/70 text-xs pl-0.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-gold">
-                  →
-                </span> */}
-              </TransitionLink>
-            ) : (
+          {status === "loading" ? (
+            <div className="hdr-account-skeleton" aria-hidden />
+          ) : user ? (
+            <AccountMenu username={user.username || user.name || "Account"} email={user.email} avatar={user.avatar} />
+          ) : (
+            <div className="hidden xl:block">
               <GoldButton href="/login" variant="ghost" size="sm">
                 Join Us
               </GoldButton>
-            )}
-          </div>
-
-          {/* Mobile Profile Icon (when authenticated) */}
-          {user && (
-            <TransitionLink
-              href="/profile"
-              className="header-profile-mobile-btn xl:hidden"
-              aria-label="Open profile"
-              title="Open profile"
-            >
-              <img
-                src={getAvatarSrc(user.avatar)}
-                alt={user.username || user.name || "Profile"}
-                className="h-6 w-6 object-cover"
-              />
-            </TransitionLink>
+            </div>
           )}
 
           {/* Custom Animated Hamburger Button without circular outline */}
@@ -219,7 +180,30 @@ export function SiteHeader({ opacity = 1 }: SiteHeaderProps) {
           })}
         </nav>
 
-        {/* Join Us CTA in Mobile Drawer (Only shown when not signed in; mobile header already has the profile icon) */}
+        {/* Signed in: account links + Sign out at the foot of the drawer. */}
+        {user && (
+          <div className="mt-6 flex items-center justify-between gap-4 px-2">
+            <TransitionLink
+              href="/profile"
+              onClick={() => setMobileMenuOpen(false)}
+              className="font-display text-[19px] font-semibold text-parchment transition-colors hover:text-gold"
+            >
+              {user.username || user.name || "Profile"}
+            </TransitionLink>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                void signOutHome();
+              }}
+              className="font-mono text-[11px] uppercase tracking-[0.22em] text-parchment/60 transition-colors hover:text-[#f0a093]"
+            >
+              Sign out
+            </button>
+          </div>
+        )}
+
+        {/* Join Us CTA in Mobile Drawer (only when signed out). */}
         {!user && (
           <div className="mt-8 flex justify-center">
             <GoldButton

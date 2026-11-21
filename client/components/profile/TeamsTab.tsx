@@ -4,22 +4,6 @@ import { useEffect, useState } from "react";
 import ConfirmationModal from "./ConfirmationModal";
 import type { Team } from "@/types/interface";
 import { TransitionLink } from "@/components/common/TransitionLink";
-import { ASSETS } from "@/constants/assets";
-
-const paymentStatusConfig = {
-  pending: {
-    label: "PAYMENT PENDING",
-    className: "text-amber-300 border-amber-500/40 bg-amber-950/30",
-  },
-  completed: {
-    label: "PAYMENT COMPLETE",
-    className: "text-emerald-300 border-emerald-500/40 bg-emerald-950/30",
-  },
-  failed: {
-    label: "PAYMENT FAILED",
-    className: "text-red-300 border-red-500/40 bg-red-950/30",
-  },
-} as const;
 
 export default function TeamsTab() {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -93,13 +77,13 @@ export default function TeamsTab() {
       setNewTeamName("");
       setNotification({
         type: "success",
-        message: "Guild name updated successfully",
+        message: "Team renamed.",
       });
     } catch (error) {
       console.error(error);
       setNotification({
         type: "error",
-        message: "Failed to update guild name",
+        message: "Couldn't rename the team.",
       });
     } finally {
       setUpdating(false);
@@ -141,7 +125,7 @@ export default function TeamsTab() {
 
       setNotification({
         type: "success",
-        message: data.message || "Member dismissed successfully",
+        message: data.message || "Removed from the team.",
       });
       setMemberToRemove(null);
     } catch (error: unknown) {
@@ -170,289 +154,192 @@ export default function TeamsTab() {
     <>
       <ConfirmationModal
         isOpen={Boolean(memberToRemove)}
-        title="Dismiss Guild Member"
+        title="Remove from team?"
         name={memberToRemove?.name}
-        confirmLabel="Dismiss"
+        confirmLabel="Remove"
         loading={updating}
         description={
           <p>
-            Are you sure you want to dismiss{" "}
-            <span className="text-gold font-semibold">
-              {memberToRemove?.name}
-            </span>{" "}
-            from this team roster?
+            <span className="text-parchment">{memberToRemove?.name}</span> will leave the team and lose their registration for this event.
           </p>
         }
         onConfirm={executeRemoveMember}
         onCancel={() => setMemberToRemove(null)}
       />
 
-      <div className="profile-chamber-card p-6 sm:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gold/20 pb-4 gap-2">
-          <div>
-            <h2 className="font-nasyhama text-2xl sm:text-3xl text-gold">
-              Alliances & Guilds
-            </h2>
-            <p className="font-taiganja text-[11px] uppercase tracking-[0.25em] text-parchment/60">
-              Your registered team rosters and guild codes
-            </p>
-          </div>
-          <span className="font-mono text-xs text-gold/70 tracking-wider">
-            TOTAL: {teams.length.toString().padStart(2, "0")}
-          </span>
-        </div>
-
+      <div>
         {notification && (
-          <div
-            className={`p-3 text-xs text-center border font-taiganja tracking-wider ${
-              notification.type === "success"
-                ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-300"
-                : "bg-red-950/40 border-red-500/40 text-red-300"
-            }`}
-          >
+          <p role="status" className={`pt-5 text-[14px] ${notification.type === "success" ? "text-parchment/80" : "text-[#f6b7ab]"}`}>
             {notification.message}
-          </div>
+          </p>
         )}
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-12 space-y-3">
-            <div className="w-8 h-8 border-2 border-gold border-t-transparent animate-spin" />
-            <p className="font-taiganja text-[11px] uppercase tracking-widest text-parchment/60">
-              Retrieving guild rosters...
-            </p>
+          <div aria-busy="true">
+            {[0, 1].map((i) => (
+              <div key={i} className="border-b border-parchment/[0.08] py-6">
+                <div className="h-5 w-44 animate-pulse bg-parchment/10" />
+                <div className="mt-2 h-3 w-64 animate-pulse bg-parchment/5" />
+              </div>
+            ))}
           </div>
         ) : teams.length > 0 ? (
-          <div className="space-y-4 w-full">
+          <ul>
             {teams.map((team) => {
               const isOpen = openTeamId === team._id;
               const teamSize = getTeamSize(team);
-              const isPaidEvent = Boolean(team.eventId.isPaidEvent);
-              const paymentStatus = team.paymentStatus;
-              const statusConfig = paymentStatus
-                ? paymentStatusConfig[paymentStatus]
-                : null;
+              const max = team.eventId.maxMembersPerTeam;
+              const min = team.eventId.minMembersPerTeam ?? 1;
+              const paid = Boolean(team.eventId.isPaidEvent);
+              const status = !paid
+                ? teamSize < min
+                  ? { tone: "wait", text: `Needs ${min - teamSize} more` }
+                  : { tone: "ok", text: "Confirmed" }
+                : team.paymentStatus === "completed"
+                  ? { tone: "ok", text: "Paid" }
+                  : team.paymentStatus === "failed"
+                    ? { tone: "bad", text: "Payment failed" }
+                    : { tone: "wait", text: "Payment pending" };
+              const leader = team.members?.find((m) => m.isLeader);
+              const viewerIsLeader = Boolean(currentUserId) && leader?._id === currentUserId;
+              const locked = paid && team.paymentStatus === "completed";
 
               return (
-                <div
-                  key={team._id}
-                  className="border border-gold/30 bg-[#090d12]/70 overflow-hidden transition-all duration-300 hover:border-gold/50"
-                >
-                  <div
-                    role="button"
-                    onClick={() => setOpenTeamId(isOpen ? null : team._id)}
-                    className="w-full px-5 py-4 flex items-center gap-4 cursor-pointer group hover:bg-gold/5 transition-colors select-none"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <h3 className="font-nasyhama text-lg sm:text-xl text-gold">
-                          {team.teamName || "Unnamed Guild"}
-                        </h3>
-                        <span className="text-xs text-parchment/70 font-serif">
-                          — {team.eventId.eventName}
-                        </span>
-                        <span className="profile-arch-tag">
-                          {team.eventId.category}
-                        </span>
-                        {isPaidEvent && statusConfig && (
-                          <span
-                            className={`profile-arch-tag ${statusConfig.className}`}
-                          >
-                            {statusConfig.label}
-                          </span>
-                        )}
-                      </div>
-                      <p className="font-taiganja text-[11px] text-parchment/50 mt-1 uppercase tracking-wider">
-                        ROSTER: {teamSize} / {team.eventId.maxMembersPerTeam ?? "—"} MEMBERS
-                      </p>
-                    </div>
-
-                    <div
-                      className="flex items-center gap-2 shrink-0"
-                      onClick={(e) => e.stopPropagation()}
+                <li key={team._id} className="border-b border-parchment/[0.08]">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-3 py-6">
+                    <button
+                      type="button"
+                      onClick={() => setOpenTeamId(isOpen ? null : team._id)}
+                      aria-expanded={isOpen}
+                      className="group min-w-0 flex-1 text-left"
                     >
-                      <button
-                        type="button"
-                        onClick={() => copyTeamCode(team.teamCode, team._id)}
-                        className="px-3 py-1.5 border border-gold/40 bg-black/60 hover:border-gold text-gold text-[10px] font-taiganja uppercase tracking-[0.2em] transition-colors cursor-pointer"
-                      >
-                        {copiedId === team._id ? "COPIED" : "COPY CODE"}
-                      </button>
-                    </div>
+                      <span className="flex items-center gap-3">
+                        <span className="font-display text-[24px] font-semibold leading-tight text-parchment transition-colors group-hover:text-gold">
+                          {team.teamName || "Unnamed team"}
+                        </span>
+                        <svg viewBox="0 0 24 24" className={`h-4 w-4 shrink-0 text-gold/60 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </span>
+                      <span className="mt-1 block text-[13.5px] text-parchment/55">
+                        {team.eventId.eventName} · {teamSize}
+                        {max ? ` of ${max}` : ""} member{teamSize === 1 ? "" : "s"}
+                        {viewerIsLeader && " · You lead"}
+                      </span>
+                    </button>
 
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className={`shrink-0 text-gold/70 transition-transform duration-300 ${
-                        isOpen ? "rotate-180" : "rotate-0"
-                      }`}
+                    <button
+                      type="button"
+                      onClick={() => copyTeamCode(team.teamCode, team._id)}
+                      className="group flex items-center gap-3 border border-gold/25 px-3.5 py-2 transition-colors hover:border-gold/60"
+                      aria-label={`Copy team code ${team.teamCode}`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                      <span className="font-mono text-[14px] tracking-[0.16em] text-gold">{team.teamCode}</span>
+                      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-parchment/45 group-hover:text-parchment/80">
+                        {copiedId === team._id ? "Copied" : "Copy"}
+                      </span>
+                    </button>
+
+                    <span className="pf-status w-[9.5rem] max-sm:w-auto" data-tone={status.tone}>
+                      {status.text}
+                    </span>
                   </div>
 
                   {isOpen && (
-                    <div className="border-t border-gold/20 px-5 py-5 space-y-4 bg-black/50">
-                      <div className="border border-gold/20 bg-black/60 p-4 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-taiganja text-[10px] uppercase tracking-[0.2em] text-gold/60">
-                            GUILD IDENTITY
-                          </span>
-                          {editingTeamId !== team._id && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingTeamId(team._id);
-                                setNewTeamName(team.teamName || "");
-                              }}
-                              className="text-[11px] text-gold hover:underline font-taiganja tracking-wider uppercase cursor-pointer"
-                            >
-                              [ RENAME ]
-                            </button>
-                          )}
-                        </div>
-
-                        {editingTeamId === team._id ? (
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={newTeamName}
-                              onChange={(e) => setNewTeamName(e.target.value)}
-                              className="flex-1 px-3 py-1.5 bg-black border border-gold/40 text-sm text-parchment focus:border-gold outline-none"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => updateTeamName(team._id)}
-                              disabled={updating || !newTeamName.trim()}
-                              className="px-4 py-1 bg-gold text-black text-xs font-taiganja uppercase tracking-wider font-semibold cursor-pointer disabled:opacity-50"
-                            >
-                              {updating ? "Saving..." : "Save"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingTeamId(null);
-                                setNewTeamName("");
-                              }}
-                              className="px-3 py-1 border border-gold/30 text-parchment text-xs font-taiganja uppercase tracking-wider cursor-pointer"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <p className="font-nasyhama text-xl text-gold">
-                            {team.teamName || "Unnamed Guild"}
-                          </p>
-                        )}
-
-                        <div className="pt-2 border-t border-gold/10 flex justify-between items-center">
-                          <span className="font-taiganja text-[10px] uppercase tracking-[0.2em] text-parchment/60">
-                            INVITE CODE:
-                          </span>
-                          <span className="font-mono text-xs text-gold font-semibold tracking-widest">
-                            {team.teamCode}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="border border-gold/20 bg-black/60 p-4 space-y-3">
-                        <span className="font-taiganja text-[10px] uppercase tracking-[0.2em] text-gold/70 block border-b border-gold/15 pb-2">
-                          GUILD ROSTER
-                        </span>
-                        {team.members && team.members.length > 0 ? (
-                          <div className="space-y-2">
-                            {team.members.map((member) => {
-                              const displayName =
-                                member.fullName || member.username || "Anonymous";
-                              const isThisMemberLeader = member.isLeader;
-                              const leaderMember = team.members?.find((m) => m.isLeader);
-                              const viewerIsLeader =
-                                Boolean(currentUserId) &&
-                                Boolean(leaderMember) &&
-                                leaderMember?._id === currentUserId;
-                              const isRemovingThisMember =
-                                removingMemberId === member._id;
-
-                              return (
-                                <div
-                                  key={member._id}
-                                  className="flex items-center justify-between text-xs text-parchment bg-black/40 p-2.5 border border-gold/15"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-serif">{displayName}</span>
-                                    {isThisMemberLeader && (
-                                      <span className="profile-arch-tag text-gold border-gold/50">
-                                        LEADER
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  {!isThisMemberLeader &&
-                                    viewerIsLeader &&
-                                    (!team.eventId.isPaidEvent ||
-                                      team.paymentStatus !== "completed") && (
-                                      <button
-                                        type="button"
-                                        disabled={updating}
-                                        onClick={() =>
-                                          setMemberToRemove({
-                                            teamId: team._id,
-                                            memberId: member._id,
-                                            name: displayName,
-                                          })
-                                        }
-                                        className="text-[10px] font-taiganja uppercase tracking-wider px-2.5 py-1 border border-red-500/40 text-red-300 hover:bg-red-900/40 transition-colors disabled:opacity-50 cursor-pointer"
-                                      >
-                                        {isRemovingThisMember
-                                          ? "Dismissing..."
-                                          : "Dismiss"}
-                                      </button>
-                                    )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-parchment/50 font-serif">
-                            No teammates have enlisted yet.
+                    <div className="profile-tab-pane grid gap-8 pb-8 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                      <div>
+                        <p className="pf-label">Members</p>
+                        <ul className="mt-3">
+                          {(team.members ?? []).map((member) => {
+                            const name = member.fullName || member.username || "Member";
+                            const canRemove = !member.isLeader && viewerIsLeader && !locked;
+                            return (
+                              <li key={member._id} className="flex items-center justify-between gap-4 border-b border-parchment/[0.06] py-2.5">
+                                <span className="flex min-w-0 items-center gap-3">
+                                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gold/30 font-display text-[15px] text-gold">
+                                    {name.charAt(0).toUpperCase()}
+                                  </span>
+                                  <span className="truncate text-[15px] text-parchment/90">{name}</span>
+                                  {member.isLeader && <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-gold/80">Leader</span>}
+                                  {member._id === currentUserId && !member.isLeader && (
+                                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-parchment/40">You</span>
+                                  )}
+                                </span>
+                                {canRemove && (
+                                  <button
+                                    type="button"
+                                    className="pf-link"
+                                    data-tone="danger"
+                                    disabled={updating}
+                                    onClick={() => setMemberToRemove({ teamId: team._id, memberId: member._id, name })}
+                                  >
+                                    {removingMemberId === member._id ? "Removing…" : "Remove"}
+                                  </button>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                        {teamSize < min && (
+                          <p className="mt-3 text-[13.5px] text-[#e6c06a]">
+                            Share the code: {team.eventId.eventName} needs at least {min} members.
                           </p>
                         )}
                       </div>
 
-                      <TransitionLink
-                        href={`/events/${team.eventId._id}`}
-                        className="flex items-center justify-center gap-2 w-full py-2.5 border border-gold/40 bg-gold/10 hover:bg-gold/20 text-gold font-taiganja uppercase tracking-wider text-xs transition-all duration-200"
-                      >
-                        View Event Dossier →
-                      </TransitionLink>
+                      <div className="flex flex-col gap-6">
+                        {viewerIsLeader && (
+                          <div>
+                            <p className="pf-label">Team name</p>
+                            {editingTeamId === team._id ? (
+                              <form
+                                className="mt-1 flex items-end gap-4"
+                                onSubmit={(e) => {
+                                  e.preventDefault();
+                                  void updateTeamName(team._id);
+                                }}
+                              >
+                                <input className="pf-input" value={newTeamName} maxLength={40} autoFocus onChange={(e) => setNewTeamName(e.target.value)} />
+                                <button type="submit" className="pf-link text-gold" disabled={updating || newTeamName.trim().length < 2}>
+                                  {updating ? "Saving…" : "Save"}
+                                </button>
+                                <button type="button" className="pf-link" onClick={() => setEditingTeamId(null)}>
+                                  Cancel
+                                </button>
+                              </form>
+                            ) : (
+                              <button
+                                type="button"
+                                className="pf-add mt-2"
+                                onClick={() => {
+                                  setEditingTeamId(team._id);
+                                  setNewTeamName(team.teamName || "");
+                                }}
+                              >
+                                Rename team
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        <TransitionLink href={`/events/${team.eventId.slug ?? team.eventId._id}`} className="pf-link self-start text-gold">
+                          Open event page →
+                        </TransitionLink>
+                      </div>
                     </div>
                   )}
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 space-y-3 text-center">
-            <img
-              src={ASSETS.cloudinary.divider}
-              alt=""
-              aria-hidden
-              className="-my-2 w-48 opacity-60 pointer-events-none"
-            />
-            <h3 className="font-nasyhama text-2xl text-parchment">
-              No Guilds Formed
-            </h3>
-            <p className="font-taiganja text-[11px] uppercase tracking-widest text-parchment/50 max-w-sm">
-              Form an alliance or enlist via code from any team event in the atlas.
+          <div className="py-14">
+            <p className="font-display text-[26px] text-parchment">No teams yet.</p>
+            <p className="mt-2 max-w-md text-[15px] leading-relaxed text-parchment/55">
+              Start one from a team event&apos;s page and share the code, or join a friend&apos;s with theirs.
             </p>
+            <TransitionLink href="/events" className="pf-link mt-6 inline-block text-gold">
+              Find a team event →
+            </TransitionLink>
           </div>
         )}
       </div>

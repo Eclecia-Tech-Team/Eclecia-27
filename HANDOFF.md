@@ -174,6 +174,15 @@ Every server action re-checks the role on the server (`guard()` in `lib/admin/se
 
 ## 7. Changelog
 
+### This branch, `wip-events-and-profile`: profile, pass, header, auth redesign (22 Nov 2026)
+- **Profile** rebuilt: festival pass (foil card, tear-off stub with QR) + editorial details with completion meter; ruled Events / Teams lists; restyled dialogs. `?tab=events|teams` opens a tab.
+- **Pass images** (`lib/pass-image.ts`, canvas): *Save pass* = 1200×1872 PNG with QR (gallery backup for the gate); *Share* = 1080×1920 story card **without** the QR. Phones use the native share sheet (image only); desktops get Copy image / Download / Copy caption.
+- **Username editing** with live availability (`GET /api/user/username`), case-insensitive uniqueness, reserved staff-looking names blocked (also at sign-up and for Google handles), race → 409.
+- **Header**: one account control (foil-ringed crest, name on desktop) opening a menu: Profile & pass, My events, My teams, Sign out. Sign out also in the phone drawer. Fixed the duplicate icon on desktop.
+- **Sign out** always lands on `/` (`lib/sign-out.ts`; auth.ts's redirect callback was bouncing it to /login).
+- **Auth page** redesigned: foil card, editorial header, serif tabs, underline fields, gold submit bar; art panel composed from the wordmark, eclipse, mirrored banners anchored to it, sky + gold dust, veena / mudra hand.
+- Bug fixed: email sign-up assigned avatars 1–10 but the model allows 1–7 (~30% of registrations failed).
+
 ### This branch, `wip-events-and-profile` (19–22 Nov 2026), not yet merged
 **Admin panel (new)**, ported from Dakshh's and rebuilt:
 - AdminUser model, roles/areas, signed sessions, password + OTP sign-in, master key, `admin:add` script.

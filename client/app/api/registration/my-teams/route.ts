@@ -18,7 +18,7 @@ export async function GET() {
     })
       .populate(
         "eventId",
-        "eventName category date time venue banner minMembersPerTeam maxMembersPerTeam isPaidEvent"
+        "slug eventName category date time venue banner minMembersPerTeam maxMembersPerTeam isPaidEvent"
       )
       .populate("teamLeader", "username fullName")
       .populate("team", "username fullName")

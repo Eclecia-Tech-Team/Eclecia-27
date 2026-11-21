@@ -5,7 +5,7 @@ import Google from "next-auth/providers/google";
 import mongoose from "mongoose";
 import connect from "@/lib/mongoose";
 import User from "@/lib/models/User";
-import { signInSchema } from "@/lib/validations/auth";
+import { reservedUsername, signInSchema } from "@/lib/validations/auth";
 import { sendWelcomeEmail } from "@/lib/auth-mail";
 
 export const googleEnabled = Boolean(
@@ -106,11 +106,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return true;
       }
 
-      const usernameBase = (user.name ?? email.split("@")[0] ?? "guest")
+      let usernameBase = (user.name ?? email.split("@")[0] ?? "guest")
         .toLowerCase()
         .replace(/[^a-z0-9_-]/g, "")
         .slice(0, 24)
         .padEnd(3, "0");
+      // A Google name like "Eclecia Official" mustn't become a staff-looking handle.
+      if (reservedUsername(usernameBase)) usernameBase = "guest";
 
       let usernameCandidate = usernameBase;
       let suffix = 1;
