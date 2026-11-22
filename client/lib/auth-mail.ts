@@ -48,14 +48,13 @@ export async function sendPasswordResetOtpEmail(to: string, otp: string) {
 }
 
 /**
- * Send celestial welcome email upon successful signup or verification.
- * Highlights that events are live and requests completion of personal dossier.
+ * Send welcome email upon successful signup or verification.
  */
 export async function sendWelcomeEmail(to: string, username?: string) {
   const html = getWelcomeEmailHtml({ email: to, username });
   return send(
     to,
-    "Welcome to Eclecia'27 — Events Are Live & Action Required",
+    "Welcome to Eclecia'27: The Annual Cultural Fest of Heritage Institute of Technology, Kolkata",
     html,
     `welcome user=${username || to}`,
   );
