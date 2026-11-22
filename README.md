@@ -5,6 +5,7 @@ A scroll-driven, single-scene landing page built around a black-and-gold eclipse
 
 - **Design rationale and decisions:** [DESIGN.md](DESIGN.md)
 - **Developer docs (config reference, asset pipeline, how-tos):** [client/README.md](client/README.md)
+- **New to the team? Start here:** [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Repository layout
 
