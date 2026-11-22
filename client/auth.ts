@@ -7,12 +7,13 @@ import connect from "@/lib/mongoose";
 import User from "@/lib/models/User";
 import { reservedUsername, signInSchema } from "@/lib/validations/auth";
 import { sendWelcomeEmail } from "@/lib/auth-mail";
+import { AVATARS } from "@/constants/avatars";
 
 export const googleEnabled = Boolean(
   process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
 );
 
-const randomAvatar = () => Math.floor(Math.random() * 7) + 1;
+const randomAvatar = () => Math.floor(Math.random() * AVATARS.length) + 1;
 
 const toPlainRoles = (roles: unknown): string[] => {
   if (!roles) return [];
