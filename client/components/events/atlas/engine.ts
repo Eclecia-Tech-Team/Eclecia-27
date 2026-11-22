@@ -158,7 +158,7 @@ export function mountAtlas(root: HTMLElement, { categories: data, onDiscover, on
   frontCaption.tabIndex = -1;
   frontCaption.setAttribute("aria-hidden", "true");
   frontCaption.innerHTML =
-    '<span class="category-name"></span><div class="category-meta-row"><span class="category-kind"></span><span class="category-meta-dot">·</span><span class="category-count"></span></div><span class="world-enter">ENTER WORLD ↗</span>';
+    '<span class="category-name"></span><div class="category-meta-row"><span class="category-kind"></span><span class="category-meta-dot">·</span><span class="category-count"></span></div>';
   on(frontCaption, "click", () => {
     if (performance.now() >= blockOrbitClickUntil && frontWorld) enterCategory(frontWorld);
   });

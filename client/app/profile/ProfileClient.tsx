@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { signOutHome } from "@/lib/sign-out";
 
@@ -87,6 +87,7 @@ export default function ProfileClient({
   const shareCard = useRef<Blob | null>(null);
   const [nameCheck, setNameCheck] = useState<{ for: string; available: boolean; reason?: string } | null>(null);
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [isCam, setIsCam] = useState<boolean | null>(null);
 
   const inputs = useRef<Partial<Record<FieldKey, HTMLInputElement | null>>>({});
   const hasTriggeredAutoLogout = useRef(false);
@@ -141,6 +142,14 @@ export default function ProfileClient({
         if (session?.user && (session.user.username !== data.username || session.user.avatar !== data.avatar)) {
           void updateSession({ user: { username: data.username, avatar: data.avatar } });
         }
+        // Check Campus Ambassador status
+        try {
+          const camRes = await fetch("/api/cam");
+          if (camRes.ok) {
+            const camData = await camRes.json();
+            if (!cancelled) setIsCam(Boolean(camData?.isAmbassador));
+          }
+        } catch {}
       } catch (err) {
         console.error("Failed to load profile details:", err);
       }
@@ -189,13 +198,13 @@ export default function ProfileClient({
 
   const startEditing = (key: FieldKey | null = null) => {
     setFormData({
-      username: profile.username,
-      fullName: profile.fullName,
-      phoneNumber: profile.phoneNumber,
-      college: profile.college,
-      stream: profile.stream,
+      username: profile.username || "",
+      fullName: profile.fullName || "",
+      phoneNumber: profile.phoneNumber || "",
+      college: profile.college || "",
+      stream: profile.stream || "",
     });
-    setFocusKey(key ?? REQUIRED.find((k) => !profile[k]) ?? "fullName");
+    setFocusKey(key ?? "fullName");
     setActiveTab("details");
     setIsEditing(true);
   };
@@ -339,10 +348,17 @@ export default function ProfileClient({
           className="pointer-events-none fixed inset-0 h-full w-full object-cover opacity-45"
           style={depth(14, 1.06)}
         />
-        <div className="pointer-events-none fixed inset-0" aria-hidden style={depth(14)}>
+        <div
+          className="pointer-events-none fixed inset-0"
+          aria-hidden
+          style={depth(14)}
+        >
           <Meteors />
         </div>
-        <div aria-hidden className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_30%_30%,transparent_20%,rgba(2,4,6,0.75)_80%)]" />
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_30%_30%,transparent_20%,rgba(2,4,6,0.75)_80%)]"
+        />
 
         <SiteHeader />
 
@@ -350,7 +366,9 @@ export default function ProfileClient({
           <div
             role="status"
             className={`pf-toast fixed left-1/2 top-24 z-40 -translate-x-1/2 border px-5 py-2.5 text-[14px] backdrop-blur-md ${
-              notification.type === "success" ? "border-gold/40 bg-black/80 text-parchment" : "border-[#e57363]/50 bg-black/85 text-[#f6b7ab]"
+              notification.type === "success"
+                ? "border-gold/40 bg-black/80 text-parchment"
+                : "border-[#e57363]/50 bg-black/85 text-[#f6b7ab]"
             }`}
           >
             {notification.message}
@@ -359,12 +377,17 @@ export default function ProfileClient({
 
         <main className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 gap-12 px-5 pb-24 pt-28 md:px-8 md:pt-36 lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-16">
           {/* ── The pass ─────────────────────────────────────────────── */}
-          <aside className="mx-auto w-full max-w-[400px] lg:sticky lg:top-28 lg:self-start">
+          <aside className="mx-auto w-full max-w-100 lg:sticky lg:top-28 lg:self-start">
             <div className="pf-pass">
               <div className="pf-pass-halo" aria-hidden />
               <div className="px-8 pb-8 pt-7">
                 <div className="flex items-baseline justify-between">
-                  <span className="font-taiganja text-[13px] tracking-[0.22em] text-gold">ECLECIA<span className="ml-1.5 font-display text-[17px] font-semibold italic tracking-normal">’27</span></span>
+                  <span className="font-taiganja text-[13px] tracking-[0.22em] text-gold">
+                    ECLECIA
+                    <span className="ml-1.5 font-display text-[17px] font-semibold italic tracking-normal">
+                      ’27
+                    </span>
+                  </span>
                   <span className="pf-label">Festival pass</span>
                 </div>
 
@@ -372,32 +395,50 @@ export default function ProfileClient({
                   <button
                     type="button"
                     onClick={() => setAvatarModalOpen(true)}
-                    className="pf-crest group h-[132px] w-[132px] cursor-pointer"
+                    className="pf-crest group h-33 w-33 cursor-pointer"
                     aria-label="Change your crest"
                   >
                     <span className="pf-crest-inner block h-full w-full">
-                      <img src={avatarSrc} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]" />
+                      <img
+                        src={avatarSrc}
+                        alt=""
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+                      />
                     </span>
-                    <span className="absolute inset-[5px] flex items-center justify-center rounded-full bg-black/55 font-mono text-[10px] uppercase tracking-[0.25em] text-gold opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <span className="absolute inset-1.25 flex items-center justify-center rounded-full bg-black/55 font-mono text-[10px] uppercase tracking-[0.25em] text-gold opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                       Change
                     </span>
                   </button>
 
-                  <h2 className="mt-6 max-w-full font-display text-[34px] font-semibold leading-[1.05] text-parchment [overflow-wrap:anywhere]">{displayName}</h2>
-                  <p className="mt-2 font-mono text-[12px] tracking-[0.08em] text-gold/75">@{profile.username}</p>
+                  <h2 className="mt-6 max-w-full font-display text-[34px] font-semibold leading-[1.05] text-parchment wrap-anywhere">
+                    {displayName}
+                  </h2>
+                  <p className="mt-2 font-mono text-[12px] tracking-[0.08em] text-gold/75">
+                    @{profile.username}
+                  </p>
                 </div>
 
                 <dl className="mt-7 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-gold/15 pt-5">
                   <div className="min-w-0">
                     <dt className="pf-label">College</dt>
-                    <dd className="mt-1.5 line-clamp-2 font-display text-[17px] leading-snug text-parchment/90" title={profile.college}>
-                      {profile.college || <span className="text-parchment/30">—</span>}
+                    <dd
+                      className="mt-1.5 line-clamp-2 font-display text-[17px] leading-snug text-parchment/90"
+                      title={profile.college}
+                    >
+                      {profile.college || (
+                        <span className="text-parchment/30">—</span>
+                      )}
                     </dd>
                   </div>
                   <div className="min-w-0">
                     <dt className="pf-label">Stream</dt>
-                    <dd className="mt-1.5 line-clamp-2 font-display text-[17px] leading-snug text-parchment/90" title={profile.stream}>
-                      {profile.stream || <span className="text-parchment/30">—</span>}
+                    <dd
+                      className="mt-1.5 line-clamp-2 font-display text-[17px] leading-snug text-parchment/90"
+                      title={profile.stream}
+                    >
+                      {profile.stream || (
+                        <span className="text-parchment/30">—</span>
+                      )}
                     </dd>
                   </div>
                 </dl>
@@ -414,14 +455,38 @@ export default function ProfileClient({
                   aria-label="Show your pass QR larger"
                   disabled={!profile.qrPayload}
                 >
-                  {profile.qrPayload ? <PassQr payload={profile.qrPayload} className="h-[92px] w-[92px]" /> : <div className="h-[92px] w-[92px] animate-pulse bg-black/10" />}
+                  {profile.qrPayload ? (
+                    <PassQr payload={profile.qrPayload} className="h-23 w-23" />
+                  ) : (
+                    <div className="h-23 w-23 animate-pulse bg-black/10" />
+                  )}
                 </button>
                 <div className="min-w-0">
-                  <span className="pf-status" data-tone={!loaded ? "wait" : profile.isProfileComplete ? "ok" : "wait"}>
-                    {!loaded ? "Loading" : profile.isProfileComplete ? "Ready" : "Incomplete"}
+                  <span
+                    className="pf-status"
+                    data-tone={
+                      !loaded
+                        ? "wait"
+                        : profile.isProfileComplete
+                          ? "ok"
+                          : "wait"
+                    }
+                  >
+                    {!loaded
+                      ? "Loading"
+                      : profile.isProfileComplete
+                        ? "Ready"
+                        : "Incomplete"}
                   </span>
-                  <p className="mt-2.5 text-[13.5px] leading-snug text-parchment/65">Show this at the gate and food counters.</p>
-                  <button type="button" onClick={() => setQrModalOpen(true)} className="pf-link mt-3" disabled={!profile.qrPayload}>
+                  <p className="mt-2.5 text-[13.5px] leading-snug text-parchment/65">
+                    Show this QR code to the volunteers to scan for event entry.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setQrModalOpen(true)}
+                    className="pf-link mt-3"
+                    disabled={!profile.qrPayload}
+                  >
                     Enlarge
                   </button>
                 </div>
@@ -434,13 +499,24 @@ export default function ProfileClient({
                 disabled={!loaded || exporting !== null}
                 className="flex items-center justify-center gap-2.5 border border-gold/30 bg-black/40 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-parchment/80 backdrop-blur transition-colors hover:border-gold/70 hover:text-parchment disabled:opacity-50"
               >
-                <svg viewBox="0 0 24 24" className="h-4 w-4 text-gold" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" />
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 text-gold"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"
+                  />
                 </svg>
                 {exporting === "save" ? "Making…" : "Save pass"}
               </button>
               <div className="relative">
-              <button
+                <button
                   type="button"
                   onClick={sharePass}
                   aria-haspopup="menu"
@@ -448,42 +524,89 @@ export default function ProfileClient({
                   disabled={!loaded || exporting !== null}
                   className="flex w-full items-center justify-center gap-2.5 border border-gold/30 bg-black/40 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-parchment/80 backdrop-blur transition-colors hover:border-gold/70 hover:text-parchment disabled:opacity-50"
                 >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4 text-gold" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V4m0 0L8 8m4-4l4 4M6 12H5v8h14v-8h-1" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 text-gold"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 15V4m0 0L8 8m4-4l4 4M6 12H5v8h14v-8h-1"
+                    />
                   </svg>
-                  {exporting === "share" || exporting === "copy" ? "Making…" : "Share"}
+                  {exporting === "share" || exporting === "copy"
+                    ? "Making…"
+                    : "Share"}
                 </button>
                 {shareMenu && (
                   <>
-                    <button type="button" aria-hidden tabIndex={-1} className="fixed inset-0 z-20 cursor-default" onClick={() => setShareMenu(false)} />
-                    <div role="menu" className="pf-modal absolute right-0 top-[calc(100%+8px)] z-30 w-60 py-2">
+                    <button
+                      type="button"
+                      aria-hidden
+                      tabIndex={-1}
+                      className="fixed inset-0 z-30 cursor-default bg-transparent"
+                      onClick={() => setShareMenu(false)}
+                    />
+                    <div role="menu" className="pf-share-popover">
                       {canCopyImage() && (
-                        <button type="button" role="menuitem" className="block w-full px-4 py-2.5 text-left text-[14px] text-parchment/85 hover:bg-gold/10 hover:text-parchment" onClick={() => shareAction("copy")}>
-                          Copy image
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className="pf-share-item"
+                          onClick={() => shareAction("copy")}
+                        >
+                          <span>Copy image</span>
+                          <span className="text-[9px] text-gold/60">⎘</span>
                         </button>
                       )}
-                      <button type="button" role="menuitem" className="block w-full px-4 py-2.5 text-left text-[14px] text-parchment/85 hover:bg-gold/10 hover:text-parchment" onClick={() => shareAction("download")}>
-                        Download image
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="pf-share-item"
+                        onClick={() => shareAction("download")}
+                      >
+                        <span>Download image</span>
+                        <span className="text-[9px] text-gold/60">↓</span>
                       </button>
-                      <button type="button" role="menuitem" className="block w-full px-4 py-2.5 text-left text-[14px] text-parchment/85 hover:bg-gold/10 hover:text-parchment" onClick={() => shareAction("caption")}>
-                        Copy caption
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="pf-share-item"
+                        onClick={() => shareAction("caption")}
+                      >
+                        <span>Copy caption</span>
+                        <span className="text-[9px] text-gold/60">✎</span>
                       </button>
-                      <p className="mx-4 mt-1 border-t border-gold/15 pt-2.5 text-[12px] leading-snug text-parchment/45">A 1080×1920 story card. Your QR isn&apos;t on it.</p>
+                      <p className="mx-4.5 mt-1.5 border-t border-gold/15 pt-2 text-[10.5px] leading-snug font-sans text-parchment/45 relative z-1">
+                        A 1080×1920 story card. Your QR isn&apos;t on it.
+                      </p>
                     </div>
                   </>
                 )}
               </div>
             </div>
-            <p className="mt-3 text-center text-[12.5px] leading-snug text-parchment/40">Saved pass includes your QR. The shared card never does.</p>
+            <p className="mt-3 text-center text-[12.5px] leading-snug text-parchment/40">
+              Saved pass includes your QR. The shared card never does.
+            </p>
           </aside>
 
           {/* ── Account ──────────────────────────────────────────────── */}
           <section className="min-w-0">
             <p className="pf-eyebrow">Your account</p>
-            <h1 className="mt-4 font-display text-[44px] font-semibold leading-[1] tracking-[-0.01em] text-parchment md:text-[60px]" suppressHydrationWarning>
-              {greeting()}, <em className="font-medium text-gold">{firstName}</em>
+            <h1
+              className="mt-4 font-display text-[44px] font-semibold leading-none tracking-[-0.01em] text-parchment md:text-[60px]"
+              suppressHydrationWarning
+            >
+              {greeting()},{" "}
+              <em className="font-medium text-gold">{firstName}</em>
             </h1>
-            <p className="mt-4 text-[15px] text-parchment/55">{profile.email}</p>
+            <p className="mt-4 text-[15px] text-parchment/55">
+              {profile.email}
+            </p>
 
             {/* Readiness */}
             {loaded && (
@@ -521,9 +644,15 @@ export default function ProfileClient({
                       ))}
                     </div>
                     {!isEditing && (
-                      <GoldActionButton size="sm" className="mt-6" type="button" onClick={() => startEditing()}>
-                        Complete profile
-                      </GoldActionButton>
+                      <div className="mt-6 flex justify-end">
+                        <GoldActionButton
+                          size="sm"
+                          type="button"
+                          onClick={() => startEditing()}
+                        >
+                          Complete profile
+                        </GoldActionButton>
+                      </div>
                     )}
                   </>
                 )}
@@ -531,7 +660,11 @@ export default function ProfileClient({
             )}
 
             {/* Tabs */}
-            <div className="pf-tabs mt-14" role="tablist" aria-label="Profile sections">
+            <div
+              className="pf-tabs mt-14"
+              role="tablist"
+              aria-label="Profile sections"
+            >
               {TABS.map((t) => (
                 <button
                   key={t.id}
@@ -548,96 +681,218 @@ export default function ProfileClient({
               ))}
             </div>
 
-            <div key={activeTab} id={`panel-${activeTab}`} role="tabpanel" aria-labelledby={`tab-${activeTab}`} className="profile-tab-pane pt-2">
-              {activeTab === "details" && (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void handleSaveProfile();
-                  }}
-                >
-                  <div className="pf-fields">
-                    {FIELDS.map((f) => {
-                      const value = profile[f.key];
-                      const needed = REQUIRED.includes(f.key) && !value;
-                      return (
-                        <div key={f.key} className={`pf-field ${isEditing ? "border-transparent" : ""}`}>
-                          <label htmlFor={`pf-${f.key}`} className="pf-label flex items-center gap-2">
+            <div
+              key={activeTab}
+              id={`panel-${activeTab}`}
+              role="tabpanel"
+              aria-labelledby={`tab-${activeTab}`}
+              className="profile-tab-pane pt-2"
+            >
+              {activeTab === "details" &&
+                (isEditing ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void handleSaveProfile();
+                    }}
+                  >
+                    <div className="pf-fields">
+                      {FIELDS.map((f) => (
+                        <div key={f.key} className="pf-field">
+                          <label
+                            htmlFor={`pf-${f.key}`}
+                            className="pf-label flex items-center gap-2"
+                          >
                             {f.label}
-                            {needed && !isEditing && <span className="h-1 w-1 rounded-full bg-gold" aria-label="required" />}
                           </label>
-                          {isEditing ? (
-                            <>
-                            <input
-                              id={`pf-${f.key}`}
-                              ref={(el) => {
-                                inputs.current[f.key] = el;
-                              }}
-                              className="pf-input"
-                              value={(formData[f.key] as string) ?? ""}
-                              placeholder={f.placeholder}
-                              inputMode={f.inputMode}
-                              maxLength={f.key === "phoneNumber" ? 10 : f.key === "username" ? 30 : 120}
-                              autoComplete={f.key === "fullName" ? "name" : f.key === "phoneNumber" ? "tel-national" : f.key === "college" ? "organization" : "off"}
-                              onChange={(e) =>
-                                setFormData({ ...formData, [f.key]: f.key === "phoneNumber" ? e.target.value.replace(/\D/g, "") : e.target.value })
-                              }
-                              aria-describedby={f.key === "username" ? "pf-username-status" : undefined}
-                              aria-invalid={f.key === "username" && nameStatus?.tone === "bad" ? true : undefined}
-                            />
-                            {f.key === "username" && (
-                              <p id="pf-username-status" aria-live="polite" className="mt-2 min-h-[16px]">
-                                {nameStatus && (
-                                  <span className="pf-status" data-tone={nameStatus.tone}>
-                                    {nameStatus.text}
-                                  </span>
-                                )}
-                              </p>
-                            )}
-                            </>
-                          ) : value ? (
-                            <p className="pf-field-value">
-                              {f.key === "phoneNumber" ? formatPhone(value) : value}
+                          <input
+                            id={`pf-${f.key}`}
+                            ref={(el) => {
+                              inputs.current[f.key] = el;
+                            }}
+                            className="pf-input"
+                            value={(formData[f.key] as string) ?? ""}
+                            placeholder={f.placeholder}
+                            inputMode={f.inputMode}
+                            maxLength={
+                              f.key === "phoneNumber"
+                                ? 10
+                                : f.key === "username"
+                                  ? 30
+                                  : 120
+                            }
+                            autoComplete={
+                              f.key === "fullName"
+                                ? "name"
+                                : f.key === "phoneNumber"
+                                  ? "tel-national"
+                                  : f.key === "college"
+                                    ? "organization"
+                                    : "off"
+                            }
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                [f.key]:
+                                  f.key === "phoneNumber"
+                                    ? e.target.value.replace(/\D/g, "")
+                                    : e.target.value,
+                              })
+                            }
+                            aria-describedby={
+                              f.key === "username"
+                                ? "pf-username-status"
+                                : undefined
+                            }
+                            aria-invalid={
+                              f.key === "username" && nameStatus?.tone === "bad"
+                                ? true
+                                : undefined
+                            }
+                          />
+                          {f.key === "username" && (
+                            <p
+                              id="pf-username-status"
+                              aria-live="polite"
+                              className="mt-2 min-h-4"
+                            >
+                              {nameStatus && (
+                                <span
+                                  className="pf-status"
+                                  data-tone={nameStatus.tone}
+                                >
+                                  {nameStatus.text}
+                                </span>
+                              )}
                             </p>
-                          ) : (
-                            <button type="button" className="pf-add mt-2" onClick={() => startEditing(f.key)}>
-                              Add {f.label.toLowerCase()}
-                            </button>
                           )}
                         </div>
-                      );
-                    })}
-                    <div className={`pf-field ${isEditing ? "border-transparent" : ""}`}>
-                      <span className="pf-label flex items-center gap-2">Email</span>
-                      <p className="pf-field-value" style={{ color: "rgba(236,228,210,0.62)" }}>
-                        {profile.email}
-                      </p>
+                      ))}
+                      <div className="pf-field">
+                        <span className="pf-label flex items-center gap-2">
+                          Email
+                        </span>
+                        <p
+                          className="pf-field-value"
+                          style={{ color: "rgba(236,228,210,0.62)" }}
+                        >
+                          {profile.email}
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="mt-10 flex flex-wrap items-center justify-between gap-6">
-                    {isEditing ? (
-                      <>
-                        <button type="button" className="pf-link" onClick={() => setIsEditing(false)}>
-                          Cancel
-                        </button>
-                        <GoldActionButton size="sm" type="submit" disabled={loading || nameBlocks}>
-                          {loading ? "Saving…" : "Save details"}
-                        </GoldActionButton>
-                      </>
-                    ) : (
-                      <>
-                        <button type="button" className="pf-link" data-tone="danger" onClick={() => void signOutHome()}>
+                    <div className="mt-10 flex flex-wrap items-center justify-between gap-6">
+                      <button
+                        type="button"
+                        className="pf-link"
+                        onClick={() => setIsEditing(false)}
+                      >
+                        Cancel
+                      </button>
+                      <GoldActionButton
+                        size="sm"
+                        type="submit"
+                        disabled={loading || nameBlocks}
+                      >
+                        {loading ? "Saving…" : "Save details"}
+                      </GoldActionButton>
+                    </div>
+                  </form>
+                ) : (
+                  <div>
+                    <div className="pf-fields">
+                      {FIELDS.map((f) => {
+                        const value = profile[f.key];
+                        const needed = REQUIRED.includes(f.key) && !value;
+                        return (
+                          <div key={f.key} className="pf-field">
+                            <span className="pf-label flex items-center gap-2">
+                              {f.label}
+                              {needed && (
+                                <span
+                                  className="h-1 w-1 rounded-full bg-gold"
+                                  aria-label="required"
+                                />
+                              )}
+                            </span>
+                            {value ? (
+                              <p className="pf-field-value">
+                                {f.key === "phoneNumber"
+                                  ? formatPhone(value)
+                                  : value}
+                              </p>
+                            ) : (
+                              <button
+                                type="button"
+                                className="pf-add mt-2"
+                                onClick={() => startEditing(f.key)}
+                              >
+                                Add {f.label.toLowerCase()}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                      <div className="pf-field">
+                        <span className="pf-label flex items-center gap-2">
+                          Email
+                        </span>
+                        <p
+                          className="pf-field-value"
+                          style={{ color: "rgba(236,228,210,0.62)" }}
+                        >
+                          {profile.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-10 flex flex-wrap items-center justify-between gap-6">
+                      <div className="flex items-center gap-5">
+                        <button
+                          type="button"
+                          className="pf-link"
+                          data-tone="danger"
+                          onClick={() => void signOutHome()}
+                        >
                           Sign out
                         </button>
-                        <GoldActionButton size="sm" variant="ghost" type="button" onClick={() => startEditing(null)}>
-                          Edit details
-                        </GoldActionButton>
-                      </>
-                    )}
+                      </div>
+                      <GoldActionButton
+                        size="sm"
+                        variant="ghost"
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          startEditing(null);
+                        }}
+                      >
+                        Edit details
+                      </GoldActionButton>
+                    </div>
+
+                    {/* Campus Ambassador Guild (Minimal, Unboxed) */}
+                    <div className="mt-14 pt-8 border-t border-gold/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-gold/80">
+                          Campus Ambassador
+                        </p>
+                        <p className="mt-1 font-sans text-[13.5px] text-parchment/65">
+                          {isCam
+                            ? "Your official ambassador credential for Eclecia'27 is active."
+                            : "Represent your college at Eclecia'27 and unlock exclusive festival perks and passes."}
+                        </p>
+                      </div>
+                      <div className="shrink-0">
+                        <GoldButton href="/cam" size="sm" variant="ghost">
+                          {isCam
+                            ? "Ambassador Pass"
+                            : "Join Ambassador Guild"}
+                        </GoldButton>
+                      </div>
+                    </div>
                   </div>
-                </form>
-              )}
+                ))}
               {activeTab === "events" && <EventsTab />}
               {activeTab === "teams" && <TeamsTab />}
             </div>
@@ -647,32 +902,62 @@ export default function ProfileClient({
         <SiteFooter />
       </div>
 
-      <AvatarModal open={avatarModalOpen} onClose={() => setAvatarModalOpen(false)} currentAvatar={profile.avatar ?? 1} onSelect={handleAvatarSelect} />
+      <AvatarModal
+        open={avatarModalOpen}
+        onClose={() => setAvatarModalOpen(false)}
+        currentAvatar={profile.avatar ?? 1}
+        onSelect={handleAvatarSelect}
+      />
 
       {qrModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-5 backdrop-blur-md" onClick={() => setQrModalOpen(false)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-5 backdrop-blur-md"
+          onClick={() => setQrModalOpen(false)}
+        >
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Your festival pass"
-            className="pf-modal w-full max-w-[360px] px-8 pb-8 pt-7 text-center"
+            className="pf-modal w-full max-w-90 px-8 pb-8 pt-7 text-center"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-baseline justify-between">
-              <span className="font-taiganja text-[13px] tracking-[0.22em] text-gold">ECLECIA<span className="ml-1.5 font-display text-[17px] font-semibold italic tracking-normal">’27</span></span>
+              <span className="font-taiganja text-[13px] tracking-[0.22em] text-gold">
+                ECLECIA
+                <span className="ml-1.5 font-display text-[17px] font-semibold italic tracking-normal">
+                  ’27
+                </span>
+              </span>
               <span className="pf-label">Festival pass</span>
             </div>
             <div className="pf-qr-tile mx-auto mt-7 w-fit">
-              {profile.qrPayload && <PassQr payload={profile.qrPayload} className="h-[232px] w-[232px]" />}
+              {profile.qrPayload && (
+                <PassQr payload={profile.qrPayload} className="h-58 w-58" />
+              )}
             </div>
-            <p className="mt-6 font-display text-[26px] font-semibold leading-tight text-parchment">{displayName}</p>
-            <p className="mt-1 font-mono text-[12px] tracking-[0.08em] text-gold/75">@{profile.username}</p>
-            <p className="mt-4 text-[13.5px] text-parchment/55">Turn your brightness up and hold it steady.</p>
+            <p className="mt-6 font-display text-[26px] font-semibold leading-tight text-parchment">
+              {displayName}
+            </p>
+            <p className="mt-1 font-mono text-[12px] tracking-[0.08em] text-gold/75">
+              @{profile.username}
+            </p>
+            <p className="mt-4 text-[13.5px] text-parchment/55">
+              Turn your brightness up and hold it steady.
+            </p>
             <div className="mt-6 flex items-center justify-center gap-8">
-              <button type="button" className="pf-link text-gold" onClick={savePass} disabled={exporting !== null}>
+              <button
+                type="button"
+                className="pf-link text-gold"
+                onClick={savePass}
+                disabled={exporting !== null}
+              >
                 {exporting === "save" ? "Making…" : "Save to photos"}
               </button>
-              <button type="button" className="pf-link" onClick={() => setQrModalOpen(false)}>
+              <button
+                type="button"
+                className="pf-link"
+                onClick={() => setQrModalOpen(false)}
+              >
                 Close
               </button>
             </div>

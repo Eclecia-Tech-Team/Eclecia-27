@@ -112,7 +112,7 @@ export async function PATCH(request: Request) {
       });
     }
 
-    if (username !== undefined) {
+    if (username !== undefined && username.toLowerCase() !== (currentUser?.username || "").toLowerCase()) {
       const escaped = username.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const existing = await User.findOne({
         username: new RegExp(`^${escaped}$`, "i"),

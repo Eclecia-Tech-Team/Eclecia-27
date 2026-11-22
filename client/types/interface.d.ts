@@ -108,6 +108,7 @@ export interface IRegistration {
   checkedInByEmail?: string;
   foodServedCount: number;
   lastFoodServedAt?: Date;
+  referredByCode?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -281,3 +282,16 @@ export interface ProfileData {
   isProfileComplete?: boolean;
   qrPayload?: string;
 }
+
+export interface ICampusAmbassadorData {
+  id?: string;
+  userId: string;
+  name: string;
+  college: string;
+  graduationYear: number;
+  ambassadorCode: string;
+  status: "active" | "pending" | "suspended";
+  referralCount: number;
+  createdAt?: string;
+}
+

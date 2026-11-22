@@ -2,14 +2,16 @@ import { NextResponse } from "next/server";
 import Registration from "@/lib/models/Registrations";
 import Team from "@/lib/models/Team";
 import User from "@/lib/models/User";
+import CampusAmbassador from "@/lib/models/CampusAmbassador";
 import { confirmByMail, fail, loadRegistrant, paymentNote } from "@/lib/registration";
 
-/** Join an existing team of this event by its code. Body: `{ teamCode }`. */
+/** Join an existing team of this event by its code. Body: `{ teamCode, refCode? }`. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const body = (await request.json().catch(() => ({}))) as { teamCode?: unknown };
+    const body = (await request.json().catch(() => ({}))) as { teamCode?: unknown; refCode?: string };
     const teamCode = typeof body.teamCode === "string" ? body.teamCode.trim().toUpperCase() : "";
+    const rawRefCode = typeof body.refCode === "string" ? body.refCode.trim().toUpperCase() : "";
     if (!teamCode) return fail(400, "BAD_CODE", "Enter your team's code.");
 
     const ctx = await loadRegistrant(id);
@@ -21,6 +23,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!found) return fail(404, "BAD_CODE", "No team has that code.");
     if (String(found.eventId) !== String(event._id)) {
       return fail(400, "BAD_CODE", "That code belongs to a team in a different event.");
+    }
+
+    let validRefCode: string | undefined = undefined;
+    if (rawRefCode) {
+      const ambassadorExists = await CampusAmbassador.exists({ ambassadorCode: rawRefCode });
+      if (ambassadorExists) {
+        validRefCode = rawRefCode;
+        await CampusAmbassador.updateOne(
+          { ambassadorCode: rawRefCode },
+          { $inc: { referralCount: 1 } }
+        );
+      }
     }
 
     // Seat claimed atomically, so two people can't both take the last spot.
@@ -38,6 +52,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         isInTeam: true,
         teamId: team._id,
         verified: !event.isPaidEvent || team.paymentStatus === "completed",
+        ...(validRefCode ? { referredByCode: validRefCode } : {}),
       });
     } catch (error) {
       await Team.updateOne({ _id: team._id }, { $pull: { team: user._id } });

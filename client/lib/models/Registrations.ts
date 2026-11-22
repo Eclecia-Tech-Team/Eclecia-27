@@ -55,6 +55,11 @@ const registrationSchema = new Schema(
     lastFoodServedAt: {
       type: Date,
     },
+    referredByCode: {
+      type: String,
+      trim: true,
+      uppercase: true,
+    },
   },
   { timestamps: true }
 );

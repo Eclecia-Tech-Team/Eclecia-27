@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Event from "@/lib/models/Events";
 import Registration from "@/lib/models/Registrations";
 import Team from "@/lib/models/Team";
+import CampusAmbassador from "@/lib/models/CampusAmbassador";
 import generateCode from "@/lib/generateTeamID";
 import { confirmByMail, fail, isEventFull, loadRegistrant, paymentNote } from "@/lib/registration";
 
@@ -9,8 +10,9 @@ import { confirmByMail, fail, isEventFull, loadRegistrant, paymentNote } from "@
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const body = (await request.json().catch(() => ({}))) as { teamName?: unknown };
+    const body = (await request.json().catch(() => ({}))) as { teamName?: unknown; refCode?: string };
     const teamName = typeof body.teamName === "string" ? body.teamName.trim() : "";
+    const rawRefCode = typeof body.refCode === "string" ? body.refCode.trim().toUpperCase() : "";
     if (teamName.length < 2 || teamName.length > 40) {
       return NextResponse.json({ error: "Team name must be 2 to 40 characters." }, { status: 400 });
     }
@@ -21,6 +23,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     if (!event.isTeamEvent) return fail(400, "WRONG_FORMAT", "This is a solo event.");
     if (await isEventFull(event)) return fail(400, "FULL", "This event has no team slots left.");
+
+    let validRefCode: string | undefined = undefined;
+    if (rawRefCode) {
+      const ambassadorExists = await CampusAmbassador.exists({ ambassadorCode: rawRefCode });
+      if (ambassadorExists) {
+        validRefCode = rawRefCode;
+        await CampusAmbassador.updateOne(
+          { ambassadorCode: rawRefCode },
+          { $inc: { referralCount: 1 } }
+        );
+      }
+    }
 
     // Codes are random; retry the rare collision on the unique index.
     let team;
@@ -47,6 +61,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         isInTeam: true,
         teamId: team._id,
         verified: !event.isPaidEvent,
+        ...(validRefCode ? { referredByCode: validRefCode } : {}),
       });
     } catch (error) {
       await Team.deleteOne({ _id: team._id });

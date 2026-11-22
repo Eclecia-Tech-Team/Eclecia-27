@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { SiteHeader } from "@/components/common/Header";
 import { SiteFooter } from "@/components/common/Footer";
 import { PageFade } from "@/components/common/PageFade";
@@ -180,7 +180,9 @@ export function EventDetail({ data }: { data: EventPageData }) {
 
             {/* Phones: registration right after the facts; desktop: sticky right column. */}
             <aside className="order-first flex flex-col gap-8 lg:sticky lg:top-28 lg:order-none lg:self-start">
-              <RegistrationCard event={event} viewer={data.viewer} />
+              <Suspense fallback={null}>
+                <RegistrationCard event={event} viewer={data.viewer} />
+              </Suspense>
 
               {event.pocs.length > 0 && (
                 <Section title="Coordinators" id="coordinators">

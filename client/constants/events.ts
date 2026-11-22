@@ -278,8 +278,8 @@ export const ATLAS_CATEGORIES: AtlasCategory[] = [
         club: "Atmadweep: The Quiz Club of HITK",
       },
       {
-        id: "india-crisis-conclave",
-        name: "India Crisis Conclave",
+        id: "mission-impossible",
+        name: "Mission: Impossible",
         description:
           "A news-themed treasure hunt in which participants solve clues related to different locations across the college campus. Each correctly identified location will lead them to the next clue, bringing them closer to completing the hunt.",
         kind: "Treasure Hunt",

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { EventDetail } from "@/components/events/detail/EventDetail";
+import { ComingSoon } from "@/components/common/ComingSoon";
 import { getEventPage, getEventRecord } from "@/lib/event-page";
 
 type EventPageProps = { params: Promise<{ id: string }> };
@@ -23,6 +24,19 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
 
 export default async function EventPage({ params }: EventPageProps) {
   const { id } = await params;
+
+  // When NEXT_PUBLIC_ENABLE_EVENTS_DETAILS is not "true" (default: false), show Coming Soon
+  if (process.env.NEXT_PUBLIC_ENABLE_EVENTS_DETAILS !== "true") {
+    return (
+      <ComingSoon
+        eyebrow="Celestial Stage"
+        note="Event details and registration for this world will be unveiled shortly."
+        backHref="/events"
+        backLabel="Back to Events Atlas"
+      />
+    );
+  }
+
   const session = await auth();
   const data = await getEventPage(id, session?.user?.id);
   if (!data) notFound();

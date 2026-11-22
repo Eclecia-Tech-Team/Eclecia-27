@@ -94,5 +94,5 @@ export function confirmByMail(
 export const paymentNote = (event: IEventDocument) =>
   event.isPaidEvent ? " Your entry is confirmed once the fee is paid; payment details are posted on the event page." : "";
 
-/** Site-wide registration switch (NEXT_PUBLIC_ENABLE_REGISTRATION), on top of each event's isActive. */
-export const registrationLive = () => process.env.NEXT_PUBLIC_ENABLE_REGISTRATION === "true";
+/** Site-wide registration is live. */
+export const registrationLive = () => true;

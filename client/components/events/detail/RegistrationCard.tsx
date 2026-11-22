@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, type FormEvent, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { GoldActionButton, GoldButton } from "@/components/common/GoldButton";
 import type { EventPageData } from "@/lib/event-page";
 
@@ -11,19 +11,56 @@ type Message = { tone: "error" | "success"; text: string } | null;
 /** Registration panel: every state from "sign in" to "you're in, here's your team". */
 export function RegistrationCard({ event, viewer }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<Message>(null);
+  const [refCode, setRefCode] = useState<string>(() => {
+    const queryRef = searchParams.get("ref") || searchParams.get("refCode");
+    if (queryRef) {
+      const code = queryRef.trim().toUpperCase();
+      try {
+        sessionStorage.setItem("eclecia_ambassador_ref", code);
+        localStorage.setItem("eclecia_ambassador_ref", code);
+      } catch {}
+      return code;
+    }
+    try {
+      const stored =
+        sessionStorage.getItem("eclecia_ambassador_ref") ||
+        localStorage.getItem("eclecia_ambassador_ref");
+      return stored ? stored.trim().toUpperCase() : "";
+    } catch {
+      return "";
+    }
+  });
   const here = `/events/${event.slug}`;
+
+  // Keep storage in sync if query param changes later
+  useEffect(() => {
+    const queryRef = searchParams.get("ref") || searchParams.get("refCode");
+    if (queryRef) {
+      const code = queryRef.trim().toUpperCase();
+      const timer = setTimeout(() => {
+        setRefCode(code);
+      }, 0);
+      try {
+        sessionStorage.setItem("eclecia_ambassador_ref", code);
+        localStorage.setItem("eclecia_ambassador_ref", code);
+      } catch {}
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   /** Calls a registration route; routes the visitor to sign-in / profile when the API says so. */
   const call = async (url: string, method: "POST" | "PATCH", body?: object) => {
     setBusy(true);
     setMessage(null);
     try {
+      const payload = body ? { ...body, ...(refCode ? { refCode } : {}) } : (refCode ? { refCode } : undefined);
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: body ? JSON.stringify(body) : undefined,
+        body: payload ? JSON.stringify(payload) : undefined,
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string; message?: string; code?: string };
       if (data.code === "UNAUTHENTICATED") return router.push(`/login?callbackUrl=${encodeURIComponent(here)}`);
@@ -110,6 +147,12 @@ export function RegistrationCard({ event, viewer }: Props) {
         >
           {message.text}
         </p>
+      )}
+      {!viewer.registration && refCode && (
+        <div className="mb-4 flex items-center justify-between border border-gold/30 bg-gold/5 px-3 py-1.5 font-mono text-[11px] text-gold">
+          <span className="text-parchment/60">Ambassador Referral</span>
+          <span className="font-semibold tracking-wider">{refCode}</span>
+        </div>
       )}
       {body}
     </section>

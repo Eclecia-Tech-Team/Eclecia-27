@@ -177,7 +177,7 @@ export function getEmailLayout({
                       <tr>
                         <td style="border: 1px solid rgba(217,164,65,0.4); background-color: rgba(217,164,65,0.08); padding: 4px 14px; text-align: center;">
                           <span style="font-family: 'Courier New', Courier, monospace; font-size: 10px; font-weight: bold; letter-spacing: 0.25em; color: #ffd875; text-transform: uppercase;">
-                            ✦ ${esc(badge)} ✦
+                            ${esc(badge)}
                           </span>
                         </td>
                       </tr>

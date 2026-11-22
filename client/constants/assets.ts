@@ -146,7 +146,7 @@ export const ASSETS = {
       brahmand: {
         veritasium:
           "https://res.cloudinary.com/ajpcnwvo/image/upload/v1793485890/veritasium.webp",
-        "india-crisis-conclave":
+        "mission-impossible":
           "https://res.cloudinary.com/ajpcnwvo/image/upload/v1793485889/india-crisis-conclave.webp",
         "the-unfiltered-mic":
           "https://res.cloudinary.com/ajpcnwvo/image/upload/v1793485889/the-unfiltered-mic.webp",

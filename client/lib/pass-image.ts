@@ -36,7 +36,8 @@ type Fonts = { display: string; taiganja: string; mono: string; sans: string };
 /** next/font family names, read from the CSS variables the root layout sets. */
 async function loadFonts(): Promise<Fonts> {
   const css = getComputedStyle(document.documentElement);
-  const v = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
+  const v = (name: string, fallback: string) =>
+    css.getPropertyValue(name).trim() || fallback;
   const fonts = {
     display: v("--font-cormorant", "Georgia, serif"),
     taiganja: v("--font-taiganja", "Georgia, serif"),
@@ -65,9 +66,17 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
 }
 
 /** Text with manual letter-spacing (canvas letterSpacing isn't everywhere yet). */
-function spaced(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, spacing: number, align: "left" | "right" | "center" = "left") {
+function spaced(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  spacing: number,
+  align: "left" | "right" | "center" = "left",
+) {
   const widths = [...text].map((ch) => ctx.measureText(ch).width);
-  const total = widths.reduce((a, b) => a + b, 0) + spacing * Math.max(0, text.length - 1);
+  const total =
+    widths.reduce((a, b) => a + b, 0) + spacing * Math.max(0, text.length - 1);
   let cx = align === "left" ? x : align === "right" ? x - total : x - total / 2;
   const prev = ctx.textAlign;
   ctx.textAlign = "left";
@@ -82,7 +91,8 @@ function spaced(ctx: CanvasRenderingContext2D, text: string, x: number, y: numbe
 function ellipsize(ctx: CanvasRenderingContext2D, text: string, max: number) {
   if (ctx.measureText(text).width <= max) return text;
   let t = text;
-  while (t.length > 1 && ctx.measureText(`${t}…`).width > max) t = t.slice(0, -1);
+  while (t.length > 1 && ctx.measureText(`${t}…`).width > max)
+    t = t.slice(0, -1);
   return `${t.trimEnd()}…`;
 }
 
@@ -128,11 +138,21 @@ function grain(ctx: CanvasRenderingContext2D) {
 }
 
 /** Draws the pass at (0,0) in pass units (400×624). */
-async function drawPass(ctx: CanvasRenderingContext2D, info: PassInfo, fonts: Fonts, withQr: boolean) {
+async function drawPass(
+  ctx: CanvasRenderingContext2D,
+  info: PassInfo,
+  fonts: Fonts,
+  withQr: boolean,
+) {
   const [avatar, qr] = await Promise.all([
     loadImage(info.avatarSrc),
     withQr && info.qrPayload
-      ? QRCode.toDataURL(info.qrPayload, { errorCorrectionLevel: "M", margin: 0, width: 600, color: { dark: "#000000", light: "#f6f1e4" } }).then(loadImage)
+      ? QRCode.toDataURL(info.qrPayload, {
+          errorCorrectionLevel: "M",
+          margin: 0,
+          width: 600,
+          color: { dark: "#000000", light: "#f6f1e4" },
+        }).then(loadImage)
       : Promise.resolve(null),
   ]);
 
@@ -192,7 +212,10 @@ async function drawPass(ctx: CanvasRenderingContext2D, info: PassInfo, fonts: Fo
   // Crest: gold ring, dark gap, artwork
   const r = 66;
   let ring: CanvasGradient;
-  if (typeof (ctx as { createConicGradient?: unknown }).createConicGradient === "function") {
+  if (
+    typeof (ctx as { createConicGradient?: unknown }).createConicGradient ===
+    "function"
+  ) {
     ring = ctx.createConicGradient((210 * Math.PI) / 180, W / 2, crestY);
     ring.addColorStop(0, "rgba(255,220,140,0.95)");
     ring.addColorStop(0.25, "rgba(217,164,65,0.18)");
@@ -200,7 +223,12 @@ async function drawPass(ctx: CanvasRenderingContext2D, info: PassInfo, fonts: Fo
     ring.addColorStop(0.75, "rgba(217,164,65,0.18)");
     ring.addColorStop(1, "rgba(255,220,140,0.95)");
   } else {
-    ring = ctx.createLinearGradient(W / 2 - r, crestY - r, W / 2 + r, crestY + r);
+    ring = ctx.createLinearGradient(
+      W / 2 - r,
+      crestY - r,
+      W / 2 + r,
+      crestY + r,
+    );
     ring.addColorStop(0, GOLD_HI);
     ring.addColorStop(1, GOLD);
   }
@@ -252,7 +280,10 @@ async function drawPass(ctx: CanvasRenderingContext2D, info: PassInfo, fonts: Fo
     // Up to two lines, the second shortened if it still doesn't fit.
     const lines = wrap(ctx, value || "—", max);
     lines.slice(0, 2).forEach((line, i) => {
-      const last = i === 1 && lines.length > 2 ? `${line} ${lines.slice(2).join(" ")}` : line;
+      const last =
+        i === 1 && lines.length > 2
+          ? `${line} ${lines.slice(2).join(" ")}`
+          : line;
       ctx.fillText(ellipsize(ctx, last, max), x, 395 + i * 21);
     });
   };
@@ -292,7 +323,11 @@ async function drawPass(ctx: CanvasRenderingContext2D, info: PassInfo, fonts: Fo
     spaced(ctx, info.ready ? "READY" : "INCOMPLETE", sx + 14, ty + 26, 2.2);
     ctx.fillStyle = `rgba(${PARCH},0.66)`;
     ctx.font = `400 13.5px ${fonts.sans}`;
-    wrap(ctx, "Show this at the gate and food counters.", W - sx - 32).forEach((l, i) => ctx.fillText(l, sx, ty + 52 + i * 19));
+    wrap(
+      ctx,
+      "Show this QR code to the volunteers to scan for event entry.",
+      W - sx - 32,
+    ).forEach((l, i) => ctx.fillText(l, sx, ty + 52 + i * 19));
     ctx.fillStyle = `rgba(${PARCH},0.4)`;
     ctx.font = `400 10px ${fonts.mono}`;
     spaced(ctx, "15–17 JAN 2027 · HITK", sx, ty + 104, 1.6);
@@ -306,13 +341,20 @@ async function drawPass(ctx: CanvasRenderingContext2D, info: PassInfo, fonts: Fo
     ctx.fillText("15–17 January 2027", W / 2, PERF_Y + 92);
     ctx.fillStyle = "rgba(217,164,65,0.85)";
     ctx.font = `italic 400 17px ${fonts.display}`;
-    ctx.fillText("Heritage Institute of Technology, Kolkata", W / 2, PERF_Y + 122);
+    ctx.fillText(
+      "Heritage Institute of Technology, Kolkata",
+      W / 2,
+      PERF_Y + 122,
+    );
     ctx.textAlign = "left";
   }
 }
 
 /** The pass alone, transparent around the notches. 3× by default (1200×1872). */
-export async function renderPass(info: PassInfo, { withQr = true, scale = 3 } = {}) {
+export async function renderPass(
+  info: PassInfo,
+  { withQr = true, scale = 3 } = {},
+) {
   const fonts = await loadFonts();
   const canvas = document.createElement("canvas");
   canvas.width = W * scale;
@@ -335,14 +377,30 @@ export async function renderShareCard(info: PassInfo) {
 
   ctx.fillStyle = "#030405";
   ctx.fillRect(0, 0, CW, CH);
-  const [sky, corona] = await Promise.all([loadImage("/assets/opt/bg-layer1.webp"), loadImage("/assets/opt/events/shared/corona-halo.webp")]);
+  const [sky, corona] = await Promise.all([
+    loadImage("/assets/opt/bg-layer1.webp"),
+    loadImage("/assets/opt/events/shared/corona-halo.webp"),
+  ]);
   if (sky) {
     const ratio = Math.max(CW / sky.width, CH / sky.height);
     ctx.globalAlpha = 0.55;
-    ctx.drawImage(sky, (CW - sky.width * ratio) / 2, (CH - sky.height * ratio) / 2, sky.width * ratio, sky.height * ratio);
+    ctx.drawImage(
+      sky,
+      (CW - sky.width * ratio) / 2,
+      (CH - sky.height * ratio) / 2,
+      sky.width * ratio,
+      sky.height * ratio,
+    );
     ctx.globalAlpha = 1;
   }
-  const vignette = ctx.createRadialGradient(CW / 2, CH * 0.48, 200, CW / 2, CH * 0.48, CH * 0.75);
+  const vignette = ctx.createRadialGradient(
+    CW / 2,
+    CH * 0.48,
+    200,
+    CW / 2,
+    CH * 0.48,
+    CH * 0.75,
+  );
   vignette.addColorStop(0, "rgba(3,4,5,0)");
   vignette.addColorStop(1, "rgba(3,4,5,0.9)");
   ctx.fillStyle = vignette;
@@ -396,23 +454,39 @@ export async function renderShareCard(info: PassInfo) {
 }
 
 export const toBlob = (canvas: HTMLCanvasElement) =>
-  new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Couldn't make the image"))), "image/png"));
+  new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Couldn't make the image"))),
+      "image/png",
+    ),
+  );
 
 /** Phones and tablets: where a native share sheet is the right tool. */
-export const isTouchDevice = () => typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+export const isTouchDevice = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(pointer: coarse)").matches;
 
 /**
  * Native share sheet with only the image (no title/text: some targets turn
  * extra fields into a second item). Returns false when the device can't.
  */
-export async function shareImage(blob: Blob, filename: string): Promise<"shared" | "cancelled" | "unsupported"> {
+export async function shareImage(
+  blob: Blob,
+  filename: string,
+): Promise<"shared" | "cancelled" | "unsupported"> {
   const file = new File([blob], filename, { type: "image/png" });
-  if (typeof navigator === "undefined" || !navigator.canShare?.({ files: [file] })) return "unsupported";
+  if (
+    typeof navigator === "undefined" ||
+    !navigator.canShare?.({ files: [file] })
+  )
+    return "unsupported";
   try {
     await navigator.share({ files: [file] });
     return "shared";
   } catch (err) {
-    return (err as DOMException)?.name === "AbortError" ? "cancelled" : "unsupported";
+    return (err as DOMException)?.name === "AbortError"
+      ? "cancelled"
+      : "unsupported";
   }
 }
 
@@ -427,7 +501,10 @@ export function downloadImage(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-export const canCopyImage = () => typeof window !== "undefined" && "ClipboardItem" in window && Boolean(navigator.clipboard?.write);
+export const canCopyImage = () =>
+  typeof window !== "undefined" &&
+  "ClipboardItem" in window &&
+  Boolean(navigator.clipboard?.write);
 
 /** Puts the PNG itself on the clipboard (paste straight into WhatsApp Web, Slack, a story editor). */
 export async function copyImage(blob: Blob) {
