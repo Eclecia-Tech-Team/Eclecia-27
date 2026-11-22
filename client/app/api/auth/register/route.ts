@@ -6,6 +6,7 @@ import { firstIssue, registerApiSchema } from "@/lib/validations/auth";
 import { sendOtpEmail } from "@/lib/auth-mail";
 import { generateOtp, hashOtp, otpExpiryDate } from "@/lib/otp";
 import { isValidDeviceId, setOtpSession } from "@/lib/otp-session-store";
+import { AVATARS } from "@/constants/avatars";
 
 async function issueOtp(email: string, deviceId: string) {
   const otp = generateOtp();
@@ -85,8 +86,8 @@ export async function POST(request: Request) {
       email: normalizedEmail,
       provider: "credentials",
       passwordHash: await bcrypt.hash(password, 10),
-      // The model allows avatars 1–7.
-      avatar: Math.floor(Math.random() * 7) + 1,
+      // Choose from the configured avatar set.
+      avatar: Math.floor(Math.random() * AVATARS.length) + 1,
       verified: false,
     });
 

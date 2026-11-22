@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AVATARS } from "@/constants/avatars";
 
 /** Names that would let someone pass as staff or the fest itself. Matched ignoring case, _ and -. */
 const RESERVED = ["admin", "administrator", "eclecia", "hitk", "heritage", "official", "support", "staff", "team", "organizer", "organiser", "moderator", "mod", "root", "system", "help", "null", "undefined"];
@@ -41,7 +42,7 @@ export const resetPasswordSchema = z.object({
 });
 
 export const profileUpdateSchema = z.object({
-  avatar: z.number().min(1).max(7).optional(),
+  avatar: z.number().min(1).max(AVATARS.length).optional(),
   username: usernameSchema.optional(),
   fullName: z.string().trim().min(2, "Full name must be at least 2 characters").max(80, "Full name: 80 characters max").regex(/^[^<>{}]*$/, "Full name can't contain < > { }").optional().or(z.literal("")),
   phoneNumber: z.string().trim().regex(/^\d{10}$/, "Phone number must be 10 digits").optional().or(z.literal("")),

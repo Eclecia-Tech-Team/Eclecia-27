@@ -6,48 +6,22 @@ export interface AvatarItem {
 }
 
 export const AVATARS: AvatarItem[] = [
-  {
-    id: 1,
-    name: "Aetheria",
-    slug: "aetheria",
-    src: "/assets/opt/events/mobile/thumbnails/categories/aetheria/artwork.webp",
-  },
-  {
-    id: 2,
-    name: "Anubhuti",
-    slug: "anubhuti",
-    src: "/assets/opt/events/mobile/thumbnails/categories/anubhuti/artwork.webp",
-  },
-  {
-    id: 3,
-    name: "BakyaRongo",
-    slug: "bakya-rongo",
-    src: "/assets/opt/events/mobile/thumbnails/categories/bakya-rongo/artwork.webp",
-  },
-  {
-    id: 4,
-    name: "Brahmand",
-    slug: "brahmand",
-    src: "/assets/opt/events/mobile/thumbnails/categories/brahmand/artwork.webp",
-  },
-  {
-    id: 5,
-    name: "Cadence",
-    slug: "cadence",
-    src: "/assets/opt/events/mobile/thumbnails/categories/cadence/artwork.webp",
-  },
-  {
-    id: 6,
-    name: "Celeste",
-    slug: "celeste",
-    src: "/assets/opt/events/mobile/thumbnails/categories/celeste/artwork.webp",
-  },
-  {
-    id: 7,
-    name: "Taal Tarang",
-    slug: "taal-tarang",
-    src: "/assets/opt/events/mobile/thumbnails/categories/taal-tarang/artwork.webp",
-  },
+  { id: 1, name: "Aanya", slug: "avatar-01", src: "/assets/opt/avatars/avatar-01.webp" },
+  { id: 2, name: "Kabir", slug: "avatar-02", src: "/assets/opt/avatars/avatar-02.webp" },
+  { id: 3, name: "Meher", slug: "avatar-03", src: "/assets/opt/avatars/avatar-03.webp" },
+  { id: 4, name: "Arjun", slug: "avatar-04", src: "/assets/opt/avatars/avatar-04.webp" },
+  { id: 5, name: "Tara", slug: "avatar-05", src: "/assets/opt/avatars/avatar-05.webp" },
+  { id: 6, name: "Dev", slug: "avatar-06", src: "/assets/opt/avatars/avatar-06.webp" },
+  { id: 7, name: "Noor", slug: "avatar-07", src: "/assets/opt/avatars/avatar-07.webp" },
+  { id: 8, name: "Aman", slug: "avatar-08", src: "/assets/opt/avatars/avatar-08.webp" },
+  { id: 9, name: "Isha", slug: "avatar-09", src: "/assets/opt/avatars/avatar-09.webp" },
+  { id: 10, name: "Rohan", slug: "avatar-10", src: "/assets/opt/avatars/avatar-10.webp" },
+  { id: 11, name: "Zoya", slug: "avatar-11", src: "/assets/opt/avatars/avatar-11.webp" },
+  { id: 12, name: "Nikhil", slug: "avatar-12", src: "/assets/opt/avatars/avatar-12.webp" },
+  { id: 13, name: "Pema", slug: "avatar-13", src: "/assets/opt/avatars/avatar-13.webp" },
+  { id: 14, name: "Vihaan", slug: "avatar-14", src: "/assets/opt/avatars/avatar-14.webp" },
+  { id: 15, name: "Anika", slug: "avatar-15", src: "/assets/opt/avatars/avatar-15.webp" },
+  { id: 16, name: "Kiran", slug: "avatar-16", src: "/assets/opt/avatars/avatar-16.webp" },
 ];
 
 export const getAvatarSrc = (avatarId?: number | null): string => {
