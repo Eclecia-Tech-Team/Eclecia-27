@@ -52,10 +52,29 @@ export function AccountMenu({ username, email, avatar }: Props) {
 
   return (
     <div ref={root} className="relative">
+      {/* Desktop Avatar Square Button — avatar only, no text, opens dropdown */}
       <button
         ref={button}
         type="button"
-        className="hdr-account group"
+        className="header-profile-btn group hidden xl:inline-flex cursor-pointer p-1.25!"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Account menu for ${username}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <div className="relative h-7 w-7 overflow-hidden border border-gold/70 shadow-[0_0_8px_rgba(217,164,65,0.3)] bg-black shrink-0">
+          <img
+            src={getAvatarSrc(avatar)}
+            alt={username}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+          />
+        </div>
+      </button>
+
+      {/* Mobile Profile Icon (phone view remains as it is) */}
+      <button
+        type="button"
+        className="hdr-account group xl:hidden"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Account menu for ${username}`}
@@ -64,23 +83,12 @@ export function AccountMenu({ username, email, avatar }: Props) {
         <span className="hdr-crest">
           <img src={getAvatarSrc(avatar)} alt="" />
         </span>
-        <span className="hdr-account-name hidden xl:block">{username}</span>
-        <svg
-          viewBox="0 0 16 16"
-          className={`hidden h-3 w-3 text-gold/60 transition-transform duration-300 group-hover:text-gold xl:block ${open ? "rotate-180" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.4}
-          aria-hidden
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 6l4.5 4.5L12.5 6" />
-        </svg>
       </button>
 
       {open && (
         <div role="menu" aria-label="Account" className="hdr-menu">
           <div className="flex items-center gap-3 px-5 pb-4 pt-5">
-            <span className="hdr-crest !h-10 !w-10">
+            <span className="hdr-crest h-10! w-10!">
               <img src={getAvatarSrc(avatar)} alt="" />
             </span>
             <div className="min-w-0">
