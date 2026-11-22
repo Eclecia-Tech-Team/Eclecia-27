@@ -313,9 +313,9 @@ export function CamPanel() {
                     </p>
                   </div>
 
-                  <span className="inline-block border border-gold/45 bg-gold/10 px-2.5 py-1 font-mono text-[9.5px] sm:text-[10px] uppercase tracking-[0.2em] text-gold shrink-0">
+                  {/* <span className="inline-block border border-gold/45 bg-gold/10 px-2.5 py-1 font-mono text-[9.5px] sm:text-[10px] uppercase tracking-[0.2em] text-gold shrink-0">
                     Active
-                  </span>
+                  </span> */}
                 </div>
               </div>
 

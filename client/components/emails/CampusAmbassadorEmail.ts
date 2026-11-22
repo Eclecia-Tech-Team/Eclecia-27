@@ -21,6 +21,8 @@ export function getCampusAmbassadorEmailHtml({
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.eclecia-hitk.in"
   ).replace(/\/+$/, "");
   const camUrl = `${siteUrl}/cam`;
+  const whatsappUrl =
+    "https://chat.whatsapp.com/IMeZAShfHRe3Kw14bwBRtN?s=sh&p=a&iam=2";
 
   const content = `
     <p style="margin: 0 0 16px; font-size: 16px; line-height: 26px; color: #ece4d2;">
@@ -55,6 +57,25 @@ export function getCampusAmbassadorEmailHtml({
         <li style="margin-bottom: 6px;"><strong>Leadership Recognition:</strong> Distinctive campus leadership spotlight and networking opportunities with the central organizing team.</li>
         <li><strong>Performance Rewards:</strong> Unlock rewards, trophies, and commendations based on campus outreach and participation.</li>
       </ul>
+    </div>
+
+    <!-- WhatsApp Community -->
+    <div style="margin: 24px 0 28px; padding: 24px; border: 1px solid rgba(217, 164, 65, 0.4); background: rgba(217, 164, 65, 0.05); text-align: center;">
+      <p style="margin: 0 0 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: #ffd875;">
+        Join the Guild Circle
+      </p>
+      <p style="margin: 0 0 18px; font-size: 14px; line-height: 24px; color: rgba(236,228,210,0.8);">
+        Join the group to receive all updates and more.
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 0 auto;">
+        <tr>
+          <td align="center" bgcolor="#d9a441" style="background-color: #d9a441; border-radius: 2px;">
+            <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 14px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #0a0b0d; text-decoration: none; border-radius: 2px;">
+              Join WhatsApp Group
+            </a>
+          </td>
+        </tr>
+      </table>
     </div>
 
     <p style="margin: 0 0 20px; font-size: 14px; line-height: 24px; color: rgba(236,228,210,0.7);">
