@@ -1,6 +1,7 @@
 import mongoose, { Schema, model, models } from "mongoose";
 import bcrypt from "bcryptjs";
 import { IUser } from "@/types/interface";
+import { AVATARS } from "@/constants/avatars";
 
 export interface IUserDocument extends IUser, mongoose.Document {
   _id: mongoose.Types.ObjectId;
@@ -47,7 +48,7 @@ const userSchema = new Schema<IUserDocument>(
       type: Number,
       required: false,
       min: 1,
-      max: 7,
+      max: AVATARS.length,
     },
     emailVerified: {
       type: Date,
