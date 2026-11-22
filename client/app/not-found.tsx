@@ -4,6 +4,8 @@ import { SiteFooter } from "@/components/common/Footer";
 import { PageFade } from "@/components/common/PageFade";
 import { GoldButton } from "@/components/common/GoldButton";
 import { ASSETS } from "@/constants/assets";
+import { Meteors } from "@/components/common/Meteors";
+import { depth } from "@/lib/depth";
 
 export const metadata: Metadata = {
   title: "404 - Page Not Found | Eclecia'27",
@@ -20,7 +22,11 @@ export default function NotFound() {
           alt=""
           aria-hidden
           className="pointer-events-none fixed inset-0 h-full w-full object-cover opacity-60"
+          style={depth(14, 1.06)}
         />
+        <div className="pointer-events-none fixed inset-0" aria-hidden style={depth(14)}>
+          <Meteors />
+        </div>
 
         <SiteHeader />
 

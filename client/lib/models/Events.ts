@@ -1,20 +1,13 @@
 import { IEvent } from "@/types/interface";
 import mongoose, { model, Schema } from "mongoose";
 import { models } from "mongoose";
+import { EVENT_CATEGORIES } from "@/constants/event-categories";
 
 export interface IEventDocument extends IEvent, mongoose.Document {
   _id: mongoose.Types.ObjectId;
 }
 
-export const EVENT_CATEGORIES = [
-  "Celeste",
-  "Taal Tarang",
-  "Anubhuti",
-  "BakyaRongo",
-  "Aetheria",
-  "Cadence",
-  "Brahmand",
-] as const;
+export { EVENT_CATEGORIES };
 
 const eventSchema = new Schema(
   {

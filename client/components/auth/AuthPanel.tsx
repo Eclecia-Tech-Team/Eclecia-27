@@ -13,10 +13,11 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { signIn, signOut } from "next-auth/react";
-import { GoldActionButton } from "@/components/common/GoldButton";
+import { signIn } from "next-auth/react";
+import { signOutHome } from "@/lib/sign-out";
 import { TransitionLink } from "@/components/common/TransitionLink";
 import { ASSETS } from "@/constants/assets";
+import { atlasArt } from "@/constants/events";
 
 type Tab = "login" | "register";
 type View = "credentials" | "verify" | "forgot" | "reset";
@@ -27,24 +28,43 @@ export interface AuthPanelProps {
   user?: { username?: string; email?: string | null } | null;
 }
 
-const TAB_HREF: Record<Tab, string> = { login: "/login", register: "/register" };
+const TAB_HREF: Record<Tab, string> = {
+  login: "/login",
+  register: "/register",
+};
 const TABS: { id: Tab; label: string }[] = [
-  { id: "login", label: "Sign In" },
-  { id: "register", label: "Register" },
+  { id: "login", label: "Sign in" },
+  { id: "register", label: "Create account" },
 ];
 
 /** In tab order, so headings slide the way the tab underline does. */
 const HEADINGS = {
-  login: { title: "Welcome Back", sub: "Sign in to your Eclecia'27 account." },
-  register: { title: "Join Eclecia'27", sub: "Create your account to take part in the fest." },
-  forgot: { title: "Reset Password", sub: "Enter your email and we'll send you a 6-digit code." },
-  reset: { title: "New Password", sub: "Enter the code from your email and choose a new password." },
-  verify: { title: "Check Your Inbox", sub: "Enter the 6-digit code to verify your email." },
-  account: { title: "You're In", sub: "Your Eclecia'27 account is ready." },
+  login: {
+    title: "Welcome back",
+    sub: "Sign in to register for events and carry your pass.",
+  },
+  register: {
+    title: "Take your seat",
+    sub: "One account for every event, team and your festival pass.",
+  },
+  forgot: {
+    title: "Forgot password?",
+    sub: "We'll email you a 6-digit code to set a new one.",
+  },
+  reset: {
+    title: "New password",
+    sub: "Enter the code we emailed you, then your new password.",
+  },
+  verify: {
+    title: "Check your inbox",
+    sub: "Enter the 6-digit code we just sent you.",
+  },
+  account: { title: "You're in", sub: "Your Eclecia’27 account is ready." },
 } as const;
 
 const ERRORS: Record<string, string> = {
-  use_credentials: "This email already has a password account. Sign in with your email and password.",
+  use_credentials:
+    "This email already has a password account. Sign in with your email and password.",
   CredentialsSignin: "Invalid email or password.",
 };
 
@@ -61,7 +81,10 @@ function getDeviceId() {
   return id;
 }
 
-async function post<T = { error?: string; message?: string }>(url: string, body: object) {
+async function post<T = { error?: string; message?: string }>(
+  url: string,
+  body: object,
+) {
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -74,7 +97,8 @@ async function post<T = { error?: string; message?: string }>(url: string, body:
 export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
   const router = useRouter();
   const pathTab: Tab = usePathname() === "/login" ? "login" : "register";
-  const errorCode = useSearchParams().get("error");
+  const searchParams = useSearchParams();
+  const errorCode = searchParams.get("error");
   // Moves on click; settles on the URL once the navigation lands.
   const [tab, setTab] = useOptimistic(pathTab);
   const [view, setView] = useState<View>("credentials");
@@ -85,7 +109,9 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
   const [newPassword, setNewPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(
-    errorCode ? (ERRORS[errorCode] ?? "Sign-in failed. Please try again.") : null,
+    errorCode
+      ? (ERRORS[errorCode] ?? "Sign-in failed. Please try again.")
+      : null,
   );
   const [notice, setNotice] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -101,7 +127,9 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
 
   useEffect(() => {
     if (view === "credentials") return;
-    panelRef.current?.querySelector<HTMLInputElement>(`[data-view="${view}"] input`)?.focus({ preventScroll: true });
+    panelRef.current
+      ?.querySelector<HTMLInputElement>(`[data-view="${view}"] input`)
+      ?.focus({ preventScroll: true });
   }, [view]);
 
   const switchTab = (next: Tab) => {
@@ -117,11 +145,17 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
   };
 
   const finishSignIn = async () => {
-    const result = await signIn("credentials", { email, password, redirect: false });
+    const callbackUrl = searchParams.get("callbackUrl") || "/profile";
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
     if (result?.error) {
       setError("We couldn't sign you in. Please try again.");
       return;
     }
+    router.push(callbackUrl);
     router.refresh();
   };
 
@@ -141,7 +175,11 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
   };
 
   const onRegister = run(async () => {
-    const { ok, data } = await post("/api/auth/register", { username, email, password });
+    const { ok, data } = await post("/api/auth/register", {
+      username,
+      email,
+      password,
+    });
     if (!ok) return setError(data.error ?? "We couldn't create your account.");
     setOtp("");
     setNotice(`We sent a 6-digit code to ${email}.`);
@@ -149,10 +187,10 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
   });
 
   const onLogin = run(async () => {
-    const { ok, data } = await post<{ requiresVerification?: boolean; message?: string }>(
-      "/api/auth/signin-check",
-      { email, password },
-    );
+    const { ok, data } = await post<{
+      requiresVerification?: boolean;
+      message?: string;
+    }>("/api/auth/signin-check", { email, password });
     if (!ok) return setError(data.error ?? "Invalid email or password.");
     if (data.requiresVerification) {
       setOtp("");
@@ -179,7 +217,11 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
   });
 
   const onReset = run(async () => {
-    const { ok, data } = await post("/api/auth/reset-password", { email, otp, newPassword });
+    const { ok, data } = await post("/api/auth/reset-password", {
+      email,
+      otp,
+      newPassword,
+    });
     if (!ok) return setError(data.error ?? "We couldn't reset your password.");
     setPassword("");
     setNotice("Your password has been reset. Sign in with your new password.");
@@ -207,27 +249,37 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
   return (
     <section
       data-tab={registering && !user ? "register" : "login"}
-      className="auth-card relative grid w-full max-w-[420px] overflow-hidden border border-gold/40 bg-[#050507]/90 md:min-h-[540px] md:max-w-[880px] md:grid-cols-[5fr_6fr]"
+      className="auth-card relative grid w-full max-w-110 overflow-hidden md:min-h-150 md:max-w-240 md:grid-cols-[5fr_6fr]"
     >
       <ArtPane art={registering && !user ? "register" : "login"} />
 
-      <div ref={panelRef} className="relative px-6 pt-6 pb-1 sm:px-10 md:pt-8 md:pb-3">
-        <header className="mb-5 flex flex-col items-center text-center">
-          <h1 className="font-nasyhama text-[32px] font-normal leading-tight text-parchment sm:text-[36px]">
+      <div
+        ref={panelRef}
+        className="relative px-7 pt-8 pb-2 sm:px-12 md:pt-12 md:pb-4"
+      >
+        <header className="mb-8">
+          <p className="auth-eyebrow">
+            Eclecia&apos;27 · 15-17 January
+            <span className="hidden sm:inline"> · HITK</span>
+          </p>
+          <h1 className="mt-4 font-display text-[40px] font-semibold leading-[1.02] tracking-[-0.01em] text-parchment sm:text-[46px]">
             <Swap
               active={heading}
               items={Object.entries(HEADINGS).map(([id, h]) => ({
                 id,
-                node: id === "account" && user?.username ? user.username : h.title,
+                node:
+                  id === "account" && user?.username ? user.username : h.title,
               }))}
             />
           </h1>
-          <img src={ASSETS.cloudinary.divider} alt="" aria-hidden className="-my-2 w-[min(78%,260px)]" />
-          <p className="mt-1 w-full font-sans text-[14px] leading-snug text-parchment/70">
+          <p className="mt-3 w-full font-sans text-[15px] leading-relaxed text-parchment/60">
             <Swap
               active={heading}
               className="w-full"
-              items={Object.entries(HEADINGS).map(([id, h]) => ({ id, node: h.sub }))}
+              items={Object.entries(HEADINGS).map(([id, h]) => ({
+                id,
+                node: h.sub,
+              }))}
             />
           </p>
         </header>
@@ -238,9 +290,7 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
 
         <Messages error={error} notice={notice} />
 
-        <Collapse open={!!user}>
-          {user && <Account user={user} />}
-        </Collapse>
+        <Collapse open={!!user}>{user && <Account user={user} />}</Collapse>
 
         <Collapse open={onForm}>
           <form
@@ -259,10 +309,18 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
                 autoComplete="username"
                 minLength={3}
                 maxLength={30}
-                hint="Letters, numbers, underscores and hyphens."
+                hint="Letters, numbers, _ and -. You can change it later."
               />
             </Collapse>
-            <Field label="Email Address" name="email" type="email" value={email} onChange={setEmail} autoComplete="email" />
+            <Field
+              label="Email"
+              name="email"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              autoComplete="email"
+              placeholder="you@college.edu"
+            />
             <Field
               label="Password"
               name="password"
@@ -273,7 +331,9 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
               footer={
                 <>
                   <Collapse open={registering}>
-                    <p className="pt-1.5 font-sans text-[12px] text-parchment/55">At least 8 characters.</p>
+                    <p className="pt-2 font-sans text-[12.5px] text-parchment/45">
+                      At least 8 characters.
+                    </p>
                   </Collapse>
                   <Collapse open={!registering}>
                     <div className="flex justify-end pt-2">
@@ -284,20 +344,24 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
                           setView("forgot");
                         }}
                       >
-                        Forgot Password?
+                        Forgot password?
                       </TextButton>
                     </div>
                   </Collapse>
                 </>
               }
             />
-            <Submit disabled={busy || !email || !password || (registering && !username)}>
+            <Submit
+              disabled={
+                busy || !email || !password || (registering && !username)
+              }
+            >
               <Swap
                 active={busy ? "busy" : tab}
                 items={[
-                  { id: "login", node: "Sign In" },
-                  { id: "register", node: "Create Account" },
-                  { id: "busy", node: "Please Wait…" },
+                  { id: "login", node: "Sign in" },
+                  { id: "register", node: "Create account" },
+                  { id: "busy", node: "One moment…" },
                 ]}
               />
             </Submit>
@@ -305,17 +369,21 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
 
           {googleEnabled && (
             <>
-              <div className="flex items-center gap-4 pt-2 pb-5 font-sans text-[12px] text-parchment/50">
-                <span className="h-px flex-1 bg-gold/20" />
+              <div className="flex items-center gap-4 pt-1 pb-5 font-mono text-[10px] uppercase tracking-[0.3em] text-parchment/40">
+                <span className="h-px flex-1 bg-parchment/10" />
                 or
-                <span className="h-px flex-1 bg-gold/20" />
+                <span className="h-px flex-1 bg-parchment/10" />
               </div>
               <div className="pb-6">
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => signIn("google", { redirectTo: "/register" })}
-                  className="auth-google-btn group relative flex w-full items-center justify-center gap-3 py-3.5 font-sans text-[14px] font-medium tracking-wide text-parchment transition-all duration-300 hover:text-white disabled:cursor-not-allowed disabled:border-gold/15 disabled:bg-black/20 disabled:text-parchment/35 disabled:shadow-none disabled:hover:border-gold/15 disabled:hover:bg-black/20"
+                  onClick={() =>
+                    signIn("google", {
+                      redirectTo: searchParams.get("callbackUrl") || "/profile",
+                    })
+                  }
+                  className="auth-google-btn group relative flex h-13 w-full items-center justify-center gap-3 font-sans text-[14.5px] text-parchment/90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <GoogleMark className="transition-all duration-300 group-disabled:opacity-35 group-disabled:grayscale-[0.7]" />
                   <span>Continue with Google</span>
@@ -328,15 +396,31 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
         <Collapse open={!user && view === "verify"}>
           <form data-view="verify" onSubmit={onVerify} noValidate>
             <CodeField value={otp} onChange={setOtp} />
-            <Submit disabled={busy || otp.length !== 6}>{busy ? "Please Wait…" : "Verify and Continue"}</Submit>
-            <FlowLinks onBack={() => switchTab("login")} onResend={() => onResend("/api/auth/resend-otp")} busy={busy} />
+            <Submit disabled={busy || otp.length !== 6}>
+              {busy ? "One moment…" : "Verify and continue"}
+            </Submit>
+            <FlowLinks
+              onBack={() => switchTab("login")}
+              onResend={() => onResend("/api/auth/resend-otp")}
+              busy={busy}
+            />
           </form>
         </Collapse>
 
         <Collapse open={!user && view === "forgot"}>
           <form data-view="forgot" onSubmit={onForgot} noValidate>
-            <Field label="Email Address" name="email" type="email" value={email} onChange={setEmail} autoComplete="email" />
-            <Submit disabled={busy || !email}>{busy ? "Please Wait…" : "Send Code"}</Submit>
+            <Field
+              label="Email"
+              name="email"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              autoComplete="email"
+              placeholder="you@college.edu"
+            />
+            <Submit disabled={busy || !email}>
+              {busy ? "One moment…" : "Send code"}
+            </Submit>
             <FlowLinks onBack={() => switchTab("login")} busy={busy} />
           </form>
         </Collapse>
@@ -345,7 +429,7 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
           <form data-view="reset" onSubmit={onReset} noValidate>
             <CodeField value={otp} onChange={setOtp} />
             <Field
-              label="New Password"
+              label="New password"
               name="new-password"
               type="password"
               value={newPassword}
@@ -353,10 +437,16 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
               autoComplete="new-password"
               hint="At least 8 characters."
             />
-            <Submit disabled={busy || otp.length !== 6 || newPassword.length < 8}>
-              {busy ? "Please Wait…" : "Reset Password"}
+            <Submit
+              disabled={busy || otp.length !== 6 || newPassword.length < 8}
+            >
+              {busy ? "One moment…" : "Set new password"}
             </Submit>
-            <FlowLinks onBack={() => switchTab("login")} onResend={() => onResend("/api/auth/forgot-password")} busy={busy} />
+            <FlowLinks
+              onBack={() => switchTab("login")}
+              onResend={() => onResend("/api/auth/forgot-password")}
+              busy={busy}
+            />
           </form>
         </Collapse>
       </div>
@@ -364,34 +454,78 @@ export function AuthPanel({ googleEnabled, user }: AuthPanelProps) {
   );
 }
 
-/** The setting-eclipse scene from the landing's finale, with the veena or mudra hand in front. */
+/**
+ * The landing's finale in miniature: wordmark over the eclipse,
+ * mask-and-sitar banners framing the sky, hills with the veena (sign in) or
+ * the mudra hand (register) in front. The eclipse sets for sign-in and
+ * rises for register.
+ */
 function ArtPane({ art }: { art: Tab }) {
   return (
-    <div aria-hidden className="relative h-36 overflow-hidden border-b border-gold/25 md:h-auto md:border-r md:border-b-0">
+    <div
+      aria-hidden
+      className="auth-art relative z-1 h-44 overflow-hidden md:h-auto"
+    >
+      {/* Sky */}
       <img
-        src={ASSETS.cloudinary.blacksun}
+        src={ASSETS.cloudinary.bg}
         alt=""
-        className="auth-eclipse absolute bottom-3 left-1/2 w-[132px] md:bottom-[30%] md:w-[280px]"
+        className="absolute inset-0 h-full w-full object-cover opacity-45"
       />
+      <img
+        src={atlasArt.shared("gold-dust")}
+        alt=""
+        className="auth-dust absolute inset-0 h-full w-full object-cover opacity-50 mix-blend-screen"
+      />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_55%,transparent_20%,rgba(5,5,6,0.75)_75%)]" />
+
+      {/* Eclipse */}
+      <div className="auth-eclipse absolute bottom-[34%] left-1/2 w-28 md:bottom-[27%] md:w-77.5">
+        {/* Banners hang off the eclipse itself: always centred on it, mirrored, and rising/setting with it. */}
+        <img
+          src={ASSETS.cloudinary.banner}
+          alt=""
+          className="auth-banner absolute top-1/2 right-[calc(100%-22px)] hidden w-29.5 max-w-none -translate-y-1/2 md:block"
+        />
+        <img
+          src={ASSETS.cloudinary.banner}
+          alt=""
+          className="auth-banner absolute top-1/2 left-[calc(100%-22px)] hidden w-29.5 max-w-none -translate-y-1/2 -scale-x-100 md:block"
+        />
+        <img
+          src={ASSETS.cloudinary.blacksun}
+          alt=""
+          className="relative w-full"
+        />
+      </div>
+
+      {/* Ground and the piece in front */}
       <img
         src={ASSETS.cloudinary.bottom}
         alt=""
-        className="absolute inset-x-0 bottom-0 w-full md:h-[34%] md:object-cover md:object-top"
+        className="absolute inset-x-0 bottom-0 w-full md:h-[32%] md:object-cover md:object-top"
       />
       <img
         src={ASSETS.cloudinary.veena}
         alt=""
         data-state={art === "login" ? "active" : "before"}
-        className="auth-art-piece absolute bottom-[3%] left-[6%] hidden w-[88%] md:block"
+        className="auth-art-piece absolute bottom-[2%] left-[8%] hidden w-[84%] md:block"
       />
       <img
         src={ASSETS.cloudinary.hand}
         alt=""
         data-state={art === "register" ? "active" : "after"}
-        className="auth-art-piece absolute bottom-[3%] left-[18%] hidden w-[64%] md:block"
+        className="auth-art-piece absolute bottom-[2%] left-[20%] hidden w-[60%] md:block"
       />
-      <div className="absolute inset-x-0 top-9 hidden text-center md:block">
-        <p className="font-display text-[22px] italic leading-snug text-gold">
+
+      {/* Title block */}
+      <div className="absolute inset-x-0 top-8 hidden flex-col items-center px-10 text-center md:flex">
+        <img
+          src={ASSETS.cloudinary.wordmarkBlacker}
+          alt=""
+          className="w-[72%] max-w-82.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.7)]"
+        />
+        <p className="-mt-1 font-display text-[22px] italic leading-snug text-gold/95 [text-shadow:0_2px_14px_rgba(0,0,0,0.9)]">
           <Swap
             active={art}
             items={[
@@ -411,11 +545,18 @@ function Tabs({ tab, onSelect }: { tab: Tab; onSelect: (tab: Tab) => void }) {
     e.preventDefault();
     const next = tab === "login" ? "register" : "login";
     onSelect(next);
-    e.currentTarget.querySelector<HTMLButtonElement>(`[data-tab-id="${next}"]`)?.focus();
+    e.currentTarget
+      .querySelector<HTMLButtonElement>(`[data-tab-id="${next}"]`)
+      ?.focus();
   };
 
   return (
-    <div role="tablist" aria-label="Account" onKeyDown={onKeyDown} className="relative mb-5 grid grid-cols-2 border-b border-gold/25">
+    <div
+      role="tablist"
+      aria-label="Account"
+      onKeyDown={onKeyDown}
+      className="relative mb-7 grid grid-cols-2 border-b border-parchment/10"
+    >
       {TABS.map(({ id, label }) => (
         <button
           key={id}
@@ -426,14 +567,15 @@ function Tabs({ tab, onSelect }: { tab: Tab; onSelect: (tab: Tab) => void }) {
           aria-controls="auth-credentials"
           tabIndex={tab === id ? 0 : -1}
           onClick={() => onSelect(id)}
-          className={`auth-tab-btn pb-3 font-taiganja text-[15px] font-semibold tracking-[0.06em] transition-colors duration-300 ${
-            tab === id ? "text-gold" : "text-parchment/55 hover:text-parchment"
-          }`}
+          className="auth-tab-btn pb-3.5 text-center"
         >
           {label}
         </button>
       ))}
-      <span aria-hidden className="auth-tab-line absolute -bottom-px left-0 h-0.5 w-1/2 bg-gold" />
+      <span
+        aria-hidden
+        className="auth-tab-line absolute -bottom-px left-0 h-px w-1/2"
+      />
     </div>
   );
 }
@@ -441,21 +583,26 @@ function Tabs({ tab, onSelect }: { tab: Tab; onSelect: (tab: Tab) => void }) {
 function Account({ user }: { user: NonNullable<AuthPanelProps["user"]> }) {
   return (
     <div className="pb-8">
-      <p className="text-center font-sans text-[15px] leading-relaxed text-parchment/75">
-        Signed in as <span className="text-parchment">{user.email}</span>. Event registrations open soon; we&apos;ll
-        email you when they do.
+      <p className="font-sans text-[15px] leading-relaxed text-parchment/70">
+        Signed in as <span className="text-parchment">{user.email}</span>. Event
+        registrations open soon; we&apos;ll email you when they do.
       </p>
-      <div className="mt-8 flex flex-col items-center gap-5">
-        <GoldActionButton
-          onClick={() => signOut({ redirectTo: "/login" })}
-          variant="ghost"
-          className="px-12! text-[15px]! tracking-[0.06em]! normal-case!"
-        >
-          Sign Out
-        </GoldActionButton>
-        <TransitionLink href="/events" className="font-sans text-[14px] text-parchment/70 transition-colors hover:text-gold">
-          Explore the Events →
+      <div className="mt-8 flex flex-col gap-5">
+        <TransitionLink href="/profile" className="auth-submit">
+          Open your profile <span aria-hidden>→</span>
         </TransitionLink>
+        <div className="flex items-center justify-between">
+          <TransitionLink href="/events" className="auth-link">
+            Explore events →
+          </TransitionLink>
+          <button
+            type="button"
+            className="auth-link"
+            onClick={() => void signOutHome()}
+          >
+            Sign out
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -478,7 +625,9 @@ function Swap({
         <span
           key={id}
           aria-hidden={i !== activeIndex}
-          data-state={i === activeIndex ? "active" : i < activeIndex ? "before" : "after"}
+          data-state={
+            i === activeIndex ? "active" : i < activeIndex ? "before" : "after"
+          }
         >
           {node}
         </span>
@@ -497,7 +646,13 @@ function Collapse({ open, children }: { open: boolean; children: ReactNode }) {
   );
 }
 
-function Messages({ error, notice }: { error: string | null; notice: string | null }) {
+function Messages({
+  error,
+  notice,
+}: {
+  error: string | null;
+  notice: string | null;
+}) {
   const message = error ?? notice;
   // Keeps the text while the box closes so it collapses instead of snapping shut.
   const [shown, setShown] = useState(message);
@@ -505,11 +660,13 @@ function Messages({ error, notice }: { error: string | null; notice: string | nu
 
   return (
     <Collapse open={!!message}>
-      <div className="pb-5">
+      <div className="pb-6">
         <p
           role={error ? "alert" : "status"}
-          className={`border-l-2 py-1 pl-3 font-sans text-[13px] leading-snug ${
-            error ? "border-red-400 text-red-200" : "border-gold text-parchment/85"
+          className={`border-l py-1.5 pl-4 font-sans text-[14px] leading-snug ${
+            error
+              ? "border-[#e57363] text-[#f6b7ab]"
+              : "border-gold text-parchment/80"
           }`}
         >
           {shown && (/[.!?]$/.test(shown) ? shown : `${shown}.`)}
@@ -519,7 +676,10 @@ function Messages({ error, notice }: { error: string | null; notice: string | nu
   );
 }
 
-type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> & {
+type FieldProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "onChange" | "value"
+> & {
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -527,24 +687,30 @@ type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "valu
   footer?: ReactNode;
 };
 
-const inputClass =
-  "w-full border border-gold/30 bg-black/40 px-3.5 py-2.5 font-sans text-[16px] text-parchment outline-none transition-colors focus:border-gold focus:bg-black/60";
-
-function Field({ label, value, onChange, hint, footer, type, className = "", ...input }: FieldProps) {
+function Field({
+  label,
+  value,
+  onChange,
+  hint,
+  footer,
+  type,
+  className = "",
+  ...input
+}: FieldProps) {
   const [reveal, setReveal] = useState(false);
   const isPassword = type === "password";
 
   return (
-    <div className="pb-4">
-      <label className="flex flex-col gap-1.5">
-        <span className="font-sans text-[13px] font-medium text-parchment/80">{label}</span>
+    <div className="auth-field pb-6">
+      <label className="flex flex-col gap-1">
+        <span className="auth-label">{label}</span>
         <span className="relative">
           <input
             {...input}
             type={isPassword && reveal ? "text" : type}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className={`${inputClass} ${isPassword ? "pr-11" : ""} ${className}`}
+            className={`auth-input ${isPassword ? "pr-10" : ""} ${className}`}
           />
           {isPassword && (
             <button
@@ -552,67 +718,96 @@ function Field({ label, value, onChange, hint, footer, type, className = "", ...
               onClick={() => setReveal(!reveal)}
               aria-label={reveal ? "Hide Password" : "Show Password"}
               aria-pressed={reveal}
-              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-parchment/50 transition-colors hover:text-gold"
+              className="absolute inset-y-0 right-0 flex w-10 items-center justify-end text-parchment/40 transition-colors hover:text-gold"
             >
               <EyeIcon open={reveal} />
             </button>
           )}
         </span>
       </label>
-      {hint && <p className="mt-1.5 font-sans text-[12px] text-parchment/55">{hint}</p>}
+      {hint && (
+        <p className="mt-2 font-sans text-[12.5px] text-parchment/45">{hint}</p>
+      )}
       {footer}
     </div>
   );
 }
 
-function CodeField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+function CodeField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
     <Field
-      label="6-Digit Code"
+      label="6-digit code"
       name="otp"
       value={value}
       onChange={(v) => onChange(v.replace(/\D/g, "").slice(0, 6))}
       inputMode="numeric"
       autoComplete="one-time-code"
-      className="text-center text-[22px] tracking-[0.4em]"
+      className="auth-code"
     />
   );
 }
 
-function Submit({ disabled, children }: { disabled?: boolean; children: ReactNode }) {
+function Submit({
+  disabled,
+  children,
+}: {
+  disabled?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <div className="flex justify-center pt-1 pb-6">
-      <GoldActionButton
-        type="submit"
-        disabled={disabled}
-        className="min-w-[240px] text-[15px]! tracking-[0.06em]! normal-case!"
-      >
+    <div className="pt-2 pb-6">
+      <button type="submit" disabled={disabled} className="auth-submit">
         {children}
-      </GoldActionButton>
+        <span aria-hidden className="text-[14px] tracking-normal">
+          →
+        </span>
+      </button>
     </div>
   );
 }
 
-function TextButton({ onClick, disabled, children }: { onClick: () => void; disabled?: boolean; children: ReactNode }) {
+function TextButton({
+  onClick,
+  disabled,
+  children,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="font-sans text-[13px] text-parchment/65 transition-colors hover:text-gold disabled:opacity-50"
+      className="auth-link"
     >
       {children}
     </button>
   );
 }
 
-function FlowLinks({ onBack, onResend, busy }: { onBack: () => void; onResend?: () => void; busy: boolean }) {
+function FlowLinks({
+  onBack,
+  onResend,
+  busy,
+}: {
+  onBack: () => void;
+  onResend?: () => void;
+  busy: boolean;
+}) {
   return (
     <div className="flex justify-between pb-8">
-      <TextButton onClick={onBack}>← Back to Sign In</TextButton>
+      <TextButton onClick={onBack}>← Back to sign in</TextButton>
       {onResend && (
         <TextButton onClick={onResend} disabled={busy}>
-          Resend Code
+          Resend code
         </TextButton>
       )}
     </div>
@@ -621,7 +816,17 @@ function FlowLinks({ onBack, onResend, busy }: { onBack: () => void; onResend?: 
 
 function EyeIcon({ open }: { open: boolean }) {
   return (
-    <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      aria-hidden
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
       <circle cx="12" cy="12" r="3" />
       {open && <path d="M4 4l16 16" />}
@@ -631,11 +836,29 @@ function EyeIcon({ open }: { open: boolean }) {
 
 function GoogleMark({ className = "" }: { className?: string }) {
   return (
-    <svg aria-hidden width="18" height="18" viewBox="0 0 48 48" className={className}>
-      <path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.9-6.9C35.9 2.4 30.5 0 24 0 14.6 0 6.5 5.4 2.6 13.2l8 6.2C12.5 13.7 17.8 9.5 24 9.5z" />
-      <path fill="#4285F4" d="M46.9 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.9c-.6 3-2.2 5.5-4.7 7.2l7.7 6c4.5-4.2 7-10.3 7-17.7z" />
-      <path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-8-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l8-6.2z" />
-      <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.2 0-11.5-4.2-13.4-9.9l-8 6.2C6.5 42.6 14.6 48 24 48z" />
+    <svg
+      aria-hidden
+      width="18"
+      height="18"
+      viewBox="0 0 48 48"
+      className={className}
+    >
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.9-6.9C35.9 2.4 30.5 0 24 0 14.6 0 6.5 5.4 2.6 13.2l8 6.2C12.5 13.7 17.8 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.9 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.9c-.6 3-2.2 5.5-4.7 7.2l7.7 6c4.5-4.2 7-10.3 7-17.7z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-8-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l8-6.2z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.2 0-11.5-4.2-13.4-9.9l-8 6.2C6.5 42.6 14.6 48 24 48z"
+      />
     </svg>
   );
 }

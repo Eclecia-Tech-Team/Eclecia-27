@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     await clearOtpSession(email, deviceId);
 
     if (justVerified) {
-      await sendWelcomeEmail(email).catch((err) =>
+      await sendWelcomeEmail(email, user.username).catch((err) =>
         console.error("[verify-otp] welcome_mail_failed", err)
       );
     }

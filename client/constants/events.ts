@@ -10,6 +10,8 @@ export interface AtlasEvent {
   description: string;
   kind: string;
   club?: string;
+  /** Artwork URL set in the admin panel (Event.banner); else the bundled art by id. */
+  image?: string;
 }
 
 export interface AtlasCategory {
@@ -259,13 +261,14 @@ export const ATLAS_CATEGORIES: AtlasCategory[] = [
     kind: "Beyond the Realm",
     line: "Debates, quizzes and verses for minds that never stop chasing the next question.",
     events: [
-      // {
-      //   id: "",
-      //   name: "",
-      //   description: "Take a stand. Make your argument count.",
-      //   kind: "Oxford Debate",
-      //   club: "DEBSOC: The Heritage Debating Society",
-      // },
+      {
+        id: "rifaqat",
+        name: "Rifaqat",
+        description:
+          "An invitation to the curious, a challenge to the conventional, and a passage into the unexplored. Speak, deliberate, argue, and debate with us through the legacies of culture, the mysteries of tradition and the shifting landscapes of modernity.",
+        kind: "Oxford Debate",
+        club: "DEBSOC: The Heritage Debating Society",
+      },
       {
         id: "veritasium",
         name: "Veritasium",
@@ -275,24 +278,27 @@ export const ATLAS_CATEGORIES: AtlasCategory[] = [
         club: "Atmadweep: The Quiz Club of HITK",
       },
       {
-        id: "india-crisis-conclave",
-        name: "India Crisis Conclave",
-        description: "Think deeply. Speak with conviction.",
-        kind: "Conclave",
+        id: "mission-impossible",
+        name: "Mission: Impossible",
+        description:
+          "A news-themed treasure hunt in which participants solve clues related to different locations across the college campus. Each correctly identified location will lead them to the next clue, bringing them closer to completing the hunt.",
+        kind: "Treasure Hunt",
         club: "News Club of HITK",
       },
       {
         id: "the-unfiltered-mic",
         name: "The Unfiltered Mic",
-        description: "A microphone. Your unfiltered voice.",
-        kind: "Open mic",
+        description:
+          "A fun-filled open-stage talent competition where participants get an opportunity to showcase any unique, interesting or unconventional talent within one minute. The event will follow a light-hearted and entertaining format, making it enjoyable for both participants and the audience.",
+        kind: "Talent Show",
         club: "News Club of HITK",
       },
       {
         id: "headline-hustle",
         name: "Headline Hustle",
-        description: "Find the story. Make the headline.",
-        kind: "Media challenge",
+        description:
+          "A creative journalism-based event in which participants are presented with a particular situation or scenario. They must transform it into a news story by creating a catchy headline, a suitable subheading and presenting the situation in the style of a television news report.",
+        kind: "Creative Journalism",
         club: "News Club of HITK",
       },
       {
@@ -303,13 +309,6 @@ export const ATLAS_CATEGORIES: AtlasCategory[] = [
         kind: "Linguistic Competition",
         club: "Zubaan: The Language Club of HITK",
       },
-      // {
-      //   id: "kavi-sammelan",
-      //   name: "Kavi Sammelan",
-      //   description: "An assembly of voices, united by poetry.",
-      //   kind: "Poetry Recitation",
-      //   club: "Zubaan: The Language Club of HITK",
-      // },
     ],
   },
 ];
@@ -342,6 +341,9 @@ export const atlasArt = {
     if (dbImage) return dbImage;
     const catEvents = ASSETS.cloudinary.events[categoryId];
     const cloudUrl = catEvents ? catEvents[eventId] : "";
-    return cloudUrl || `${ATLAS_MEDIA}/events/${categoryId}/${eventId}.webp`;
+    if (cloudUrl) return cloudUrl;
+    // Events added in the admin panel without artwork have no bundled file: use the plain planet.
+    const bundled = ATLAS_CATEGORIES.some((c) => c.id === categoryId && c.events.some((e) => e.id === eventId));
+    return bundled ? `${ATLAS_MEDIA}/events/${categoryId}/${eventId}.webp` : atlasArt.shared("planet-base");
   },
 } as const;

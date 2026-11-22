@@ -61,6 +61,12 @@ body:has(.mobile-events) {
   transform: translateZ(0);
   will-change: transform;
 }
+.mobile-events .m-meteors {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
 .mobile-events .m-figures {
   position: fixed;
   inset: 0;

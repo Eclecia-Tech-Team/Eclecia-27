@@ -10,6 +10,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: "Our Tale", href: "/our-tale" },
   { label: "Sponsors", href: "/sponsors" },
   { label: "Team", href: "/team" },
+  { label: "CAP", href: "/cam" },
 ] as const;
 
 export const SPONSORSHIP_HEADS = [

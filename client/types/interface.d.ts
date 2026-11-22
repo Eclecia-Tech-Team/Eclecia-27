@@ -95,3 +95,203 @@ export interface PublicEventProps {
   prizePool: string;
   isActive: boolean;
 }
+
+export interface IRegistration {
+  eventId: Types.ObjectId;
+  isInTeam: boolean;
+  teamId?: Types.ObjectId;
+  participant: Types.ObjectId;
+  verified: boolean;
+  checkedIn: boolean;
+  checkedInAt?: Date;
+  checkedInBy?: Types.ObjectId;
+  checkedInByEmail?: string;
+  foodServedCount: number;
+  lastFoodServedAt?: Date;
+  referredByCode?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ITeam {
+  eventId: Types.ObjectId;
+  teamCode: string;
+  teamName?: string;
+  teamLeader: Types.ObjectId;
+  team: Types.ObjectId[];
+  paymentStatus?: "pending" | "completed" | "failed";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface RegiEventProps {
+  _id: string;
+  slug?: string;
+  eventName: string;
+  category: EventCategory;
+  banner?: string | null;
+  date: string;
+  time: string;
+  venue: string;
+  minMembersPerTeam?: number;
+  maxMembersPerTeam?: number;
+  isPaidEvent?: boolean;
+}
+
+export interface Registration {
+  _id: string;
+  eventId: RegiEventProps;
+  isInTeam: boolean;
+  participant: string;
+  verified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface Team {
+  _id: string;
+  eventId: RegiEventProps;
+  teamLeader:
+    | string
+    | {
+        _id: string;
+        username?: string;
+        fullName?: string;
+      };
+  teamCode: string;
+  teamName?: string;
+  paymentStatus?: "pending" | "completed" | "failed";
+  team: (
+    | string
+    | {
+        _id: string;
+        username?: string;
+        fullName?: string;
+      }
+  )[];
+  members?: {
+    _id: string;
+    username?: string;
+    fullName?: string;
+    isLeader: boolean;
+  }[];
+  teamSize?: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface PopulatedTeamUser {
+  _id: mongoose.Types.ObjectId;
+  username?: string;
+  fullName?: string;
+}
+
+export interface RegistrationLean {
+  _id: mongoose.Types.ObjectId;
+  isInTeam?: boolean;
+  teamId?: mongoose.Types.ObjectId;
+  verified?: boolean;
+  createdAt?: Date;
+}
+
+export interface TeamLean {
+  _id: mongoose.Types.ObjectId;
+  teamCode: string;
+  teamName?: string;
+  teamLeader?: PopulatedTeamUser;
+  team?: PopulatedTeamUser[];
+  paymentStatus?: "pending" | "completed" | "failed";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MyTeamResponse {
+  _id: string;
+  teamCode: string;
+  teamName?: string;
+  paymentStatus?: "pending" | "completed" | "failed";
+  createdAt: Date;
+  updatedAt: Date;
+  isTeamLeader?: boolean;
+  members: {
+    _id: string;
+    username: string;
+    fullName: string;
+    isLeader: boolean;
+  }[];
+  teamSize: number;
+}
+
+export interface TeamMember {
+  _id: string;
+  username?: string;
+  fullName?: string;
+  isLeader?: boolean;
+}
+
+export interface TeamDetails {
+  _id: string;
+  teamCode: string;
+  teamName?: string;
+  teamSize: number;
+  isTeamLeader?: boolean;
+  paymentStatus?: "pending" | "completed" | "failed";
+  members: TeamMember[];
+}
+
+export interface EventDetails {
+  _id: string;
+  eventName: string;
+  category: string;
+  date: string;
+  time: string;
+  duration?: string;
+  venue: string;
+  description: string;
+  banner?: string;
+  rules?: string[];
+  clubs?: string[];
+  pocs?: { name: string; mobile: string }[];
+  isTeamEvent: boolean;
+  isActive: boolean;
+  doc?: string;
+  minMembersPerTeam: number;
+  maxMembersPerTeam: number;
+  isPaidEvent: boolean;
+  fees: number;
+  prizePool: string;
+  userRegistration?: {
+    isRegistered: boolean;
+    isInTeam: boolean;
+    verified: boolean;
+    registrationId?: string | null;
+  };
+  myTeam?: TeamDetails | null;
+}
+
+export interface ProfileData {
+  username: string;
+  avatar: number | null;
+  email?: string;
+  fullName?: string;
+  phoneNumber?: string;
+  college?: string;
+  stream?: string;
+  isProfileComplete?: boolean;
+  qrPayload?: string;
+}
+
+export interface ICampusAmbassadorData {
+  id?: string;
+  userId: string;
+  name: string;
+  college: string;
+  graduationYear: number;
+  ambassadorCode: string;
+  status: "active" | "pending" | "suspended";
+  referralCount: number;
+  createdAt?: string;
+}
+

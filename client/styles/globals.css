@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./loader.css";
+@import "./auth.css";
 
 :root {
   --background: #000000;
@@ -53,39 +54,7 @@ body {
     0 0 18px rgba(0, 0, 0, 0.55);
 }
 
-/* === Page transitions (View Transitions API) =================================
-   Old page: fades out + scales down slightly (cinematic receding feel).
-   New page: fades in + scales from 1.025 to 1 (atmospheric reveal).
-   Duration is deliberately slow -- the Eclecia aesthetic is cinematic.
-   Respects prefers-reduced-motion.
-   ============================================================================ */
-
-@keyframes vt-fade-out {
-  from { opacity: 1; transform: scale(1); }
-  to   { opacity: 0; transform: scale(0.97); }
-}
-
-@keyframes vt-fade-in {
-  from { opacity: 0; transform: scale(1.025); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-/* Replace the browser default cross-fade with our dark dissolve. */
-::view-transition-old(root) {
-  animation: vt-fade-out 420ms cubic-bezier(0.4, 0, 1, 1) both;
-}
-
-::view-transition-new(root) {
-  /* 80 ms delay lets the old page start receding before the new one rises. */
-  animation: vt-fade-in 550ms cubic-bezier(0, 0, 0.2, 1) 80ms both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation: none;
-  }
-}
+/* Page transitions: styles/route-curtain.css. */
 
 /* ---- Date reveal effects ---- */
 

@@ -1,6 +1,6 @@
-import AuthComingSoon from "./AuthComingSoon";
 /* eslint-disable @next/next/no-img-element */
 import { Suspense, type ReactNode } from "react";
+import { redirect } from "next/navigation";
 import { auth, googleEnabled } from "@/auth";
 import { SiteHeader } from "@/components/common/Header";
 import { SiteFooter } from "@/components/common/Footer";
@@ -8,12 +8,11 @@ import { PageFade } from "@/components/common/PageFade";
 import { ASSETS } from "@/constants/assets";
 import { AuthPanel } from "./AuthPanel";
 import "@/styles/auth.css";
+import { Meteors } from "@/components/common/Meteors";
+import { depth } from "@/lib/depth";
 
 /** Server shell for the (auth) layout: reads the session, renders the panel. */
 export async function AuthPage({ children }: { children: ReactNode }) {
-  if (process.env.NEXT_PUBLIC_ENABLE_REGISTRATION !== "true") {
-    return <AuthComingSoon />;
-  }
   let session = null;
   try {
     session = await auth();
@@ -25,6 +24,10 @@ export async function AuthPage({ children }: { children: ReactNode }) {
     session = null;
   }
 
+  if (session?.user) {
+    redirect("/profile");
+  }
+
   return (
     <PageFade className="min-h-dvh">
       <div className="relative flex min-h-dvh flex-col justify-between overflow-hidden bg-black text-parchment">
@@ -33,7 +36,11 @@ export async function AuthPage({ children }: { children: ReactNode }) {
           alt=""
           aria-hidden
           className="pointer-events-none fixed inset-0 h-full w-full object-cover opacity-60"
+          style={depth(14, 1.06)}
         />
+        <div className="pointer-events-none fixed inset-0" aria-hidden style={depth(14)}>
+          <Meteors />
+        </div>
         <SiteHeader />
         <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-14 pt-24 md:pb-10 md:pt-24">
           <Suspense fallback={null}>
