@@ -46,7 +46,11 @@ export function Meteors({
 
   useEffect(() => {
     const canvas = ref.current;
-    if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (
+      !canvas ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -97,7 +101,9 @@ export function Meteors({
       const hx = m.x + m.dx * travelled;
       const hy = m.y + m.dy * travelled;
       // Tail grows from the start point, then draws in as the meteor burns out.
-      const tail = Math.min(m.len, travelled) * (t > 0.8 ? 1 - ((t - 0.8) / 0.2) * 0.6 : 1);
+      const tail =
+        Math.min(m.len, travelled) *
+        (t > 0.8 ? 1 - ((t - 0.8) / 0.2) * 0.6 : 1);
       const tx = hx - m.dx * tail;
       const ty = hy - m.dy * tail;
       // Brightens through most of its flight, then vanishes quickly.

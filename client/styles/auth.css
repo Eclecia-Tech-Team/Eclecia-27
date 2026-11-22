@@ -191,10 +191,8 @@
   font-size: 16px;
   color: var(--parchment);
   outline: none;
-  transition: border-color 0.25s;
 }
 .auth-input::placeholder { color: rgba(236, 228, 210, 0.24); }
-.auth-input:hover { border-bottom-color: rgba(236, 228, 210, 0.3); }
 .auth-input:focus { border-bottom-color: #ffd875; }
 /* Autofill keeps the dark paper instead of Chrome's yellow. */
 .auth-input:-webkit-autofill {
@@ -266,3 +264,174 @@
 }
 .auth-link:hover:not(:disabled) { color: var(--gold); }
 .auth-link:disabled { opacity: 0.45; }
+
+/* ===== Celestial CAP Button (Bespoke Celestial Chamfered Foil) ===== */
+.cam-celestial-btn {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 20px;
+  background: linear-gradient(135deg, #f7d58b 0%, #d9a441 50%, #be8627 100%);
+  color: #0b0905;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid rgba(255, 240, 195, 0.6);
+  clip-path: polygon(7px 0%, calc(100% - 7px) 0%, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0% calc(100% - 7px), 0% 7px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 6px 24px -4px rgba(217, 164, 65, 0.5);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+/* Delicate inner hairline */
+.cam-celestial-btn::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  clip-path: polygon(5px 0%, calc(100% - 5px) 0%, 100% 5px, 100% calc(100% - 5px), calc(100% - 5px) 100%, 5px 100%, 0% calc(100% - 5px), 0% 5px);
+  pointer-events: none;
+}
+
+/* Lustrous light sweep */
+.cam-celestial-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%);
+  transform: translateX(-140%);
+  transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.cam-celestial-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    inset 0 0 16px rgba(255, 245, 215, 0.5),
+    0 12px 32px -4px rgba(217, 164, 65, 0.75);
+}
+
+.cam-celestial-btn:hover:not(:disabled)::after {
+  transform: translateX(140%);
+}
+
+.cam-celestial-btn:active:not(:disabled) {
+  transform: scale(0.99) translateY(0.5px);
+}
+
+.cam-celestial-btn:disabled {
+  background: rgba(14, 16, 20, 0.9);
+  color: rgba(217, 164, 65, 0.4);
+  border-color: rgba(217, 164, 65, 0.2);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.cam-celestial-btn:disabled::before {
+  display: none;
+}
+
+.cam-btn-corner {
+  display: none;
+}
+
+/* Celestial FAQ Accordion */
+.cam-faq-item {
+  position: relative;
+  border-bottom: 1px solid rgba(217, 164, 65, 0.15);
+  background: transparent;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cam-faq-item:hover {
+  border-bottom-color: rgba(217, 164, 65, 0.35);
+  background: rgba(217, 164, 65, 0.02);
+}
+
+.cam-faq-item[data-open="true"] {
+  border-bottom-color: rgba(217, 164, 65, 0.4);
+  background: rgba(217, 164, 65, 0.03);
+}
+
+.cam-faq-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 8px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.25s ease;
+}
+
+.cam-faq-question {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: #ece4d2;
+  transition: color 0.25s ease;
+}
+
+@media (min-width: 640px) {
+  .cam-faq-question {
+    font-size: 21px;
+  }
+}
+
+.cam-faq-trigger:hover .cam-faq-question,
+.cam-faq-item[data-open="true"] .cam-faq-question {
+  color: #ffd875;
+}
+
+.cam-faq-icon {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(217, 164, 65, 0.35);
+  background: rgba(10, 14, 18, 0.85);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.3s ease;
+}
+
+.cam-faq-trigger:hover .cam-faq-icon {
+  border-color: #ffd875;
+  background: rgba(217, 164, 65, 0.18);
+  box-shadow: 0 0 12px rgba(217, 164, 65, 0.25);
+}
+
+.cam-faq-item[data-open="true"] .cam-faq-icon {
+  transform: rotate(45deg);
+  border-color: #ffd875;
+  background: rgba(217, 164, 65, 0.25);
+  box-shadow: 0 0 14px rgba(217, 164, 65, 0.35);
+}
+
+.cam-faq-body {
+  overflow: hidden;
+  transition: max-height 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+}
+
+.cam-faq-content {
+  padding: 0 8px 20px 8px;
+}
+

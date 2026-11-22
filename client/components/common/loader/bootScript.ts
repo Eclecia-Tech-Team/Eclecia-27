@@ -17,9 +17,6 @@ const LAYERS = ["moon", "rays", "minisun"] as const;
  *    high that the sun's crown (~0.43 x moon width) would cross the top edge.
  */
 export function loaderBootScript(): string {
-  if (process.env.NEXT_PUBLIC_ENABLE_LOADER !== "true") {
-    return `(function(){document.documentElement.dataset.loaderSkip="1"})()`;
-  }
   const data = {
     key: LOADER.storageKey,
     once: LOADER.oncePerSession,
