@@ -85,7 +85,8 @@ export async function POST(request: Request) {
       email: normalizedEmail,
       provider: "credentials",
       passwordHash: await bcrypt.hash(password, 10),
-      avatar: Math.floor(Math.random() * 10) + 1,
+      // The model allows avatars 1–7.
+      avatar: Math.floor(Math.random() * 7) + 1,
       verified: false,
     });
 

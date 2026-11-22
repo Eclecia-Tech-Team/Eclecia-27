@@ -16,6 +16,8 @@ import { SiteHeader } from "@/components/common/Header";
 import { PageFade } from "@/components/common/PageFade";
 import { GoldButton } from "@/components/common/GoldButton";
 import { ASSETS } from "@/constants/assets";
+import { Meteors } from "@/components/common/Meteors";
+import { depth } from "@/lib/depth";
 
 const FRAME = cfg.frame;
 const DESK = cfg.layout[cfg.sponsorsPoseFrom]; // eclipse sits where the left-moon section puts it
@@ -289,7 +291,9 @@ export function SponsorsView() {
               src={ASSETS.cloudinary.bg}
               alt=""
               className="absolute left-0 top-0 h-216 w-378 max-w-none"
+              style={depth(12, 1.04)}
             />
+            <Meteors style={depth(12)} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={ASSETS.cloudinary.blacksun}
@@ -301,6 +305,7 @@ export function SponsorsView() {
                 width: RAYS.width,
                 height: RAYS.height,
                 transform: poseTransform(RAYS, POSE.rays, 0),
+                ...depth(7),
               }}
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -314,6 +319,7 @@ export function SponsorsView() {
                 width: MOON.width,
                 height: MOON.height,
                 transform: poseTransform(MOON, POSE.moon, spin),
+                ...depth(7),
               }}
             />
           </div>

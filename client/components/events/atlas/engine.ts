@@ -158,7 +158,7 @@ export function mountAtlas(root: HTMLElement, { categories: data, onDiscover, on
   frontCaption.tabIndex = -1;
   frontCaption.setAttribute("aria-hidden", "true");
   frontCaption.innerHTML =
-    '<span class="category-name"></span><div class="category-meta-row"><span class="category-kind"></span><span class="category-meta-dot">·</span><span class="category-count"></span></div><span class="world-enter">ENTER WORLD ↗</span>';
+    '<span class="category-name"></span><div class="category-meta-row"><span class="category-kind"></span><span class="category-meta-dot">·</span><span class="category-count"></span></div>';
   on(frontCaption, "click", () => {
     if (performance.now() >= blockOrbitClickUntil && frontWorld) enterCategory(frontWorld);
   });
@@ -361,7 +361,7 @@ export function mountAtlas(root: HTMLElement, { categories: data, onDiscover, on
         image(atlasArt.shared("corona-halo"), "planet-halo"),
         image(atlasArt.shared("event-orbit"), "planet-ring rear"),
         image(atlasArt.shared("planet-base"), "planet-base"),
-        image(atlasArt.event(c.id, event.id), "planet-artwork", i === 0),
+        image(atlasArt.event(c.id, event.id, event.image), "planet-artwork", i === 0),
         image(atlasArt.shared("event-orbit"), "planet-ring front"),
       );
       on(node, "click", () => (Math.abs(progress - i) < 0.35 || i === active ? discover() : goTo(i)));

@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { GoldActionButton } from "@/components/common/GoldButton";
 import { SiteHeader } from "@/components/common/Header";
 import { atlasArt, type AtlasCategory } from "@/constants/events";
@@ -12,6 +12,8 @@ import { curtainNavigate, holdCurtain } from "@/lib/route-curtain";
 import { mountAtlas } from "./atlas/engine";
 import { MobileEventsAtlas } from "./MobileEventsAtlas";
 import "@/styles/events-atlas.css";
+import { Meteors } from "@/components/common/Meteors";
+import { depth } from "@/lib/depth";
 
 const phoneQuery = "(max-width: 1024px)";
 const subscribePhone = (notify: () => void) => {
@@ -34,6 +36,28 @@ export function EventsAtlas({ categories }: { categories: AtlasCategory[] }) {
   const phone = useSyncExternalStore(subscribePhone, phoneSnapshot, serverSnapshot);
   const router = useRouter();
   const eventCount = categories.reduce((n, c) => n + c.events.length, 0);
+  const [showGuide, setShowGuide] = useState(false);
+
+  useEffect(() => {
+    if (phone) return;
+    try {
+      if (!sessionStorage.getItem("eclecia_atlas_guide")) {
+        const timer = setTimeout(() => setShowGuide(true), 1200);
+        const autoDismiss = setTimeout(() => setShowGuide(false), 8000);
+        return () => {
+          clearTimeout(timer);
+          clearTimeout(autoDismiss);
+        };
+      }
+    } catch {}
+  }, [phone]);
+
+  const dismissGuide = () => {
+    setShowGuide(false);
+    try {
+      sessionStorage.setItem("eclecia_atlas_guide", "1");
+    } catch {}
+  };
 
   const discover = useCallback((category: string, event: string) => {
     saveAtlasSpot({ category, event });
@@ -63,13 +87,16 @@ export function EventsAtlas({ categories }: { categories: AtlasCategory[] }) {
         <div className="sky" aria-hidden>
           <div
             className="sky-texture"
-            style={
-              ASSETS.cloudinary.eventsBackground
+            style={{
+              ...(ASSETS.cloudinary.eventsBackground
                 ? { backgroundImage: `url(${ASSETS.cloudinary.eventsBackground})` }
-                : undefined
-            }
+                : undefined),
+              // Mouse depth; the texture's -4% inset hides its edges.
+              ...depth(14),
+            }}
           />
           <img className="dust" src={atlasArt.shared("gold-dust")} alt="" draggable={false} />
+          <Meteors style={depth(14)} />
           <div className="vignette" />
         </div>
 
@@ -82,8 +109,7 @@ export function EventsAtlas({ categories }: { categories: AtlasCategory[] }) {
                 <br />a <em className="font-nasyhama font-normal italic text-gold">universe</em>.
               </h1>
               <p className="intro-note">
-                <span className="hint-pointer">Drag to rotate.</span>
-                <span className="hint-touch">Swipe to turn.</span>
+                <span>Drag to rotate.</span>
               </p>
               <button className="intro-link" id="browse-bottom">
                 View all {eventCount} events <span aria-hidden>→</span>
@@ -107,7 +133,29 @@ export function EventsAtlas({ categories }: { categories: AtlasCategory[] }) {
                 className="atlas-figure atlas-figure--hand"
               />
             </div>
+
           </section>
+
+          {/* First-visit guidance pop-up (Desktop only, auto-dismisses & remembers session) */}
+          {showGuide && (
+            <aside
+              role="status"
+              aria-label="Atlas navigation guidance"
+              className="atlas-guide-toast"
+            >
+              <span className="atlas-guide-toast-text">
+                Click on any planet to explore all events in that world
+              </span>
+              <button
+                type="button"
+                onClick={dismissGuide}
+                className="atlas-guide-toast-dismiss"
+                aria-label="Dismiss guidance"
+              >
+                ✕
+              </button>
+            </aside>
+          )}
 
           <section id="event-scene" aria-label="Explore category events" hidden inert>
             <div className="event-breadcrumb">

@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+/** Names that would let someone pass as staff or the fest itself. Matched ignoring case, _ and -. */
+const RESERVED = ["admin", "administrator", "eclecia", "hitk", "heritage", "official", "support", "staff", "team", "organizer", "organiser", "moderator", "mod", "root", "system", "help", "null", "undefined"];
+
+export function reservedUsername(name: string) {
+  const flat = name.toLowerCase().replace(/[_-]/g, "");
+  return RESERVED.some((r) => flat === r || (r.length >= 5 && flat.includes(r)));
+}
+
 export const usernameSchema = z
   .string()
   .trim()
@@ -8,7 +16,8 @@ export const usernameSchema = z
   .regex(
     /^[a-zA-Z0-9_-]+$/,
     "Username can only contain letters, numbers, underscores and hyphens"
-  );
+  )
+  .refine((v) => !reservedUsername(v), "That username is reserved. Pick another.");
 
 export const registerApiSchema = z.object({
   username: usernameSchema,
@@ -31,7 +40,17 @@ export const resetPasswordSchema = z.object({
   newPassword: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+export const profileUpdateSchema = z.object({
+  avatar: z.number().min(1).max(7).optional(),
+  username: usernameSchema.optional(),
+  fullName: z.string().trim().min(2, "Full name must be at least 2 characters").max(80, "Full name: 80 characters max").regex(/^[^<>{}]*$/, "Full name can't contain < > { }").optional().or(z.literal("")),
+  phoneNumber: z.string().trim().regex(/^\d{10}$/, "Phone number must be 10 digits").optional().or(z.literal("")),
+  college: z.string().trim().min(2, "College name is too short").max(120, "College name: 120 characters max").optional().or(z.literal("")),
+  stream: z.string().trim().min(2, "Stream name is too short").max(80, "Stream: 80 characters max").optional().or(z.literal("")),
+});
+
 export type SignInInput = z.infer<typeof signInSchema>;
+export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 
 /** First field error as one readable sentence. */
 export function firstIssue(error: z.ZodError): string {

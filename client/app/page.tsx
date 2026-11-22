@@ -22,6 +22,7 @@ import { SiteHeader } from "@/components/common/Header";
 import { SiteFooter } from "@/components/common/Footer";
 import { SKY_LQIP } from "@/lib/lqip";
 import { ASSETS } from "@/constants/assets";
+import { Meteors } from "@/components/common/Meteors";
 
 const FRAME = cfg.frame;
 
@@ -788,6 +789,8 @@ export default function Home() {
               />
             );
           })}
+          {/* Meteors cross the sky behind every figure: above bg (z 10), below the ornaments (z 12). */}
+          <Meteors className="z-11" />
 
           {/* Desktop: panels share the frame's coordinates and sit on z-80 above the moon */}
           {!mobile && (

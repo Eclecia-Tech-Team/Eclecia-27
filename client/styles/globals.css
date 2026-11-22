@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./loader.css";
+@import "./auth.css";
 
 :root {
   --background: #000000;

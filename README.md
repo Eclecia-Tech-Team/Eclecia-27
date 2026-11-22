@@ -34,13 +34,17 @@ Other scripts: `bun run build`, `bun run start`, `bun run lint`, `node scripts/o
 | Route | What |
 |---|---|
 | `/` | Landing: pinned scroll scene → hero, stats, events, dusk, finale |
-| `/sponsors` | Sponsorship page: gratitude wall, partner CTA, sponsorship heads, About HITK |
-| `/events` | Coming-soon placeholder |
-| `/register` | Coming-soon placeholder |
+| `/events`, `/events/[slug]` | Events atlas and one page per event (notices, rules, registration, results) |
+| `/login`, `/register`, `/profile` | Participant accounts, festival pass QR |
+| `/sponsors` | Sponsorship page |
+| `/admin` | Admin panel (events, notices, registrations, check-in, results, mail, staff) |
+| `/schedule`, `/team`, `/our-tale` | Coming soon |
+
+**Full, current project handoff (setup, env, data model, features, changelog, open issues): [HANDOFF.md](HANDOFF.md).**
 
 ## Status
 
 - Desktop and mobile/portrait layouts done.
 - Dates deliberately not shown anywhere yet (pre-reveal).
-- Registration and full event listings are placeholders until content lands.
+- Events, registration and the admin panel are built; see HANDOFF.md for status and open issues.
 - Brochure button on `/sponsors` expects `client/public/eclecia-26-brochure.pdf`.

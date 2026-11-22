@@ -178,7 +178,6 @@ export function SiteLoader() {
     };
   }, []);
 
-  if (process.env.NEXT_PUBLIC_ENABLE_LOADER !== "true") return null;
   if (phase === "gone") return null;
 
   return (
@@ -192,10 +191,8 @@ export function SiteLoader() {
         {art(ASSETS.cloudinary.bg, "ld-sky")}
 
         <div className="ld-figures">
-          {art(ASSETS.cloudinary.banner, "ld-figure ld-figure--banner ld-figure--banner-l", vars({ "--i": 0 }))}
-          {art(ASSETS.cloudinary.banner, "ld-figure ld-figure--banner ld-figure--banner-r", vars({ "--i": 0 }))}
-          {art(ASSETS.cloudinary.veena, "ld-figure ld-figure--veena", vars({ "--i": 1 }))}
-          {art(ASSETS.cloudinary.hand, "ld-figure ld-figure--hand", vars({ "--i": 2 }))}
+          {art(ASSETS.cloudinary.veena, "ld-figure ld-figure--veena", vars({ "--i": 0 }))}
+          {art(ASSETS.cloudinary.hand, "ld-figure ld-figure--hand", vars({ "--i": 1 }))}
         </div>
 
         <div className="ld-dust" aria-hidden>

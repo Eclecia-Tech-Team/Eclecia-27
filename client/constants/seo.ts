@@ -137,6 +137,15 @@ export const ROUTES = [
     priority: 0.9,
     changeFrequency: "weekly" as const,
   },
+  {
+    path: "/cam",
+    label: "Campus Ambassador",
+    title: "Campus Ambassador: Eclecia'27 | Heritage Institute of Technology, Kolkata",
+    description:
+      "Join Eclecia'27 as a Campus Ambassador. Lead your college, spread the celestial cultural fest, and unlock exclusive rewards, passes, and certificates.",
+    priority: 0.8,
+    changeFrequency: "weekly" as const,
+  },
 ];
 
 /**

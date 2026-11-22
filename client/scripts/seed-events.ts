@@ -2,13 +2,23 @@
  * Seeds the events collection from the atlas line-up in constants/events.ts
  * and Cloudinary links in constants/assets.ts.
  *
- *   bun scripts/seed-events.ts
- *   or: npx tsx --env-file=.env.local scripts/seed-events.ts
+ *   bun run seed:events             # add missing events only; never touches existing ones
+ *   bun run seed:events --sync-copy # also overwrite name/kind/description/clubs/artwork from constants
+ *   bun run seed:events --reset     # drop and re-create (refused once anyone has registered)
+ *
+ * Events are managed in the admin panel (/admin/events) once seeded, so the
+ * default run is insert-only: re-running it can't undo admin edits, and event
+ * ids (which registrations point at) never change.
  */
 import mongoose from "mongoose";
 import { ATLAS_CATEGORIES } from "../constants/events";
 import { ASSETS } from "../constants/assets";
 import Event from "../lib/models/Events";
+import Registration from "../lib/models/Registrations";
+
+const args = new Set(process.argv.slice(2));
+const reset = args.has("--reset");
+const syncCopy = args.has("--sync-copy");
 
 async function main() {
   const uri = process.env.MONGODB_URI;
@@ -19,63 +29,54 @@ async function main() {
 
   await mongoose.connect(uri);
 
-  // Drop existing events collection if requested/re-seeding
-  try {
-    await Event.collection.drop();
-    console.log("Dropped existing events collection.");
-  } catch (err: any) {
-    if (err.code === 26 || err.message?.includes("ns not found")) {
-      console.log("Events collection does not exist, proceeding to insert.");
-    } else {
-      console.warn("Notice on dropping events collection:", err.message);
+  if (reset) {
+    const regs = await Registration.estimatedDocumentCount();
+    if (regs > 0) {
+      console.error(`Refusing --reset: ${regs} registrations point at the current events. Edit events in /admin instead.`);
+      process.exit(1);
     }
+    await Event.deleteMany({});
+    console.log("Removed all events (--reset).");
   }
 
   const ops = ATLAS_CATEGORIES.flatMap((category) =>
     category.events.map((event) => {
       const catEvents = ASSETS.cloudinary.events[category.id];
-      const cloudBanner = catEvents ? catEvents[event.id] || "" : "";
-
-      const updateDoc: Record<string, any> = {
-        $set: {
-          eventName: event.name,
-          category: category.name,
-          kind: event.kind,
-          description: event.description,
-          // Always sync clubs from constants so the DB stays up-to-date.
-          clubs: event.club ? [event.club] : [],
-          // If a Cloudinary artwork URL is listed in ASSETS, sync it to banner
-          ...(cloudBanner ? { banner: cloudBanner } : {}),
-        },
-        $setOnInsert: {
-          slug: event.id,
-          ...(!cloudBanner ? { banner: "" } : {}),
-          date: "TBA",
-          time: "TBA",
-          duration: "TBA",
-          venue: "TBA",
-          isTeamEvent: false,
-          minMembersPerTeam: 1,
-          maxMembersPerTeam: 1,
-          isPaidEvent: false,
-          isActive: false,
-        },
+      const banner = (catEvents ? catEvents[event.id] : "") || "";
+      const copy = {
+        eventName: event.name,
+        category: category.name,
+        kind: event.kind,
+        description: event.description,
+        clubs: event.club ? [event.club] : [],
+        banner,
       };
-
+      const defaults = {
+        slug: event.id,
+        date: "TBA",
+        time: "TBA",
+        duration: "TBA",
+        venue: "TBA",
+        isTeamEvent: false,
+        minMembersPerTeam: 1,
+        maxMembersPerTeam: 1,
+        isPaidEvent: false,
+        isActive: false,
+      };
       return {
         updateOne: {
           filter: { slug: event.id },
-          update: updateDoc,
+          update: syncCopy ? { $set: copy, $setOnInsert: defaults } : { $setOnInsert: { ...copy, ...defaults } },
           upsert: true,
+          // Insert-only runs must not even bump updatedAt on existing events.
+          timestamps: syncCopy,
         },
       };
     }),
   );
 
   const result = await Event.bulkWrite(ops);
-  console.log(
-    `events: ${ops.length} in line-up, ${result.upsertedCount} inserted, ${result.modifiedCount} updated`,
-  );
+  console.log(`events: ${ops.length} in line-up, ${result.upsertedCount} inserted, ${result.modifiedCount} updated`);
 
   await mongoose.disconnect();
 }

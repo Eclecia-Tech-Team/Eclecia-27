@@ -2,6 +2,13 @@ import mongoose from "mongoose";
 import "@/lib/models/Events";
 import "@/lib/models/User";
 import "@/lib/models/OtpSession";
+import "@/lib/models/Registrations";
+import "@/lib/models/Team";
+import "@/lib/models/EventNotice";
+import "@/lib/models/AdminUser";
+import "@/lib/models/EventResult";
+import "@/lib/models/AdminAction";
+import "@/lib/models/LoginThrottle";
 
 function getMongoUri(): string {
   const uri = process.env.MONGODB_URI;
