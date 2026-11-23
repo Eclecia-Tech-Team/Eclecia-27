@@ -126,8 +126,8 @@ export const ATLAS_CATEGORIES: AtlasCategory[] = [
     line: "Where characters come alive, stories unfold, and every moment commands the stage.",
     events: [
       {
-        id: "rangamancha",
-        name: "Rangamancha",
+        id: "rangmanch",
+        name: "Rangmanch",
         description:
           "A vivid tapestry of emotions unfolds on stage, where every tale is a mirror to life's intricate dance. Experience drama that lingers long after the curtains fall. Experience the magic long after the lights go out. ",
         kind: "Stage Play",
