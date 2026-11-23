@@ -112,7 +112,7 @@ export const ASSETS = {
           "https://res.cloudinary.com/ajpcnwvo/image/upload/v1793485991/glitch.webp",
       },
       anubhuti: {
-        rangamancha:
+        rangmanch:
           "https://res.cloudinary.com/ajpcnwvo/image/upload/v1793485967/rangamancha.webp",
         hunkaar:
           "https://res.cloudinary.com/ajpcnwvo/image/upload/v1793485966/hunkaar.webp",
@@ -130,6 +130,8 @@ export const ASSETS = {
       aetheria: {
         "the-incarnates":
           "https://res.cloudinary.com/ajpcnwvo/image/upload/v1793485974/the-incarnates.webp",
+        aurelis:
+          "https://res.cloudinary.com/ajpcnwvo/image/upload/v1795446491/aurelis.webp",
       },
       cadence: {
         surkala:
