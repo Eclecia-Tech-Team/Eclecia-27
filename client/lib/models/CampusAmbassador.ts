@@ -1,4 +1,5 @@
 import mongoose, { Schema, model, models } from "mongoose";
+import { GRAD_YEAR_MIN, GRAD_YEAR_MAX } from "@/constants/graduation";
 
 export interface ICampusAmbassador {
   _id: mongoose.Types.ObjectId;
@@ -13,7 +14,8 @@ export interface ICampusAmbassador {
   updatedAt: Date;
 }
 
-export interface ICampusAmbassadorDocument extends ICampusAmbassador, mongoose.Document {
+export interface ICampusAmbassadorDocument
+  extends ICampusAmbassador, mongoose.Document {
   _id: mongoose.Types.ObjectId;
 }
 
@@ -38,9 +40,19 @@ const campusAmbassadorSchema = new Schema<ICampusAmbassadorDocument>(
     },
     graduationYear: {
       type: Number,
-      required: true,
-      min: 2024,
-      max: 2032,
+      required: [true, "Graduation year is required."],
+      min: [
+        GRAD_YEAR_MIN,
+        `Graduation year must be ${GRAD_YEAR_MIN} or later.`,
+      ],
+      max: [
+        GRAD_YEAR_MAX,
+        `Graduation year must be ${GRAD_YEAR_MAX} or earlier.`,
+      ],
+      validate: {
+        validator: Number.isInteger,
+        message: "Graduation year must be a whole number.",
+      },
     },
     ambassadorCode: {
       type: String,
@@ -60,7 +72,7 @@ const campusAmbassadorSchema = new Schema<ICampusAmbassadorDocument>(
       default: 0,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const CampusAmbassador =

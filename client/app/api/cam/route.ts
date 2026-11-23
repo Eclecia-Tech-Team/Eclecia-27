@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import connect from "@/lib/mongoose";
 import User, { IUserDocument } from "@/lib/models/User";
-import CampusAmbassador, { ICampusAmbassadorDocument } from "@/lib/models/CampusAmbassador";
+import CampusAmbassador, {
+  ICampusAmbassadorDocument,
+} from "@/lib/models/CampusAmbassador";
 import { generateUniqueAmbassadorCode } from "@/lib/ambassador-code";
 import { sendCampusAmbassadorEmail } from "@/lib/auth-mail";
+import { GRAD_YEAR_MIN, GRAD_YEAR_MAX } from "@/constants/graduation";
 
 export async function GET() {
   const session = await auth();
@@ -39,7 +42,9 @@ export async function GET() {
 
     // 2. Otherwise return user profile data so form can prefill
     const user = (await User.findById(session.user.id)
-      .select("fullName phoneNumber college stream isProfileComplete username email")
+      .select(
+        "fullName phoneNumber college stream isProfileComplete username email",
+      )
       .lean()) as IUserDocument | null;
 
     if (!user) {
@@ -63,7 +68,7 @@ export async function GET() {
     console.error("GET /api/cam error:", error);
     return NextResponse.json(
       { error: "Failed to fetch ambassador details" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -78,13 +83,18 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { graduationYear, fullName, college, phoneNumber, stream } = body;
 
+    // Must be a whole number inside the shared range (same bounds as the
+    // dropdown and the Mongoose schema). Empty string / null become 0 and fail.
     const parsedYear = Number(graduationYear);
-    const currentYear = new Date().getFullYear();
 
-    if (!parsedYear || isNaN(parsedYear) || parsedYear < currentYear - 1 || parsedYear > currentYear + 7) {
+    if (
+      !Number.isInteger(parsedYear) ||
+      parsedYear < GRAD_YEAR_MIN ||
+      parsedYear > GRAD_YEAR_MAX
+    ) {
       return NextResponse.json(
         { error: "Please select a valid graduation year." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -101,7 +111,7 @@ export async function POST(req: Request) {
           error: "You have already joined as a Campus Ambassador.",
           ambassador: alreadyRegistered,
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -114,20 +124,27 @@ export async function POST(req: Request) {
     // If profile fields were supplied/updated in this form, sync them to user
     const resolvedName = (fullName?.trim() || user.fullName || "").trim();
     const resolvedCollege = (college?.trim() || user.college || "").trim();
-    const resolvedPhone = (phoneNumber?.trim() || user.phoneNumber || "").trim();
+    const resolvedPhone = (
+      phoneNumber?.trim() ||
+      user.phoneNumber ||
+      ""
+    ).trim();
     const resolvedStream = (stream?.trim() || user.stream || "").trim();
 
     if (!resolvedName) {
       return NextResponse.json(
         { error: "Full name is required. Please fill in your name." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!resolvedCollege) {
       return NextResponse.json(
-        { error: "College name is required. Please provide your college/institute." },
-        { status: 400 }
+        {
+          error:
+            "College name is required. Please provide your college/institute.",
+        },
+        { status: 400 },
       );
     }
 
@@ -149,7 +166,13 @@ export async function POST(req: Request) {
       user.stream = resolvedStream;
       userChanged = true;
     }
-    if (user.fullName && user.college && user.phoneNumber && user.stream && !user.isProfileComplete) {
+    if (
+      user.fullName &&
+      user.college &&
+      user.phoneNumber &&
+      user.stream &&
+      !user.isProfileComplete
+    ) {
       user.isProfileComplete = true;
       userChanged = true;
     }
@@ -199,19 +222,32 @@ export async function POST(req: Request) {
           createdAt: newAmbassador.createdAt,
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: unknown) {
     console.error("POST /api/cam error:", error);
-    if (typeof error === "object" && error !== null && "code" in error && (error as { code: number }).code === 11000) {
+
+    // Mongoose schema validation failures -> readable 400 instead of generic 500
+    if (error instanceof Error && error.name === "ValidationError") {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    // Duplicate key (userId or ambassadorCode)
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      (error as { code: number }).code === 11000
+    ) {
       return NextResponse.json(
         { error: "An ambassador account already exists for this user." },
-        { status: 409 }
+        { status: 409 },
       );
     }
+
     return NextResponse.json(
       { error: "Failed to submit Campus Ambassador application." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
