@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/common/ComingSoon";
+import { OurTaleView } from "@/components/our-tale/OurTaleView";
 import { getBreadcrumbJsonLd, ROUTES } from "@/constants/seo";
 
 const route = ROUTES.find((r) => r.path === "/our-tale")!;
@@ -30,10 +30,7 @@ export default function OurTalePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <ComingSoon
-        eyebrow="Our Tale"
-        note="Discover the rich history, past editions, and journey of Eclecia over the years."
-      />
+      <OurTaleView />
     </>
   );
 }
