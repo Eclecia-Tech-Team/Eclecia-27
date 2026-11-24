@@ -27,9 +27,10 @@ export default async function EventPage({ params }: EventPageProps) {
 
   // When NEXT_PUBLIC_ENABLE_EVENTS_DETAILS is not "true" (default: false), show Coming Soon
   if (process.env.NEXT_PUBLIC_ENABLE_EVENTS_DETAILS !== "true") {
+    const event = await getEventRecord(id);
     return (
       <ComingSoon
-        eyebrow="Celestial Stage"
+        eyebrow={event?.eventName ?? "Celestial Stage"}
         note="Event details and registration for this world will be unveiled shortly."
         backHref="/events"
         backLabel="Back to Events Atlas"
