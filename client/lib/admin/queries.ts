@@ -171,7 +171,6 @@ export async function getEventForEdit(id: string): Promise<(EventInput & { id: s
     scheduleDate: str("scheduleDate"),
     startTime: str("startTime"),
     endTime: str("endTime"),
-    venueId: str("venueId"),
     banner: str("banner"),
     doc: str("doc"),
     rules: (e.rules as string[]) ?? [],

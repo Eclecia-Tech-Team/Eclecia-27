@@ -44,9 +44,9 @@ const eventSchema = new Schema(
       required: true,
     },
     // Structured schedule (fest time, IST). Day and time text is built from
-    // these when read (whenText in constants/schedule.ts); `duration` and
-    // `venue` above are derived on save (lib/admin/event-input.ts). All null
-    // until announced.
+    // these when read (whenText in constants/schedule.ts); `duration` above is
+    // derived on save (lib/admin/event-input.ts) and `venue` is free text. All
+    // null until announced.
     /** Fest day, "2027-01-16". */
     scheduleDate: {
       type: String,
@@ -59,11 +59,6 @@ const eventSchema = new Schema(
     },
     /** "16:00", 24-hour IST; after startTime. */
     endTime: {
-      type: String,
-      default: null,
-    },
-    /** Id from VENUES (constants/schedule.ts); null = TBA or a free-text `venue`. */
-    venueId: {
       type: String,
       default: null,
     },

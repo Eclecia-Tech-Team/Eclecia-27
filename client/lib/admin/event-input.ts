@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { EVENT_CATEGORIES } from "@/constants/event-categories";
-import { TIME_RE, durationLabel, isFestDate, minutesOf, venueById } from "@/constants/schedule";
+import { TIME_RE, durationLabel, isFestDate, minutesOf } from "@/constants/schedule";
 
 const text = (max: number) => z.string().trim().max(max);
 const url = z
@@ -28,7 +28,6 @@ export const eventInput = z
     scheduleDate: z.string().refine((v) => v === "" || isFestDate(v), "Pick one of the fest days"),
     startTime: z.string().refine((v) => v === "" || TIME_RE.test(v), "Times look like 14:30"),
     endTime: z.string().refine((v) => v === "" || TIME_RE.test(v), "Times look like 14:30"),
-    venueId: z.string().refine((v) => v === "" || Boolean(venueById(v)), "Pick a venue from the list"),
     banner: url,
     doc: url,
     rules: z.array(text(800)).max(40, "Keep it to 40 rules"),
@@ -51,7 +50,6 @@ export const eventInput = z
   .refine((e) => !e.endTime || e.startTime, "Set a start time before the end time")
   .refine((e) => !e.startTime || !e.endTime || minutesOf(e.endTime) > minutesOf(e.startTime), "The end time must be after the start time")
   .transform((e) => {
-    const venue = venueById(e.venueId);
     const start = e.startTime ? minutesOf(e.startTime) : null;
     const end = e.endTime ? minutesOf(e.endTime) : null;
     return {
@@ -59,11 +57,10 @@ export const eventInput = z
       scheduleDate: e.scheduleDate || null,
       startTime: e.startTime || null,
       endTime: e.endTime || null,
-      venueId: venue?.id ?? null,
       // Required by the schema; "TBA" reads as "To be announced" on the site.
       // Day and time text is built from the structured fields when read (whenText).
       duration: start !== null && end !== null ? durationLabel(end - start) : e.duration || "TBA",
-      venue: venue?.name ?? (e.venue || "TBA"),
+      venue: e.venue || "TBA",
     };
   })
   .transform((e) => ({

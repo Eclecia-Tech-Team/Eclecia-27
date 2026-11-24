@@ -14,7 +14,6 @@ const BLANK: EventInput = {
   scheduleDate: "",
   startTime: "",
   endTime: "",
-  venueId: "",
   banner: "",
   doc: "",
   rules: [],

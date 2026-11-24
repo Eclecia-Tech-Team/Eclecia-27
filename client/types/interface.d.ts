@@ -59,8 +59,6 @@ export interface IEvent {
   /** "14:30", 24-hour IST. */
   startTime?: string | null;
   endTime?: string | null;
-  /** Id from VENUES in constants/schedule.ts. */
-  venueId?: string | null;
   description: string;
   banner?: string | null;
   rules: string[];

@@ -1,6 +1,6 @@
 import { connection } from "next/server";
 import { ATLAS_CATEGORIES, atlasArt } from "@/constants/events";
-import { FEST_DAYS, VENUES, isFestDate, minutesOf, TIME_RE, type FestDay } from "@/constants/schedule";
+import { FEST_DAYS, isFestDate, minutesOf, TIME_RE, type FestDay } from "@/constants/schedule";
 import { getAtlasCategories } from "@/lib/events";
 import Event from "@/lib/models/Events";
 import connect from "@/lib/mongoose";
@@ -51,7 +51,7 @@ export interface ScheduleData {
   readAt: number;
 }
 
-export type EventRecord = Pick<IEvent, "slug" | "eventName" | "category" | "kind" | "banner" | "scheduleDate" | "startTime" | "endTime" | "venueId" | "venue">;
+export type EventRecord = Pick<IEvent, "slug" | "eventName" | "category" | "kind" | "banner" | "scheduleDate" | "startTime" | "endTime" | "venue">;
 type AtlasWorld = Awaited<ReturnType<typeof getAtlasCategories>>[number];
 
 const THUMBS = "/assets/opt/events/mobile/thumbnails/events";
@@ -73,7 +73,7 @@ export async function getSchedule(): Promise<ScheduleData> {
   await connect();
   const [records, atlas] = await Promise.all([
     Event.find()
-      .select("slug eventName category kind banner scheduleDate startTime endTime venueId venue")
+      .select("slug eventName category kind banner scheduleDate startTime endTime venue")
       .lean<EventRecord[]>(),
     getAtlasCategories(),
   ]);
@@ -82,10 +82,9 @@ export async function getSchedule(): Promise<ScheduleData> {
 
 /** Sorts events into days, buckets and venue order. Pure, so it can be tested without a database. */
 export function buildSchedule(records: EventRecord[], atlas: AtlasWorld[], readAt: number): ScheduleData {
-  // Venues: listed ones keep their fixed order; typed-in ones follow, busiest first.
+  // Venues are typed per event; the schedule lists them busiest first.
   const typed = new Map<string, { name: string; count: number }>();
   const venueOf = (r: EventRecord): string | null => {
-    if (r.venueId && VENUES.some((v) => v.id === r.venueId)) return r.venueId;
     if (isTba(r.venue)) return null;
     const key = typedVenueKey(r.venue);
     const seen = typed.get(key);
@@ -95,14 +94,12 @@ export function buildSchedule(records: EventRecord[], atlas: AtlasWorld[], readA
 
   const days: ScheduleDay[] = FEST_DAYS.map((d) => ({ date: d.date, roman: d.roman, day: d.day, weekday: d.weekday, short: d.short, timed: [], untimed: [] }));
   const unscheduled: ScheduleEvent[] = [];
-  const used = new Set<string>();
 
   for (const r of records) {
     const worldId = worldIdOf(r.category);
     const start = r.startTime && TIME_RE.test(r.startTime) ? minutesOf(r.startTime) : null;
     const endRaw = r.endTime && TIME_RE.test(r.endTime) ? minutesOf(r.endTime) : null;
     const venue = venueOf(r);
-    if (venue) used.add(venue);
     const event: ScheduleEvent = {
       slug: r.slug,
       name: r.eventName,
@@ -119,12 +116,9 @@ export function buildSchedule(records: EventRecord[], atlas: AtlasWorld[], readA
     else day.timed.push(event);
   }
 
-  const venues = [
-    ...VENUES.filter((v) => used.has(v.id)).map((v) => ({ key: v.id, name: v.name })),
-    ...[...typed.entries()]
-      .sort((a, b) => b[1].count - a[1].count || a[1].name.localeCompare(b[1].name))
-      .map(([key, v]) => ({ key, name: v.name })),
-  ];
+  const venues = [...typed.entries()]
+    .sort((a, b) => b[1].count - a[1].count || a[1].name.localeCompare(b[1].name))
+    .map(([key, v]) => ({ key, name: v.name }));
   const order = new Map(venues.map((v, i) => [v.key, i]));
   const rank = (e: ScheduleEvent) => (e.venue ? (order.get(e.venue) ?? 999) : 1000);
   const byName = (a: ScheduleEvent, b: ScheduleEvent) => a.name.localeCompare(b.name);

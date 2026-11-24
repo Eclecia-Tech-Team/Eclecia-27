@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { EVENT_CATEGORIES } from "@/constants/event-categories";
-import { FEST_DAYS, VENUES, durationLabel, minutesOf } from "@/constants/schedule";
+import { FEST_DAYS, durationLabel, minutesOf } from "@/constants/schedule";
 import { slugify, type EventInput } from "@/lib/admin/event-input";
 import { deleteEvent, saveEvent } from "@/lib/admin/actions/events";
 import { Button, ConfirmButton, Field, PageHeader, SwitchRow, toast, useAction } from "./ui";
@@ -271,13 +271,11 @@ export function EventEditor({ id, initial, registrations, writable, venueSuggest
   );
 }
 
-const OTHER_VENUE = "__other";
 const known = (v: string) => Boolean(v) && v !== "TBA";
 
 /**
- * Structured schedule: a fest day, start/end in fest time (IST) and a venue
- * from the list. The save action turns these into the date/time/venue text the
- * rest of the site shows.
+ * Structured schedule: a fest day, start/end in fest time (IST) and a typed
+ * venue. Day and time text is built from these when read (whenText).
  */
 function WhenAndWhere({
   e,
@@ -288,7 +286,6 @@ function WhenAndWhere({
   setE: Dispatch<SetStateAction<EventInput>>;
   venueSuggestions: string[];
 }) {
-  const [otherVenue, setOtherVenue] = useState(!e.venueId && known(e.venue));
   const patch = (p: Partial<EventInput>) => setE((cur) => ({ ...cur, ...p }));
   const length = e.startTime && e.endTime ? minutesOf(e.endTime) - minutesOf(e.startTime) : null;
 
@@ -312,44 +309,21 @@ function WhenAndWhere({
             ))}
           </select>
         </Field>
-        {VENUES.length ? (
-          <Field label="Venue">
-            <select
-              className="adm-input"
-              value={e.venueId || (otherVenue ? OTHER_VENUE : "")}
-              onChange={(ev) => {
-                const v = ev.target.value;
-                setOtherVenue(v === OTHER_VENUE);
-                patch({ venueId: v === OTHER_VENUE ? "" : v, venue: "" });
-              }}
-            >
-              <option value="">To be announced</option>
-              {VENUES.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                </option>
-              ))}
-              <option value={OTHER_VENUE}>Somewhere else…</option>
-            </select>
-          </Field>
-        ) : (
-          // No fixed venue list yet: type the venue; names used on other events are suggested.
-          <Field label="Venue" hint="Type it the way it should appear. Venues used on other events are suggested.">
-            <input
-              className="adm-input"
-              list="venue-suggestions"
-              value={known(e.venue) ? e.venue : ""}
-              placeholder="TBA"
-              maxLength={120}
-              onChange={(ev) => patch({ venue: ev.target.value, venueId: "" })}
-            />
-            <datalist id="venue-suggestions">
-              {venueSuggestions.map((v) => (
-                <option key={v} value={v} />
-              ))}
-            </datalist>
-          </Field>
-        )}
+        <Field label="Venue" hint="Type it the way it should appear. Venues used on other events are suggested.">
+          <input
+            className="adm-input"
+            list="venue-suggestions"
+            value={known(e.venue) ? e.venue : ""}
+            placeholder="TBA"
+            maxLength={120}
+            onChange={(ev) => patch({ venue: ev.target.value })}
+          />
+          <datalist id="venue-suggestions">
+            {venueSuggestions.map((v) => (
+              <option key={v} value={v} />
+            ))}
+          </datalist>
+        </Field>
         <Field label="Starts" hint={e.scheduleDate ? "Leave empty if the time isn't fixed yet." : "Pick the day first."}>
           <input
             type="time"
@@ -368,11 +342,6 @@ function WhenAndWhere({
             onChange={(ev) => patch({ endTime: ev.target.value })}
           />
         </Field>
-        {VENUES.length > 0 && otherVenue && (
-          <Field label="Venue name" hint="Only for places that aren't in the list above." className="sm:col-span-2">
-            <input className="adm-input" value={known(e.venue) ? e.venue : ""} maxLength={120} onChange={(ev) => patch({ venue: ev.target.value })} />
-          </Field>
-        )}
         {!e.endTime && (
           <Field label="Duration" hint="e.g. 3 hours. Worked out for you once there's an end time." className="sm:col-span-2">
             <input className="adm-input" value={known(e.duration) ? e.duration : ""} placeholder="TBA" onChange={(ev) => patch({ duration: ev.target.value })} />

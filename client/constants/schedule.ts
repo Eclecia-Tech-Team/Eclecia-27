@@ -21,19 +21,6 @@ export type FestDay = (typeof FEST_DAYS)[number];
 
 export const isFestDate = (v: string) => FEST_DAYS.some((d) => d.date === v);
 
-export type Venue = { id: string; name: string };
-
-/**
- * The fest's venues, in the order the schedule shows them (biggest first).
- * Empty until the organisers confirm them: meanwhile admins type each event's
- * venue as text, and the schedule lists those busiest first. Once filled in,
- * the editor offers these as a dropdown and the schedule keeps this order.
- * TODO(content): add the real venues, e.g. { id: "main-stage", name: "Main Stage" }.
- */
-export const VENUES: readonly Venue[] = [];
-
-export const venueById = (id: string | null | undefined) => VENUES.find((v) => v.id === id) ?? null;
-
 /** 24-hour "HH:MM". */
 export const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
