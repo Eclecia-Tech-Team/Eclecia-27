@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect, type FormEvent, type ReactNode } from "react";
+import { useState, useEffect, useId, type FormEvent, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { GoldActionButton, GoldButton } from "@/components/common/GoldButton";
+import { ASSETS } from "@/constants/assets";
+import { entryOf, formatOf } from "@/lib/event-format";
 import type { EventPageData } from "@/lib/event-page";
 
 type Props = Pick<EventPageData, "event" | "viewer">;
@@ -81,7 +83,11 @@ export function RegistrationCard({ event, viewer }: Props) {
   };
 
   const { registration, team } = viewer;
-  const feeLine = event.isPaidEvent && event.fees > 0 ? `Entry fee ₹${event.fees}` : "Free entry";
+  const entry = entryOf(event);
+  const feeLine = `${entry.note ? `${entry.value} ${entry.note}` : "Free entry"} · ${formatOf(event)}`;
+  // Signed in, profile done, open, not registered yet: the register / team forms show.
+  const canRegister = !registration && event.isActive && viewer.signedIn && viewer.profileComplete;
+  const referral = canRegister ? <ReferralField code={refCode} onChange={setRefCode} /> : null;
 
   let body: ReactNode;
   if (registration) {
@@ -104,7 +110,9 @@ export function RegistrationCard({ event, viewer }: Props) {
   } else if (!viewer.signedIn) {
     body = (
       <div className="flex flex-col items-center gap-5 text-center">
-        <p className="text-[15px] leading-relaxed text-parchment/75">Sign in to register for {event.name}.</p>
+        <p className="text-[15px] leading-relaxed text-parchment/75">
+          Taking part needs an Eclecia account. Sign in and you&apos;ll land straight back on this page.
+        </p>
         <GoldButton href={`/login?callbackUrl=${encodeURIComponent(here)}`}>Sign in to register</GoldButton>
       </div>
     );
@@ -122,21 +130,36 @@ export function RegistrationCard({ event, viewer }: Props) {
       <TeamForms
         event={event}
         busy={busy}
+        referral={referral}
         onCreate={(teamName) => call(`/api/registration/team/create/${event.slug}`, "POST", { teamName })}
         onJoin={(teamCode) => call(`/api/registration/team/join/${event.slug}`, "POST", { teamCode })}
       />
     );
   } else {
-    body = <SoloRegister event={event} busy={busy} onRegister={() => call(`/api/registration/solo/${event.slug}`, "POST")} />;
+    body = (
+      <SoloRegister
+        event={event}
+        busy={busy}
+        referral={referral}
+        onRegister={() => call(`/api/registration/solo/${event.slug}`, "POST")}
+      />
+    );
   }
 
   return (
-    <section className="ev-card p-6 sm:p-7" aria-labelledby="register-heading">
-      <div className="mb-5 flex items-baseline justify-between gap-4">
-        <h2 id="register-heading" className="ev-eyebrow">
+    <section id="register" className="ev-card px-6 pb-8 pt-14 sm:px-8" aria-labelledby="register-heading">
+      {/* Eclipse crest set into the top edge, like the crest on the festival pass. */}
+      <span className="ev-crest" aria-hidden>
+        <span className="ev-crest-inner">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={ASSETS.cloudinary.blacksun} alt="" draggable={false} />
+        </span>
+      </span>
+      <div className="mb-7 flex flex-col items-center text-center">
+        <h2 id="register-heading" className="font-display text-[32px] font-semibold leading-none text-parchment">
           Registration
         </h2>
-        <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-parchment/55">{feeLine}</span>
+        <p className="ev-label mt-3">{feeLine}</p>
       </div>
       {message && (
         <p
@@ -148,7 +171,9 @@ export function RegistrationCard({ event, viewer }: Props) {
           {message.text}
         </p>
       )}
-      {!viewer.registration && refCode && (
+      {/* Before they can register (signed out, profile, closed): show that the referral is remembered.
+          Once they can, the editable field sits above the register button instead. */}
+      {!viewer.registration && refCode && !canRegister && (
         <div className="mb-4 flex items-center justify-between border border-gold/30 bg-gold/5 px-3 py-1.5 font-mono text-[11px] text-gold">
           <span className="text-parchment/60">Ambassador Referral</span>
           <span className="font-semibold tracking-wider">{refCode}</span>
@@ -156,6 +181,53 @@ export function RegistrationCard({ event, viewer }: Props) {
       )}
       {body}
     </section>
+  );
+}
+
+/**
+ * Optional campus-ambassador code, sent with the register / team requests
+ * (the routes ignore codes that don't exist). A code from a ?ref= link is
+ * already filled in; otherwise it stays folded away behind one line.
+ */
+function ReferralField({ code, onChange }: { code: string; onChange: (code: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const inputId = useId();
+
+  if (!editing) {
+    return (
+      <p className="text-center text-[13px] text-parchment/60">
+        {code ? (
+          <>
+            Referral code <span className="font-mono tracking-[0.12em] text-gold">{code}</span>
+            {" · "}
+          </>
+        ) : null}
+        <button type="button" onClick={() => setEditing(true)} className="underline-offset-4 transition-colors hover:text-gold hover:underline">
+          {code ? "Change" : "Have a referral code?"}
+        </button>
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2 text-left">
+      <label htmlFor={inputId} className="font-mono text-[10px] uppercase tracking-[0.3em] text-parchment/55">
+        Referral code <span className="normal-case tracking-normal text-parchment/40">(optional)</span>
+      </label>
+      <input
+        id={inputId}
+        className="ev-input font-mono uppercase tracking-[0.18em]"
+        value={code}
+        onChange={(e) => onChange(e.target.value.toUpperCase().replace(/\s+/g, ""))}
+        placeholder="ECL27-CAP-XXXX"
+        autoCapitalize="characters"
+        autoComplete="off"
+        spellCheck={false}
+        maxLength={24}
+        autoFocus
+      />
+      <span className="text-[12px] leading-snug text-parchment/50">Got one from a campus ambassador? Add it before you register.</span>
+    </div>
   );
 }
 
@@ -169,7 +241,17 @@ function Status({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /** Two-step: the first press asks, the second registers. */
-function SoloRegister({ event, busy, onRegister }: { event: Props["event"]; busy: boolean; onRegister: () => void }) {
+function SoloRegister({
+  event,
+  busy,
+  referral,
+  onRegister,
+}: {
+  event: Props["event"];
+  busy: boolean;
+  referral?: ReactNode;
+  onRegister: () => void;
+}) {
   const [confirming, setConfirming] = useState(false);
   return (
     <div className="flex flex-col items-center gap-4 text-center">
@@ -178,7 +260,8 @@ function SoloRegister({ event, busy, onRegister }: { event: Props["event"]; busy
           ? `Register for ${event.name}? You can withdraw later from this page${event.isPaidEvent ? " until your fee is verified" : ""}.`
           : "Solo event: one press and your seat is booked."}
       </p>
-      <div className="flex items-center gap-6">
+      {referral && <div className="w-full">{referral}</div>}
+      <div className="mt-1 flex items-center gap-6">
         <GoldActionButton onClick={confirming ? onRegister : () => setConfirming(true)} disabled={busy} className="disabled:pointer-events-none disabled:opacity-50">
           {busy ? "One moment…" : confirming ? "Confirm" : "Register"}
         </GoldActionButton>
@@ -229,11 +312,13 @@ function SoloRegistered({ event, verified, busy, onWithdraw }: { event: Props["e
 function TeamForms({
   event,
   busy,
+  referral,
   onCreate,
   onJoin,
 }: {
   event: Props["event"];
   busy: boolean;
+  referral?: ReactNode;
   onCreate: (teamName: string) => void;
   onJoin: (teamCode: string) => void;
 }) {
@@ -285,6 +370,7 @@ function TeamForms({
             />
           </label>
         )}
+        {referral}
         <div className="flex justify-center">
           <GoldActionButton
             type="submit"
