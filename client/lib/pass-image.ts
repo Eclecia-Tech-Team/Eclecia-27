@@ -204,10 +204,10 @@ async function drawPass(
   ctx.font = `600 13px ${fonts.taiganja}`;
   const wordW = spaced(ctx, "ECLECIA", 32, 48, 2.9);
   ctx.font = `italic 600 17px ${fonts.display}`;
-  ctx.fillText("’27", 32 + wordW + 7, 49);
+  ctx.fillText("'27", 32 + wordW + 7, 49);
   ctx.fillStyle = `rgba(${PARCH},0.45)`;
   ctx.font = `400 10px ${fonts.mono}`;
-  spaced(ctx, "FESTIVAL PASS", W - 32, 47, 2.6, "right");
+  // spaced(ctx, "FESTIVAL PASS", W - 32, 47, 2.6, "right");
 
   // Crest: gold ring, dark gap, artwork
   const r = 66;

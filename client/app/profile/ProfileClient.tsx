@@ -3,7 +3,7 @@
 import { signOutHome } from "@/lib/sign-out";
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { SiteHeader } from "@/components/common/Header";
 import { SiteFooter } from "@/components/common/Footer";
@@ -76,6 +76,11 @@ export default function ProfileClient({
   });
   const [loaded, setLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+  // A tab stays mounted once opened, so returning to it neither refetches nor flashes a skeleton.
+  const [visited, setVisited] = useState<Tab[]>([initialTab]);
+  const [tabDirection, setTabDirection] = useState(0);
+  const [tabLine, setTabLine] = useState({ left: 0, width: 0 });
+  const tabButtons = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [focusKey, setFocusKey] = useState<FieldKey | null>(null);
   const [formData, setFormData] = useState<Partial<ProfileData>>({});
@@ -114,6 +119,24 @@ export default function ProfileClient({
   useEffect(() => {
     if (isEditing && focusKey) inputs.current[focusKey]?.focus();
   }, [isEditing, focusKey]);
+
+  // Keep the underline beneath the active tab (the observer also fires on first observe).
+  useLayoutEffect(() => {
+    const button = tabButtons.current[activeTab];
+    if (!button) return;
+    const observer = new ResizeObserver(() => setTabLine({ left: button.offsetLeft, width: button.offsetWidth }));
+    observer.observe(button);
+    if (button.parentElement) observer.observe(button.parentElement);
+    return () => observer.disconnect();
+  }, [activeTab]);
+
+  const selectTab = (next: Tab) => {
+    if (next === activeTab) return;
+    const order = TABS.map((t) => t.id);
+    setTabDirection(order.indexOf(next) > order.indexOf(activeTab) ? 1 : -1);
+    setVisited((seen) => (seen.includes(next) ? seen : [...seen, next]));
+    setActiveTab(next);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -205,7 +228,7 @@ export default function ProfileClient({
       stream: profile.stream || "",
     });
     setFocusKey(key ?? "fullName");
-    setActiveTab("details");
+    selectTab("details");
     setIsEditing(true);
   };
 
@@ -337,6 +360,13 @@ export default function ProfileClient({
   const firstName = first.charAt(0).toUpperCase() + first.slice(1);
   const displayName = profile.fullName || profile.username;
   const avatarSrc = getAvatarSrc(profile.avatar ?? 1);
+  const panelProps = (id: Tab) => ({
+    id: `panel-${id}`,
+    role: "tabpanel",
+    "aria-labelledby": `tab-${id}`,
+    hidden: activeTab !== id,
+    className: "profile-tab-pane pt-2",
+  });
 
   return (
     <PageFade className="min-h-dvh">
@@ -375,7 +405,7 @@ export default function ProfileClient({
           </div>
         )}
 
-        <main className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 gap-12 px-5 pb-24 pt-28 md:px-8 md:pt-36 lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-16">
+        <main className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 gap-12 px-5 pb-24 pt-28 md:px-8 md:pt-36 lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-12 xl:grid-cols-[380px_minmax(0,1fr)] xl:gap-16">
           {/* ── The pass ─────────────────────────────────────────────── */}
           <aside className="mx-auto w-full max-w-100 lg:sticky lg:top-28 lg:self-start">
             <div className="pf-pass">
@@ -388,7 +418,7 @@ export default function ProfileClient({
                       ’27
                     </span>
                   </span>
-                  <span className="pf-label">Festival pass</span>
+                  <span className="pf-label">Participation Pass</span>
                 </div>
 
                 <div className="mt-7 flex flex-col items-center text-center">
@@ -479,7 +509,7 @@ export default function ProfileClient({
                         : "Incomplete"}
                   </span>
                   <p className="mt-2.5 text-[13.5px] leading-snug text-parchment/65">
-                    Show this QR code to the volunteers to scan for event entry.
+                    Show this QR code to the volunteers to scan for entry to registered events.
                   </p>
                   <button
                     type="button"
@@ -592,10 +622,17 @@ export default function ProfileClient({
             <p className="mt-3 text-center text-[12.5px] leading-snug text-parchment/40">
               Saved pass includes your QR. The shared card never does.
             </p>
+            <footer className="pf-pass-note">
+              <p className="pf-pass-note-title">One pass for all your stars</p>
+              <p>
+                Your unified entry to every event you&apos;ve registered for. It
+                does not admit you to the artist performance nights.
+              </p>
+            </footer>
           </aside>
 
           {/* ── Account ──────────────────────────────────────────────── */}
-          <section className="min-w-0">
+          <section className="min-w-0 max-lg:mx-auto max-lg:w-full max-lg:max-w-160">
             <p className="pf-eyebrow">Your account</p>
             <h1
               className="mt-4 font-display text-[44px] font-semibold leading-none tracking-[-0.01em] text-parchment md:text-[60px]"
@@ -604,27 +641,29 @@ export default function ProfileClient({
               {greeting()},{" "}
               <em className="font-medium text-gold">{firstName}</em>
             </h1>
-            <p className="mt-4 text-[15px] text-parchment/55">
+            <p className="mt-4 text-[15px] text-parchment/55 wrap-anywhere">
               {profile.email}
             </p>
 
             {/* Readiness */}
             {loaded && (
-              <div className="mt-10 max-w-xl">
+              <div className={profile.isProfileComplete ? "mt-10" : "mt-10 max-w-xl"}>
                 {profile.isProfileComplete ? (
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
                     <p className="text-[15.5px] leading-relaxed text-parchment/75">
                       Your profile is complete. You can register for any event.
                     </p>
-                    {returnTo ? (
-                      <GoldButton href={returnTo} size="sm">
-                        Back to the event
-                      </GoldButton>
-                    ) : (
-                      <GoldButton href="/events" size="sm" variant="ghost">
-                        Browse events
-                      </GoldButton>
-                    )}
+                    <div className="ml-auto mr-2.5">
+                      {returnTo ? (
+                        <GoldButton href={returnTo} size="sm">
+                          Back to the event
+                        </GoldButton>
+                      ) : (
+                        <GoldButton href="/events" size="sm" variant="ghost">
+                          Browse events
+                        </GoldButton>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -644,7 +683,7 @@ export default function ProfileClient({
                       ))}
                     </div>
                     {!isEditing && (
-                      <div className="mt-6 flex justify-end">
+                      <div className="mt-6 flex justify-end pr-2.5">
                         <GoldActionButton
                           size="sm"
                           type="button"
@@ -659,6 +698,7 @@ export default function ProfileClient({
               </div>
             )}
 
+
             {/* Tabs */}
             <div
               className="pf-tabs mt-14"
@@ -671,25 +711,28 @@ export default function ProfileClient({
                   type="button"
                   role="tab"
                   id={`tab-${t.id}`}
+                  ref={(el) => {
+                    tabButtons.current[t.id] = el;
+                  }}
                   aria-selected={activeTab === t.id}
                   aria-controls={`panel-${t.id}`}
-                  onClick={() => setActiveTab(t.id)}
+                  onClick={() => selectTab(t.id)}
                   className="pf-tab"
                 >
                   {t.label}
                 </button>
               ))}
+              <span
+                aria-hidden
+                className="pf-tab-line"
+                data-ready={tabLine.width > 0}
+                style={{ width: tabLine.width, translate: `${tabLine.left}px 0` }}
+              />
             </div>
 
-            <div
-              key={activeTab}
-              id={`panel-${activeTab}`}
-              role="tabpanel"
-              aria-labelledby={`tab-${activeTab}`}
-              className="profile-tab-pane pt-2"
-            >
-              {activeTab === "details" &&
-                (isEditing ? (
+            <div className="pf-panels" style={{ "--pf-dir": tabDirection } as CSSProperties}>
+              <div {...panelProps("details")}>
+              {isEditing ? (
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -792,6 +835,7 @@ export default function ProfileClient({
                       <GoldActionButton
                         size="sm"
                         type="submit"
+                        className="mr-2.5"
                         disabled={loading || nameBlocks}
                       >
                         {loading ? "Saving…" : "Save details"}
@@ -861,6 +905,7 @@ export default function ProfileClient({
                         size="sm"
                         variant="ghost"
                         type="button"
+                        className="mr-2.5"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -872,7 +917,7 @@ export default function ProfileClient({
                     </div>
 
                     {/* Campus Ambassador Guild (Minimal, Unboxed) */}
-                    <div className="mt-14 pt-8 border-t border-gold/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="mt-14 pt-8 border-t border-gold/15 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-gold/80">
                           Campus Ambassador
@@ -883,7 +928,7 @@ export default function ProfileClient({
                             : "Represent your college at Eclecia'27 and unlock exclusive festival perks and passes."}
                         </p>
                       </div>
-                      <div className="shrink-0">
+                      <div className="pf-cta-end mr-2.5 shrink-0">
                         <GoldButton href="/cam" size="sm" variant="ghost">
                           {isCam
                             ? "Ambassador Pass"
@@ -892,9 +937,18 @@ export default function ProfileClient({
                       </div>
                     </div>
                   </div>
-                ))}
-              {activeTab === "events" && <EventsTab />}
-              {activeTab === "teams" && <TeamsTab />}
+                )}
+              </div>
+              {visited.includes("events") && (
+                <div {...panelProps("events")}>
+                  <EventsTab />
+                </div>
+              )}
+              {visited.includes("teams") && (
+                <div {...panelProps("teams")}>
+                  <TeamsTab />
+                </div>
+              )}
             </div>
           </section>
         </main>
@@ -928,7 +982,7 @@ export default function ProfileClient({
                   ’27
                 </span>
               </span>
-              <span className="pf-label">Festival pass</span>
+              <span className="pf-label">Participation Pass</span>
             </div>
             <div className="pf-qr-tile mx-auto mt-7 w-fit">
               {profile.qrPayload && (
