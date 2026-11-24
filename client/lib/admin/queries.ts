@@ -88,7 +88,6 @@ export interface EventRow {
   isTeamEvent: boolean;
   isPaidEvent: boolean;
   fees: number;
-  date: string;
   registrations: number;
   teams: number;
   rules: number;
@@ -98,7 +97,7 @@ export async function listEvents(): Promise<EventRow[]> {
   await connect();
   const [events, regCounts, teamCounts] = await Promise.all([
     Event.find()
-      .select("slug eventName category kind isActive isTeamEvent isPaidEvent fees date rules")
+      .select("slug eventName category kind isActive isTeamEvent isPaidEvent fees rules")
       .sort({ category: 1, eventName: 1 })
       .lean<
         {
@@ -111,7 +110,6 @@ export async function listEvents(): Promise<EventRow[]> {
           isTeamEvent: boolean;
           isPaidEvent: boolean;
           fees?: number;
-          date: string;
           rules?: string[];
         }[]
       >(),
@@ -130,7 +128,6 @@ export async function listEvents(): Promise<EventRow[]> {
     isTeamEvent: e.isTeamEvent,
     isPaidEvent: e.isPaidEvent,
     fees: e.fees ?? 0,
-    date: e.date,
     registrations: regs.get(e._id.toString()) ?? 0,
     teams: teams.get(e._id.toString()) ?? 0,
     rules: e.rules?.length ?? 0,
@@ -169,8 +166,6 @@ export async function getEventForEdit(id: string): Promise<(EventInput & { id: s
     category: e.category as EventInput["category"],
     kind: str("kind"),
     description: str("description"),
-    date: str("date"),
-    time: str("time"),
     duration: str("duration"),
     venue: str("venue"),
     scheduleDate: str("scheduleDate"),

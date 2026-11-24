@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { EVENT_CATEGORIES } from "@/constants/event-categories";
-import { TIME_RE, clockLabel, durationLabel, isFestDate, longDate, minutesOf, venueById } from "@/constants/schedule";
+import { TIME_RE, durationLabel, isFestDate, minutesOf, venueById } from "@/constants/schedule";
 
 const text = (max: number) => z.string().trim().max(max);
 const url = z
@@ -22,8 +22,6 @@ export const eventInput = z
     category: z.enum(EVENT_CATEGORIES, { message: "Pick a world" }),
     kind: text(60),
     description: z.string().trim().min(1, "Write a description").max(2000),
-    date: text(60),
-    time: text(60),
     duration: text(60),
     venue: text(120),
     // Structured schedule; "" = to be announced.
@@ -62,12 +60,8 @@ export const eventInput = z
       startTime: e.startTime || null,
       endTime: e.endTime || null,
       venueId: venue?.id ?? null,
-      // Display text the rest of the site reads. Once a day is picked it follows
-      // the structured fields; before that, older free text is kept as it was.
       // Required by the schema; "TBA" reads as "To be announced" on the site.
-      date: e.scheduleDate ? longDate(e.scheduleDate) : e.date || "TBA",
-      time:
-        start !== null ? (end !== null ? `${clockLabel(start)} – ${clockLabel(end)}` : clockLabel(start)) : e.scheduleDate ? "TBA" : e.time || "TBA",
+      // Day and time text is built from the structured fields when read (whenText).
       duration: start !== null && end !== null ? durationLabel(end - start) : e.duration || "TBA",
       venue: venue?.name ?? (e.venue || "TBA"),
     };

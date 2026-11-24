@@ -291,8 +291,6 @@ function WhenAndWhere({
   const [otherVenue, setOtherVenue] = useState(!e.venueId && known(e.venue));
   const patch = (p: Partial<EventInput>) => setE((cur) => ({ ...cur, ...p }));
   const length = e.startTime && e.endTime ? minutesOf(e.endTime) - minutesOf(e.startTime) : null;
-  // Free text from before the structured fields existed, until a day is picked.
-  const earlier = !e.scheduleDate ? [e.date, e.time].filter(known).join(", ") : "";
 
   return (
     <Card title="When and where">
@@ -303,7 +301,7 @@ function WhenAndWhere({
             value={e.scheduleDate}
             onChange={(ev) => {
               const day = ev.target.value;
-              patch(day ? { scheduleDate: day, date: "", time: "" } : { scheduleDate: "", startTime: "", endTime: "", date: "", time: "" });
+              patch(day ? { scheduleDate: day } : { scheduleDate: "", startTime: "", endTime: "" });
             }}
           >
             <option value="">To be announced</option>
@@ -381,11 +379,6 @@ function WhenAndWhere({
           </Field>
         )}
       </div>
-      {earlier && (
-        <p className="text-[12px] leading-snug text-parchment/55">
-          Entered earlier as “{earlier}”. Pick a day and time so it shows on the schedule.
-        </p>
-      )}
     </Card>
   );
 }

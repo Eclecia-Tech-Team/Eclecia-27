@@ -9,8 +9,6 @@ const BLANK: EventInput = {
   category: "Celeste",
   kind: "",
   description: "",
-  date: "",
-  time: "",
   duration: "",
   venue: "",
   scheduleDate: "",

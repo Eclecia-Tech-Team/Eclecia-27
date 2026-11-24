@@ -69,6 +69,20 @@ export function longDate(date: string) {
   );
 }
 
+type When = { scheduleDate?: string | null; startTime?: string | null; endTime?: string | null };
+
+/**
+ * Display text for an event's day and time, built from the structured fields:
+ * { date: "16 January 2027", time: "2:30 PM – 4:00 PM" }. Null = not announced.
+ */
+export function whenText(e: When) {
+  const date = e.scheduleDate && isFestDate(e.scheduleDate) ? longDate(e.scheduleDate) : null;
+  const start = date && e.startTime && TIME_RE.test(e.startTime) ? minutesOf(e.startTime) : null;
+  const end = start !== null && e.endTime && TIME_RE.test(e.endTime) ? minutesOf(e.endTime) : null;
+  const time = start === null ? null : end !== null && end > start ? `${clockLabel(start)} – ${clockLabel(end)}` : clockLabel(start);
+  return { date, time };
+}
+
 /** Fest time (IST) for an instant, whatever timezone the device is in. */
 export function festClock(ms: number) {
   const d = new Date(ms + IST_OFFSET_MS);

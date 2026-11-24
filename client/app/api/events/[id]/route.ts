@@ -14,7 +14,7 @@ export async function GET(
 
     const event = await Event.findOne(eventLookup(id))
       .select(
-        "_id slug eventName category kind date time duration venue description banner rules clubs isTeamEvent pocs minMembersPerTeam maxMembersPerTeam teamLimit isPaidEvent fees prizePool isActive doc",
+        "_id slug eventName category kind scheduleDate startTime endTime duration venue description banner rules clubs isTeamEvent pocs minMembersPerTeam maxMembersPerTeam teamLimit isPaidEvent fees prizePool isActive doc",
       )
       .lean();
 

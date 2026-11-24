@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import ConfirmationModal from "./ConfirmationModal";
 import type { Registration } from "@/types/interface";
+import { whenText } from "@/constants/schedule";
 import { TransitionLink } from "@/components/common/TransitionLink";
 
 export default function EventsTab() {
@@ -126,7 +127,8 @@ export default function EventsTab() {
               const ev = reg.eventId;
               const href = `/events/${ev.slug ?? ev._id}`;
               const known = (v?: string) => (v && !/^(tba|tbd)$/i.test(v.trim()) ? v : "");
-              const when = [known(ev.date), known(ev.time)].filter(Boolean).join(" · ") || "Schedule to be announced";
+              const { date, time } = whenText(ev);
+              const when = [date, time].filter(Boolean).join(" · ") || "Schedule to be announced";
               return (
                 <li key={reg._id} className="pf-row">
                   <TransitionLink href={href} className="pf-thumb block" aria-hidden tabIndex={-1}>
