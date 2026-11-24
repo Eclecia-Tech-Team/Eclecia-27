@@ -86,11 +86,12 @@ export function RegistrationCard({ event, viewer }: Props) {
   let body: ReactNode;
   if (registration) {
     body = team ? (
-      <TeamPanel event={event} team={team} busy={busy} onLeave={() => call(`/api/registration/team/leave/${team.id}`, "POST")} />
+      <TeamPanel event={event} team={team} registrationCode={registration.code} busy={busy} onLeave={() => call(`/api/registration/team/leave/${team.id}`, "POST")} />
     ) : (
       <SoloRegistered
         event={event}
         verified={registration.verified}
+        registrationCode={registration.code}
         busy={busy}
         onWithdraw={() => call(`/api/registration/my-events/de-register/${registration.id}`, "PATCH")}
       />
@@ -192,7 +193,42 @@ function SoloRegister({ event, busy, onRegister }: { event: Props["event"]; busy
   );
 }
 
-function SoloRegistered({ event, verified, busy, onWithdraw }: { event: Props["event"]; verified: boolean; busy: boolean; onWithdraw: () => void }) {
+/** Registration ID with a copy button; the code solo registrants and leaders pay with. */
+function CodeBox({ label, code }: { label: string; code: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {}
+  };
+  return (
+    <div className="mt-5 flex items-center justify-between gap-3 border border-gold/30 bg-black/40 px-4 py-3 text-left">
+      <div>
+        <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-parchment/50">{label}</p>
+        <p className="mt-1 font-mono text-[17px] tracking-[0.18em] text-parchment">{code}</p>
+      </div>
+      <button type="button" onClick={copy} className="font-mono text-[11px] uppercase tracking-[0.25em] text-gold hover:text-parchment">
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </div>
+  );
+}
+
+function SoloRegistered({
+  event,
+  verified,
+  registrationCode,
+  busy,
+  onWithdraw,
+}: {
+  event: Props["event"];
+  verified: boolean;
+  registrationCode: string;
+  busy: boolean;
+  onWithdraw: () => void;
+}) {
   const [confirming, setConfirming] = useState(false);
   const pending = event.isPaidEvent && !verified;
   const canWithdraw = !(event.isPaidEvent && verified);
@@ -201,9 +237,10 @@ function SoloRegistered({ event, verified, busy, onWithdraw }: { event: Props["e
       <p className="font-display text-[28px] leading-tight text-gold">You&apos;re registered</p>
       <p className="mt-2 text-[14px] leading-relaxed text-parchment/70">
         {pending
-          ? `Payment pending: your seat is confirmed once the ₹${event.fees} fee is verified. Payment details are posted in the notices.`
+          ? `Payment pending: pay the ₹${event.fees} fee with your registration ID below. Your seat is confirmed once it's verified.`
           : "See you at the event. Updates will appear in the notices on this page."}
       </p>
+      {registrationCode && <CodeBox label="Registration ID" code={registrationCode} />}
       {canWithdraw && (
         <div className="mt-5 flex items-center justify-center gap-5 text-[13px]">
           {confirming ? (
@@ -302,29 +339,22 @@ function TeamForms({
 function TeamPanel({
   event,
   team,
+  registrationCode,
   busy,
   onLeave,
 }: {
   event: Props["event"];
   team: NonNullable<Props["viewer"]["team"]>;
+  registrationCode: string;
   busy: boolean;
   onLeave: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const size = team.members.length;
   const short = event.minMembers - size;
   const pending = event.isPaidEvent && team.paymentStatus !== "completed";
   const locked = team.paymentStatus === "completed";
   const soloLeader = team.isLeader && size === 1;
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(team.code);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch {}
-  };
 
   return (
     <div>
@@ -333,15 +363,8 @@ function TeamPanel({
         {size} of {event.maxMembers} members{team.isLeader ? " · you lead this team" : ""}
       </p>
 
-      <div className="mt-5 flex items-center justify-between gap-3 border border-gold/30 bg-black/40 px-4 py-3">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-parchment/50">Team code</p>
-          <p className="mt-1 font-mono text-[17px] tracking-[0.18em] text-parchment">{team.code}</p>
-        </div>
-        <button type="button" onClick={copy} className="font-mono text-[11px] uppercase tracking-[0.25em] text-gold hover:text-parchment">
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
+      <CodeBox label="Team code · share to join" code={team.code} />
+      {team.isLeader && registrationCode && <CodeBox label="Your registration ID · pay with this" code={registrationCode} />}
 
       <ul className="mt-5 divide-y divide-gold/10">
         {team.members.map((m) => (
@@ -362,7 +385,9 @@ function TeamPanel({
       )}
       {pending && (
         <p className="mt-4 border-l-2 border-gold/60 pl-3 text-[13px] leading-snug text-parchment/75">
-          Payment pending: the team&apos;s ₹{event.fees} fee is verified by the coordinators. Payment details are posted in the notices.
+          {team.isLeader
+            ? `Payment pending: pay the team's ₹${event.fees} fee with your registration ID above. Everyone's seat is confirmed once it's verified.`
+            : `Payment pending: your team leader pays the team's ₹${event.fees} fee with their registration ID.`}
         </p>
       )}
 

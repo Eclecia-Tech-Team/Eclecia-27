@@ -7,6 +7,7 @@ import Team from "@/lib/models/Team";
 import User, { type IUserDocument } from "@/lib/models/User";
 import { eventLookup } from "@/lib/events";
 import { sendEventRegistrationEmail } from "@/lib/auth-mail";
+import generateCode from "@/lib/generateTeamID";
 import { whenText } from "@/constants/schedule";
 
 /**
@@ -73,14 +74,36 @@ export async function isEventFull(event: IEventDocument) {
   return taken >= event.teamLimit;
 }
 
+export const newRegistrationCode = () => `REG-${generateCode()}`;
+
+/**
+ * Creates a registration with a fresh registration ID, retrying the rare
+ * collision on its unique index. Other duplicate-key errors (already registered) propagate.
+ */
+export async function createRegistration(data: Record<string, unknown>) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await Registration.create({ ...data, registrationCode: newRegistrationCode() });
+    } catch (error) {
+      const dup = error as { code?: number; keyPattern?: Record<string, number> };
+      if (dup.code !== 11000 || !dup.keyPattern?.registrationCode || attempt >= 4) throw error;
+    }
+  }
+}
+
 /** Confirmation mail; never fails the registration it confirms. */
 export function confirmByMail(
   user: IUserDocument,
   event: IEventDocument,
+  registrationCode: string,
   team?: { teamName?: string; teamCode: string; isTeamLeader: boolean },
 ) {
   const when = whenText(event);
   void sendEventRegistrationEmail(user.email, {
+    registrationCode,
+    // Members don't pay; only solo registrants and leaders get the "use this to pay" line.
+    isPayer: !team || team.isTeamLeader,
+    isPaidEvent: event.isPaidEvent,
     participantName: user.fullName || user.username,
     eventName: event.eventName,
     category: event.category,
@@ -92,9 +115,13 @@ export function confirmByMail(
   }).catch((err) => console.error("[registration] mail_failed", err));
 }
 
-/** Paid events have no payment gateway yet: entries start unverified, confirmed by the team later. */
-export const paymentNote = (event: IEventDocument) =>
-  event.isPaidEvent ? " Your entry is confirmed once the fee is paid; payment details are posted on the event page." : "";
+/** Paid entries start unverified; solo registrants and leaders pay with their registration ID. */
+export const paymentNote = (event: IEventDocument, code?: string) =>
+  !event.isPaidEvent
+    ? ""
+    : code
+      ? ` Pay the fee with your registration ID ${code}; your entry is confirmed once it's paid.`
+      : " Your team leader pays the fee; your entry is confirmed once it's paid.";
 
 /** Site-wide registration is live. */
 export const registrationLive = () => true;

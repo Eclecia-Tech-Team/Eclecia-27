@@ -10,7 +10,8 @@
     "seed:events": "bun --env-file=.env.local scripts/seed-events.ts",
     "seed:categories": "bun --env-file=.env.local scripts/seed-categories.ts",
     "notice": "bun --env-file=.env.local scripts/post-notice.ts",
-    "admin:add": "bun --env-file=.env.local scripts/add-admin.ts"
+    "admin:add": "bun --env-file=.env.local scripts/add-admin.ts",
+    "backfill:reg-codes": "bun --env-file=.env.local scripts/backfill-registration-codes.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

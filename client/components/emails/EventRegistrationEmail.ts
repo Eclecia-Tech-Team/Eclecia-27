@@ -4,6 +4,9 @@ interface EventRegistrationEmailProps {
   participantName: string;
   eventName: string;
   category: string;
+  registrationCode: string;
+  isPayer: boolean;
+  isPaidEvent: boolean;
   teamName?: string;
   isTeamLeader?: boolean;
   teamCode?: string;
@@ -19,6 +22,9 @@ export function getEventRegistrationEmailHtml({
   participantName,
   eventName,
   category,
+  registrationCode,
+  isPayer,
+  isPaidEvent,
   teamName,
   isTeamLeader = false,
   teamCode,
@@ -52,6 +58,10 @@ export function getEventRegistrationEmailHtml({
           <td style="padding: 6px 0; font-size: 13px; color: rgba(236,228,210,0.6);">CREATIVE REALM:</td>
           <td style="padding: 6px 0; font-size: 14px; color: #ffd875;">${esc(category)}</td>
         </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: rgba(236,228,210,0.6);">REGISTRATION ID:</td>
+          <td style="padding: 6px 0; font-family: 'Courier New', monospace; font-size: 15px; color: #ffd875; font-weight: bold; letter-spacing: 0.15em;">${esc(registrationCode)}</td>
+        </tr>
         ${
           teamName
             ? `<tr>
@@ -80,6 +90,23 @@ export function getEventRegistrationEmailHtml({
         </tr>
       </table>
     </div>
+
+    ${
+      isPaidEvent
+        ? `<div style="margin: 20px 0; padding: 16px 20px; background: rgba(217,164,65,0.06); border-left: 3px solid #ffd875;">
+      <p style="margin: 0 0 6px; font-family: 'Courier New', Courier, monospace; font-size: 11px; font-weight: bold; color: #ffd875; letter-spacing: 0.15em; text-transform: uppercase;">
+        ENTRY FEE
+      </p>
+      <p style="margin: 0; font-size: 13px; line-height: 22px; color: #ece4d2;">
+        ${
+          isPayer
+            ? `Enter your registration ID <strong>${esc(registrationCode)}</strong> on the payment page to pay the fee${teamName ? " for your whole team" : ""}. Your entry is confirmed once the payment is verified.`
+            : "Your team leader pays the fee for the whole team with their registration ID. Your entry is confirmed once it's verified."
+        }
+      </p>
+    </div>`
+        : ""
+    }
 
     <!-- Checkpoint pass instructions -->
     <div style="margin: 20px 0; padding: 16px 20px; background: rgba(217,164,65,0.06); border-left: 3px solid #6ee7b7;">

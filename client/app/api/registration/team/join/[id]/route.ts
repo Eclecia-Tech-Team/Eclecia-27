@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import Registration from "@/lib/models/Registrations";
 import Team from "@/lib/models/Team";
 import User from "@/lib/models/User";
 import CampusAmbassador from "@/lib/models/CampusAmbassador";
-import { confirmByMail, fail, loadRegistrant, paymentNote } from "@/lib/registration";
+import { confirmByMail, createRegistration, fail, loadRegistrant, paymentNote } from "@/lib/registration";
 
 /** Join an existing team of this event by its code. Body: `{ teamCode, refCode? }`. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -45,8 +44,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     );
     if (!team) return fail(400, "TEAM_FULL", `This team is full (${event.maxMembersPerTeam} members max).`);
 
+    let registration;
     try {
-      await Registration.create({
+      registration = await createRegistration({
         eventId: event._id,
         participant: user._id,
         isInTeam: true,
@@ -60,11 +60,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     const leader = await User.findById(team.teamLeader).select("fullName username").lean<{ fullName?: string; username: string }>();
-    confirmByMail(user, event, { teamName: team.teamName, teamCode: team.teamCode, isTeamLeader: false });
+    confirmByMail(user, event, registration.registrationCode, { teamName: team.teamName, teamCode: team.teamCode, isTeamLeader: false });
 
     return NextResponse.json(
       {
-        message: `You joined ${team.teamName ? `"${team.teamName}"` : "the team"}${leader ? `, led by ${leader.fullName || leader.username}` : ""}.${paymentNote(event)}`,
+        message: `You joined ${team.teamName ? `"${team.teamName}"` : "the team"}${leader ? `, led by ${leader.fullName || leader.username}` : ""}.${team.paymentStatus === "completed" ? "" : paymentNote(event)}`,
+        registrationCode: registration.registrationCode,
       },
       { status: 201 },
     );

@@ -53,7 +53,7 @@ export interface EventPageData {
   viewer: {
     signedIn: boolean;
     profileComplete: boolean;
-    registration: { id: string; verified: boolean; isInTeam: boolean } | null;
+    registration: { id: string; code: string; verified: boolean; isInTeam: boolean } | null;
     team: {
       id: string;
       code: string;
@@ -157,8 +157,8 @@ async function loadViewer(record: EventRecord, userId: string): Promise<EventPag
   const [user, registration] = await Promise.all([
     User.findById(userId).select("isProfileComplete").lean<{ isProfileComplete?: boolean } | null>(),
     Registration.findOne({ eventId: record._id, participant: userId })
-      .select("_id verified isInTeam teamId")
-      .lean<{ _id: { toString(): string }; verified: boolean; isInTeam: boolean; teamId?: unknown } | null>(),
+      .select("_id registrationCode verified isInTeam teamId")
+      .lean<{ _id: { toString(): string }; registrationCode?: string; verified: boolean; isInTeam: boolean; teamId?: unknown } | null>(),
   ]);
   if (!user) return { signedIn: false, profileComplete: false, registration: null, team: null };
 
@@ -191,7 +191,12 @@ async function loadViewer(record: EventRecord, userId: string): Promise<EventPag
     signedIn: true,
     profileComplete: Boolean(user.isProfileComplete),
     registration: registration
-      ? { id: registration._id.toString(), verified: registration.verified, isInTeam: registration.isInTeam }
+      ? {
+          id: registration._id.toString(),
+          code: registration.registrationCode ?? "",
+          verified: registration.verified,
+          isInTeam: registration.isInTeam,
+        }
       : null,
     team,
   };

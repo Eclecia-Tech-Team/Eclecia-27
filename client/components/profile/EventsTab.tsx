@@ -142,6 +142,12 @@ export default function EventsTab() {
                       {ev.category} · {reg.isInTeam ? "Team" : "Solo"} · {when}
                       {known(ev.venue) && ` · ${ev.venue}`}
                     </p>
+                    {reg.registrationCode && (
+                      <p className="mt-1.5 text-[13px] text-parchment/55">
+                        Registration ID <span className="font-mono tracking-[0.14em] text-gold">{reg.registrationCode}</span>
+                        {ev.isPaidEvent && !reg.verified && (reg.isPayer ? " · pay with this ID" : " · your leader pays")}
+                      </p>
+                    )}
                   </div>
                   <div className="pf-row-end flex flex-col items-end gap-2.5 max-sm:items-start">
                     <span className="pf-status" data-tone={reg.verified ? "ok" : "wait"}>
