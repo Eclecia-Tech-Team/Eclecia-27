@@ -53,8 +53,6 @@ async function main() {
       };
       const defaults = {
         slug: event.id,
-        date: "TBA",
-        time: "TBA",
         duration: "TBA",
         venue: "TBA",
         isTeamEvent: false,

@@ -13,7 +13,7 @@ export async function GET() {
     await connect();
 
     const docs = await Registration.find({ participant: session.user.id })
-      .populate("eventId", "slug eventName category date time venue banner isPaidEvent")
+      .populate("eventId", "slug eventName category scheduleDate startTime endTime venue banner isPaidEvent")
       .populate("teamId", "teamLeader")
       .select("-checkedIn -foodServedCount")
       .lean<(Record<string, unknown> & { teamId?: { teamLeader?: unknown } | null })[]>();

@@ -52,10 +52,13 @@ export interface IEvent {
   category: EventCategory;
   /** Short genre label shown in the atlas (e.g. "Filmmaking"). */
   kind?: string;
-  date: string;
-  time: string;
   duration: string;
   venue: string;
+  /** Fest day "2027-01-16" (IST); null until announced. */
+  scheduleDate?: string | null;
+  /** "14:30", 24-hour IST. */
+  startTime?: string | null;
+  endTime?: string | null;
   description: string;
   banner?: string | null;
   rules: string[];
@@ -86,8 +89,9 @@ export interface PublicEventProps {
   description: string;
   banner?: string | null;
   clubs: string[];
-  date: string;
-  time: string;
+  scheduleDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
   venue: string;
   isTeamEvent: boolean;
   minMembersPerTeam: number;
@@ -131,8 +135,9 @@ export interface RegiEventProps {
   eventName: string;
   category: EventCategory;
   banner?: string | null;
-  date: string;
-  time: string;
+  scheduleDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
   venue: string;
   minMembersPerTeam?: number;
   maxMembersPerTeam?: number;
@@ -249,8 +254,9 @@ export interface EventDetails {
   _id: string;
   eventName: string;
   category: string;
-  date: string;
-  time: string;
+  scheduleDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
   duration?: string;
   venue: string;
   description: string;

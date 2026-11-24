@@ -35,14 +35,6 @@ const eventSchema = new Schema(
       type: String,
       trim: true,
     },
-    date: {
-      type: String,
-      required: true,
-    },
-    time: {
-      type: String,
-      required: true,
-    },
     duration: {
       type: String,
       required: true,
@@ -50,6 +42,25 @@ const eventSchema = new Schema(
     venue: {
       type: String,
       required: true,
+    },
+    // Structured schedule (fest time, IST). Day and time text is built from
+    // these when read (whenText in constants/schedule.ts); `duration` above is
+    // derived on save (lib/admin/event-input.ts) and `venue` is free text. All
+    // null until announced.
+    /** Fest day, "2027-01-16". */
+    scheduleDate: {
+      type: String,
+      default: null,
+    },
+    /** "14:30", 24-hour IST. */
+    startTime: {
+      type: String,
+      default: null,
+    },
+    /** "16:00", 24-hour IST; after startTime. */
+    endTime: {
+      type: String,
+      default: null,
     },
     description: {
       type: String,

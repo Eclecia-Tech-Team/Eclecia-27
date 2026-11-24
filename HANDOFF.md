@@ -76,7 +76,8 @@ app/
   events/[id]/page.tsx     one event (id = slug or Mongo id)
   (auth)/login, register   participant auth (gated by NEXT_PUBLIC_ENABLE_REGISTRATION)
   profile/                 participant profile: details, avatar, my events, my teams, pass QR
-  sponsors, team, schedule, our-tale   (schedule/team/our-tale are "coming soon")
+  sponsors, team, our-tale   (team/our-tale are "coming soon")
+  schedule/                day-wise programme from the structured schedule fields (lib/schedule.ts, components/schedule/)
   admin/login              panel sign-in
   admin/(panel)/…          panel pages (layout checks the session)
   api/auth/*               register, OTP verify/resend, signin-check, forgot/reset password, NextAuth
@@ -106,7 +107,7 @@ scripts/                   seed-events, seed-categories, add-admin, post-notice
 
 | Collection | Model | Notes |
 |---|---|---|
-| `events` | `Events.ts` | `slug` (unique, URL), `eventName` (3–30, unique), `category` (one of the seven world names, see `constants/event-categories.ts`), `kind`, description, date/time/duration/venue (strings, "TBA" allowed), `rules: string[]` (**10–12 per event, often multi-line**), clubs, pocs, team sizes, `teamLimit`, paid/fees, prizePool, `isActive` (registration open), food settings, `banner` (artwork URL). |
+| `events` | `Events.ts` | `slug` (unique, URL), `eventName` (3–30, unique), `category` (one of the seven world names, see `constants/event-categories.ts`), `kind`, description, `scheduleDate` ("2027-01-16"), `startTime`/`endTime` ("14:30", fest time IST), `venue` (free text; the schedule lists venues busiest first), `duration` (display string derived on save); day/time text is built from the structured fields when read (`whenText` in `constants/schedule.ts`), `rules: string[]` (**10–12 per event, often multi-line**), clubs, pocs, team sizes, `teamLimit`, paid/fees, prizePool, `isActive` (registration open), food settings, `banner` (artwork URL). |
 | `atlascategories` | `AtlasCategory.ts` | world copy (name, kind, line, image) |
 | `users` | `User.ts` | participants. `roles: string[]` exists but is unused (staff are in `adminusers`). Profile complete = username, email, fullName, phone, college, stream. |
 | `registrations` | `Registrations.ts` | one per person per event (unique index `{eventId, participant}`). `verified` (free = true at once; paid = after payment), `checkedIn`, `checkedInAt`, `checkedInBy` (AdminUser) + `checkedInByEmail`, `foodServedCount`, `lastFoodServedAt`, `teamId`. |
@@ -248,7 +249,7 @@ Ordered by how much they'd hurt.
 7. **Atlas cache is per server instance** (≤ 60 s staleness after admin edits on other instances).
 8. **Participant-side audit** (from the earlier work, not re-audited in depth here): participant OTP routes share one OTP slot per email+device between "verify" and "reset" flows; `api/events/*` routes are no longer called by the frontend and can be removed once nothing external depends on them.
 9. **Lint warnings**: `<img>` instead of `next/image` and one hooks-deps warning in profile code (harmless, cosmetic).
-10. **Content gaps**: `/schedule`, `/team`, `/our-tale` are "coming soon"; most events have date/venue "TBA", no rules yet; root `README.md` route table is outdated (this file is current).
+10. **Content gaps**: `/team`, `/our-tale` are "coming soon"; most events have date/venue "TBA", no rules yet; root `README.md` route table is outdated (this file is current).
 
 ## 10. Fest-day runbook
 
