@@ -21,7 +21,7 @@ export function RegistrationsTable({ data, events, canVerify, canCheckIn }: { da
   return (
     <>
       <div className="mb-4 flex flex-wrap gap-2">
-        <SearchBox placeholder="Name, email, phone, team code" />
+        <SearchBox placeholder="Name, email, phone, registration ID, team code" />
         <select className="adm-input sm:max-w-[14rem]" value={get("event")} onChange={(e) => set({ event: e.target.value || null })} aria-label="Event">
           <option value="">All events</option>
           {events.map((e) => (
@@ -62,6 +62,7 @@ export function RegistrationsTable({ data, events, canVerify, canCheckIn }: { da
                     {r.participant.phone && ` · ${r.participant.phone}`}
                   </div>
                   {r.participant.college && <div className="text-[12px] text-parchment/40">{r.participant.college}</div>}
+                  {r.code && <div className="font-mono text-[12px] text-parchment/40">{r.code}</div>}
                 </td>
                 <td className="text-parchment/75">{r.eventName}</td>
                 <td>

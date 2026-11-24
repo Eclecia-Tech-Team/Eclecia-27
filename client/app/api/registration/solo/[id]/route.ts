@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import Event from "@/lib/models/Events";
-import Registration from "@/lib/models/Registrations";
 import CampusAmbassador from "@/lib/models/CampusAmbassador";
-import { confirmByMail, fail, isEventFull, loadRegistrant, paymentNote } from "@/lib/registration";
+import { confirmByMail, createRegistration, fail, isEventFull, loadRegistrant, paymentNote } from "@/lib/registration";
 
 /** Register the signed-in visitor for a solo event. `id`: event id or slug. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -30,7 +29,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }
     }
 
-    const registration = await Registration.create({
+    const registration = await createRegistration({
       eventId: event._id,
       participant: user._id,
       isInTeam: false,
@@ -38,9 +37,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       ...(validRefCode ? { referredByCode: validRefCode } : {}),
     });
     await Event.updateOne({ _id: event._id }, { $addToSet: { registrations: registration._id } });
-    confirmByMail(user, event);
+    confirmByMail(user, event, registration.registrationCode);
 
-    return NextResponse.json({ message: `You're registered for ${event.eventName}.${paymentNote(event)}` }, { status: 201 });
+    return NextResponse.json(
+      {
+        message: `You're registered for ${event.eventName}. Your registration ID is ${registration.registrationCode}.${paymentNote(event, registration.registrationCode)}`,
+        registrationCode: registration.registrationCode,
+      },
+      { status: 201 },
+    );
   } catch (error) {
     if ((error as { code?: number }).code === 11000) {
       return fail(400, "ALREADY_REGISTERED", "You're already registered for this event.");

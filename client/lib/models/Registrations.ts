@@ -12,6 +12,13 @@ const registrationSchema = new Schema(
       ref: "Event",
       required: true,
     },
+    // Public registration ID (REG-XXXXXXXX): what solo registrants and team leaders enter at the payment provider.
+    // Sparse until scripts/backfill-registration-codes.ts has run on older entries.
+    registrationCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
     isInTeam: {
       type: Boolean,
       required: true,

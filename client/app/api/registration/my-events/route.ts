@@ -12,10 +12,17 @@ export async function GET() {
 
     await connect();
 
-    const registrations = await Registration.find({ participant: session.user.id })
+    const docs = await Registration.find({ participant: session.user.id })
       .populate("eventId", "slug eventName category date time venue banner isPaidEvent")
+      .populate("teamId", "teamLeader")
       .select("-checkedIn -foodServedCount")
-      .lean();
+      .lean<(Record<string, unknown> & { teamId?: { teamLeader?: unknown } | null })[]>();
+
+    // Solo registrants and team leaders pay with their registration ID; members don't.
+    const registrations = docs.map(({ teamId, ...reg }) => ({
+      ...reg,
+      isPayer: !teamId || String(teamId.teamLeader) === session.user!.id,
+    }));
 
     return NextResponse.json({ registrations }, { status: 200 });
   } catch (error) {

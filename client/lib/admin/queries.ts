@@ -250,6 +250,7 @@ export interface RegistrationFilter {
 
 export interface RegistrationRow {
   id: string;
+  code: string;
   eventId: string;
   eventName: string;
   participant: { id: string; name: string; username: string; email: string; phone: string; college: string; stream: string };
@@ -279,13 +280,18 @@ async function registrationQuery(f: RegistrationFilter) {
       User.find({ ...scope, $or: [{ email: re }, { username: re }, { fullName: re }, { phoneNumber: re }] }).select("_id").limit(5000).lean<{ _id: mongoose.Types.ObjectId }[]>(),
       Team.find({ ...(isId(f.eventId) ? { eventId: oid(f.eventId) } : {}), $or: [{ teamCode: re }, { teamName: re }] }).select("_id").limit(2000).lean<{ _id: mongoose.Types.ObjectId }[]>(),
     ]);
-    query.$or = [{ participant: { $in: users.map((u) => u._id) } }, { teamId: { $in: teams.map((t) => t._id) } }];
+    query.$or = [
+      { registrationCode: re },
+      { participant: { $in: users.map((u) => u._id) } },
+      { teamId: { $in: teams.map((t) => t._id) } },
+    ];
   }
   return query;
 }
 
 type PopulatedReg = {
   _id: mongoose.Types.ObjectId;
+  registrationCode?: string;
   eventId: { _id: mongoose.Types.ObjectId; eventName: string; minMembersPerTeam?: number } | null;
   participant: { _id: mongoose.Types.ObjectId; fullName?: string; username: string; email: string; phoneNumber?: string; college?: string; stream?: string } | null;
   teamId: { _id: mongoose.Types.ObjectId; teamName?: string; teamCode: string; paymentStatus?: string; teamLeader: mongoose.Types.ObjectId; team: mongoose.Types.ObjectId[] } | null;
@@ -300,6 +306,7 @@ function toRow(r: PopulatedReg): RegistrationRow {
   const p = r.participant;
   return {
     id: r._id.toString(),
+    code: r.registrationCode ?? "",
     eventId: r.eventId?._id.toString() ?? "",
     eventName: r.eventId?.eventName ?? "(deleted event)",
     participant: {

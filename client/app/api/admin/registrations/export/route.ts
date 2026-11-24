@@ -15,9 +15,10 @@ export async function GET(request: Request) {
 
   const sp = new URL(request.url).searchParams;
   const rows = await exportRegistrations({ eventId: sp.get("event") ?? "", status: sp.get("status") ?? "", q: sp.get("q") ?? "" });
-  const header = ["Event", "Name", "Username", "Email", "Phone", "College", "Stream", "Team", "Team code", "Leader", "Payment", "Verified", "Checked in", "Checked in at", "Food", "Registered at"];
+  const header = ["Registration ID", "Event", "Name", "Username", "Email", "Phone", "College", "Stream", "Team", "Team code", "Leader", "Payment", "Verified", "Checked in", "Checked in at", "Food", "Registered at"];
   const lines = rows.map((r) =>
     [
+      r.code,
       r.eventName,
       r.participant.name,
       r.participant.username,

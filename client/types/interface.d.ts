@@ -98,6 +98,7 @@ export interface PublicEventProps {
 
 export interface IRegistration {
   eventId: Types.ObjectId;
+  registrationCode?: string;
   isInTeam: boolean;
   teamId?: Types.ObjectId;
   participant: Types.ObjectId;
@@ -140,6 +141,9 @@ export interface RegiEventProps {
 
 export interface Registration {
   _id: string;
+  registrationCode?: string;
+  /** False for team members: their leader pays. */
+  isPayer?: boolean;
   eventId: RegiEventProps;
   isInTeam: boolean;
   participant: string;

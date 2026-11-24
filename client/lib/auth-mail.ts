@@ -69,6 +69,9 @@ export async function sendEventRegistrationEmail(
     participantName: string;
     eventName: string;
     category: string;
+    registrationCode: string;
+    isPayer: boolean;
+    isPaidEvent: boolean;
     teamName?: string;
     isTeamLeader?: boolean;
     teamCode?: string;
