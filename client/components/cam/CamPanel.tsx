@@ -7,11 +7,9 @@ import { TransitionLink } from "@/components/common/TransitionLink";
 import { GoldButton, GoldActionButton } from "@/components/common/GoldButton";
 import { ASSETS } from "@/constants/assets";
 import { atlasArt } from "@/constants/events";
+import { YearSelect } from "@/components/common/YearSelect";
+import { GRAD_YEARS } from "@/constants/graduation";
 import type { ICampusAmbassadorData } from "@/types/interface";
-
-const GRAD_YEARS = [
-  2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032,
-] as const;
 
 export function CamPanel() {
   const { status } = useSession();
@@ -32,7 +30,8 @@ export function CamPanel() {
   const [college, setCollege] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [stream, setStream] = useState("");
-  const [graduationYear, setGraduationYear] = useState<number>(2027);
+  // Empty string = nothing selected yet (no default year)
+  const [graduationYear, setGraduationYear] = useState<number | "">("");
 
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -59,7 +58,9 @@ export function CamPanel() {
     } catch (err: unknown) {
       console.error(err);
       const message =
-        err instanceof Error ? err.message : "Failed to fetch ambassador information";
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch ambassador information";
       setError(message);
     } finally {
       setLoading(false);
@@ -464,30 +465,15 @@ export function CamPanel() {
 
               {/* Graduation Year */}
               <div className="auth-field">
-                <label className="auth-label block">Year of Graduation</label>
-                <div className="relative">
-                  <select
-                    value={graduationYear}
-                    onChange={(e) =>
-                      setGraduationYear(parseInt(e.target.value, 10))
-                    }
-                    className="auth-input appearance-none cursor-pointer pr-8"
-                  >
-                    {GRAD_YEARS.map((yr) => (
-                      <option
-                        key={yr}
-                        value={yr}
-                        className="bg-[#0b0b0b] text-[#ece4d2]"
-                      >
-                        {yr}
-                      </option>
-                    ))}
-                  </select>
-                  {/* Subtle chevron */}
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center text-parchment/40 text-[10px]">
-                    ▼
-                  </div>
-                </div>
+                <label htmlFor="grad-year" className="auth-label block">
+                  Year of Graduation
+                </label>
+                <YearSelect
+                  id="grad-year"
+                  value={graduationYear}
+                  onChange={setGraduationYear}
+                  options={GRAD_YEARS}
+                />
               </div>
 
               {/* Phone Number */}
