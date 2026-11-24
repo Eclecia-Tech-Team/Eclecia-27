@@ -8,7 +8,7 @@ export async function GET() {
 
     const events = await Event.find()
       .select(
-        "_id slug eventName category kind description banner clubs date time venue isTeamEvent prizePool maxMembersPerTeam minMembersPerTeam isActive",
+        "_id slug eventName category kind description banner clubs scheduleDate startTime endTime venue isTeamEvent prizePool maxMembersPerTeam minMembersPerTeam isActive",
       )
       .sort({ category: 1, eventName: 1 })
       .lean();

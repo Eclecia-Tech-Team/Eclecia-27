@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { atlasArt } from "@/constants/events";
+import { whenText } from "@/constants/schedule";
 import connect from "@/lib/mongoose";
 import Event from "@/lib/models/Events";
 import EventNotice, { type IEventNotice } from "@/lib/models/EventNotice";
@@ -96,6 +97,7 @@ export async function getEventPage(id: string, userId?: string): Promise<EventPa
 
   const category = categories.find((c) => c.name === record.category) ?? null;
   const slug = record.slug;
+  const when = whenText(record);
 
   return {
     event: {
@@ -104,8 +106,8 @@ export async function getEventPage(id: string, userId?: string): Promise<EventPa
       name: record.eventName,
       kind: record.kind ?? "",
       description: record.description,
-      date: record.date,
-      time: record.time,
+      date: when.date ?? "TBA",
+      time: when.time ?? "TBA",
       duration: record.duration,
       venue: record.venue,
       rules: record.rules ?? [],

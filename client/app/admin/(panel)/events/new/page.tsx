@@ -1,6 +1,7 @@
 import { requireArea } from "@/lib/admin/page-guard";
 import { EventEditor } from "@/components/admin/EventEditor";
 import type { EventInput } from "@/lib/admin/event-input";
+import { venueSuggestions } from "@/lib/admin/queries";
 
 const BLANK: EventInput = {
   eventName: "",
@@ -8,10 +9,11 @@ const BLANK: EventInput = {
   category: "Celeste",
   kind: "",
   description: "",
-  date: "",
-  time: "",
   duration: "",
   venue: "",
+  scheduleDate: "",
+  startTime: "",
+  endTime: "",
   banner: "",
   doc: "",
   rules: [],
@@ -31,5 +33,5 @@ const BLANK: EventInput = {
 
 export default async function NewEventPage() {
   await requireArea("events", true);
-  return <EventEditor id={null} initial={BLANK} registrations={0} writable />;
+  return <EventEditor id={null} initial={BLANK} registrations={0} writable venueSuggestions={await venueSuggestions()} />;
 }

@@ -88,7 +88,6 @@ export interface EventRow {
   isTeamEvent: boolean;
   isPaidEvent: boolean;
   fees: number;
-  date: string;
   registrations: number;
   teams: number;
   rules: number;
@@ -98,7 +97,7 @@ export async function listEvents(): Promise<EventRow[]> {
   await connect();
   const [events, regCounts, teamCounts] = await Promise.all([
     Event.find()
-      .select("slug eventName category kind isActive isTeamEvent isPaidEvent fees date rules")
+      .select("slug eventName category kind isActive isTeamEvent isPaidEvent fees rules")
       .sort({ category: 1, eventName: 1 })
       .lean<
         {
@@ -111,7 +110,6 @@ export async function listEvents(): Promise<EventRow[]> {
           isTeamEvent: boolean;
           isPaidEvent: boolean;
           fees?: number;
-          date: string;
           rules?: string[];
         }[]
       >(),
@@ -130,7 +128,6 @@ export async function listEvents(): Promise<EventRow[]> {
     isTeamEvent: e.isTeamEvent,
     isPaidEvent: e.isPaidEvent,
     fees: e.fees ?? 0,
-    date: e.date,
     registrations: regs.get(e._id.toString()) ?? 0,
     teams: teams.get(e._id.toString()) ?? 0,
     rules: e.rules?.length ?? 0,
@@ -169,10 +166,11 @@ export async function getEventForEdit(id: string): Promise<(EventInput & { id: s
     category: e.category as EventInput["category"],
     kind: str("kind"),
     description: str("description"),
-    date: str("date"),
-    time: str("time"),
     duration: str("duration"),
     venue: str("venue"),
+    scheduleDate: str("scheduleDate"),
+    startTime: str("startTime"),
+    endTime: str("endTime"),
     banner: str("banner"),
     doc: str("doc"),
     rules: (e.rules as string[]) ?? [],
@@ -500,4 +498,25 @@ export async function listActivity(limit = 100) {
   await connect();
   const rows = await AdminAction.find().sort({ createdAt: -1 }).limit(limit).lean<{ _id: mongoose.Types.ObjectId; by: string; action: string; target: string; detail: string; createdAt: Date }[]>();
   return rows.map((r) => ({ id: r._id.toString(), by: r.by, action: r.action, target: r.target, detail: r.detail, at: r.createdAt.toISOString() }));
+}
+
+/**
+ * Venue names already typed on events, for the editor's suggestions while
+ * there is no fixed venue list. Spellings that differ only in case or spacing
+ * count as one; the most used spelling wins.
+ */
+export async function venueSuggestions(): Promise<string[]> {
+  await connect();
+  const rows = await Event.aggregate<{ _id: string; n: number }>([
+    { $match: { venue: { $exists: true, $nin: ["", "TBA"] } } },
+    { $group: { _id: { $trim: { input: "$venue" } }, n: { $sum: 1 } } },
+  ]);
+  const groups = new Map<string, { name: string; top: number }>();
+  for (const r of rows) {
+    if (!r._id || r._id.toUpperCase() === "TBA") continue;
+    const key = r._id.toLowerCase().replace(/\s+/g, " ");
+    const seen = groups.get(key);
+    if (!seen || r.n > seen.top) groups.set(key, { name: r._id, top: r.n });
+  }
+  return [...groups.values()].map((v) => v.name).sort((a, b) => a.localeCompare(b));
 }

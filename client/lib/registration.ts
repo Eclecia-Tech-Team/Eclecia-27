@@ -7,6 +7,7 @@ import Team from "@/lib/models/Team";
 import User, { type IUserDocument } from "@/lib/models/User";
 import { eventLookup } from "@/lib/events";
 import { sendEventRegistrationEmail } from "@/lib/auth-mail";
+import { whenText } from "@/constants/schedule";
 
 /**
  * Error codes the event page understands. `code` drives the client's next step
@@ -78,6 +79,7 @@ export function confirmByMail(
   event: IEventDocument,
   team?: { teamName?: string; teamCode: string; isTeamLeader: boolean },
 ) {
+  const when = whenText(event);
   void sendEventRegistrationEmail(user.email, {
     participantName: user.fullName || user.username,
     eventName: event.eventName,
@@ -86,7 +88,7 @@ export function confirmByMail(
     teamCode: team?.teamCode,
     isTeamLeader: team?.isTeamLeader,
     venue: event.venue && event.venue !== "TBA" ? event.venue : undefined,
-    schedule: event.date && event.date !== "TBA" ? [event.date, event.time].filter(Boolean).join(", ") : undefined,
+    schedule: [when.date, when.time].filter(Boolean).join(", ") || undefined,
   }).catch((err) => console.error("[registration] mail_failed", err));
 }
 
