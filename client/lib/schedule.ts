@@ -65,7 +65,8 @@ function eventThumb(worldId: string | undefined, slug: string, banner?: string |
 
 const worldIdOf = (name: string) => ATLAS_CATEGORIES.find((c) => c.name === name)?.id;
 const isTba = (v: string | null | undefined) => !v || !v.trim() || v.trim().toUpperCase() === "TBA";
-const typedVenueKey = (name: string) => `other:${name.trim().toLowerCase().replace(/\s+/g, " ")}`;
+/** Never "": the venue filter and grid use "" for "all" and "TBA". */
+const typedVenueKey = (name: string) => name.trim().toLowerCase().replace(/\s+/g, " ");
 
 export async function getSchedule(): Promise<ScheduleData> {
   // Read per request: a prerender would need the database at build time.
@@ -120,7 +121,7 @@ export function buildSchedule(records: EventRecord[], atlas: AtlasWorld[], readA
     .sort((a, b) => b[1].count - a[1].count || a[1].name.localeCompare(b[1].name))
     .map(([key, v]) => ({ key, name: v.name }));
   const order = new Map(venues.map((v, i) => [v.key, i]));
-  const rank = (e: ScheduleEvent) => (e.venue ? (order.get(e.venue) ?? 999) : 1000);
+  const rank = (e: ScheduleEvent) => (e.venue ? order.get(e.venue)! : venues.length);
   const byName = (a: ScheduleEvent, b: ScheduleEvent) => a.name.localeCompare(b.name);
   for (const d of days) {
     d.timed.sort((a, b) => a.start! - b.start! || rank(a) - rank(b) || byName(a, b));

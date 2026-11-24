@@ -6,7 +6,7 @@ import { clockLabel, clockParts } from "@/constants/schedule";
 import type { ScheduleDay } from "@/lib/schedule";
 import { LiveDot, LiveTag, Medallion, statusOf, type FestNow } from "./bits";
 
-const TBA_ROW = "__tba";
+const TBA_ROW = "";
 
 /** First and last hour across the whole fest, so the grid doesn't jump between days. */
 function hourSpan(days: ScheduleDay[]) {

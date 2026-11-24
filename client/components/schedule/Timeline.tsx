@@ -48,7 +48,7 @@ export function VenueStrip({
   }, [measure, chips]);
 
   const scroll = (dir: number) => ref.current?.scrollBy({ left: dir * 280, behavior: "smooth" });
-  const all: VenueChip = { key: "all", name: "All venues", count: total, live: false };
+  const all: VenueChip = { key: "", name: "All venues", count: total, live: false };
 
   return (
     <div className="relative mt-5 border-y border-gold/25 bg-[rgba(4,12,16,0.65)]">

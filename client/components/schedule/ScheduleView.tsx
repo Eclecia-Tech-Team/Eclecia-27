@@ -54,7 +54,7 @@ export function ScheduleView({ data, nowMs }: { data: ScheduleData; nowMs: numbe
   const live = isFestDay(now.date);
   const [dayDate, setDayDate] = useState(() => openingDay(data, festClock(nowMs).date));
   const [view, setView] = useState<View>("timeline");
-  const [venue, setVenue] = useState("all");
+  const [venue, setVenue] = useState("");
 
   const names = useMemo(() => new Map(data.venues.map((v) => [v.key, v.name])), [data.venues]);
   const venueName = (key: string | null) => (key && names.get(key)) || "Venue TBA";
@@ -69,17 +69,17 @@ export function ScheduleView({ data, nowMs }: { data: ScheduleData; nowMs: numbe
       return { key: v.key, name: v.name, count: here.length, live: here.some((e) => statusOf(day.date, e, now, live) === "now") };
     })
     .filter((c) => c.count > 0);
-  const events = venue === "all" ? day.timed : day.timed.filter((e) => e.venue === venue);
+  const events = !venue ? day.timed : day.timed.filter((e) => e.venue === venue);
   const dayVenues = new Set([...day.timed, ...day.untimed].map((e) => e.venue).filter(Boolean)).size;
 
   const pickDay = (date: string) => {
     setDayDate(date);
-    setVenue("all");
+    setVenue("");
   };
   const seeAllNow = () => {
     if (!today) return;
     setView("timeline");
-    setVenue("all");
+    setVenue("");
     setDayDate(today.date);
     setTimeout(() => document.getElementById("now")?.scrollIntoView({ behavior: "smooth", block: "center" }), 60);
   };
