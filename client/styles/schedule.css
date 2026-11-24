@@ -1,0 +1,426 @@
+/* === Schedule (/schedule, components/schedule) ==============================
+   Same chamber-card language as the event page and profile: dark glass, gold
+   hairline frame. Crimson (from the art's lotus petals) marks what is live.
+   ============================================================================ */
+
+.sch {
+  /* Cormorant defaults to old-style figures (5, 7 and 9 drop below the line),
+     which make dates and times look uneven. */
+  font-variant-numeric: lining-nums;
+  --sch-crimson: #7c201b;
+  --sch-bright: #f0c96d;
+  --sch-ink: #041116;
+}
+
+/* Cards ---------------------------------------------------------------------- */
+.sch-card {
+  position: relative;
+  border: 1px solid rgba(217, 164, 65, 0.28);
+  background: radial-gradient(circle at 0% 50%, rgba(18, 32, 38, 0.9), rgba(4, 12, 16, 0.93) 70%);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+  transition: border-color 300ms, transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sch-card::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(217, 164, 65, 0.12);
+  pointer-events: none;
+}
+.sch-card[data-state="next"] {
+  border-color: rgba(217, 164, 65, 0.55);
+  background: radial-gradient(circle at 0% 50%, rgba(22, 40, 46, 0.94), rgba(4, 12, 16, 0.95) 70%);
+}
+.sch-card[data-state="now"] {
+  border-color: rgba(240, 201, 109, 0.85);
+  background: linear-gradient(105deg, rgba(124, 32, 27, 0.45) 0%, rgba(20, 30, 34, 0.92) 45%, rgba(4, 12, 16, 0.95) 100%);
+  box-shadow: 0 0 44px rgba(217, 164, 65, 0.16), 0 24px 50px rgba(0, 0, 0, 0.6);
+}
+.sch-card[data-state="now"]::after { border-color: rgba(240, 201, 109, 0.22); }
+.sch-card[data-state="past"] { opacity: 0.55; }
+.sch-card[data-dashed] { border-style: dashed; border-color: rgba(217, 164, 65, 0.45); }
+.sch-card[data-dashed]::after { display: none; }
+a:hover > .sch-card,
+a:focus-visible > .sch-card { border-color: rgba(240, 201, 109, 0.8); transform: translateY(-2px); }
+a:hover .sch-name,
+a:focus-visible .sch-name { color: var(--sch-bright); }
+.sch-name { transition: color 300ms; }
+
+/* The live panel: profile-style chamber with a double frame. */
+.sch-panel {
+  position: relative;
+  border: 1px solid rgba(217, 164, 65, 0.48);
+  background: radial-gradient(circle at 50% 0%, rgba(20, 34, 40, 0.96), rgba(4, 10, 14, 0.98) 75%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 50px rgba(217, 164, 65, 0.1), inset 0 0 40px rgba(217, 164, 65, 0.04);
+}
+.sch-panel::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(217, 164, 65, 0.2);
+  pointer-events: none;
+}
+.sch-panel::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 1px dashed rgba(217, 164, 65, 0.12);
+  pointer-events: none;
+}
+.sch-live-item {
+  display: block;
+  border: 1px solid rgba(217, 164, 65, 0.55);
+  background: linear-gradient(110deg, rgba(124, 32, 27, 0.38), rgba(10, 20, 24, 0.6) 62%);
+  transition: border-color 300ms;
+}
+.sch-live-item:hover,
+.sch-live-item:focus-visible { border-color: var(--sch-bright); }
+
+/* Event artwork on a small eclipse disc; the art may break the rim. */
+.sch-med { position: relative; flex: none; display: block; }
+.sch-med > .sch-med-base {
+  position: absolute;
+  inset: 7%;
+  width: 86%;
+  height: 86%;
+  border-radius: 50%;
+  filter: brightness(0.85);
+}
+.sch-med > .sch-med-ring {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  border: 1px solid rgba(217, 164, 65, 0.55);
+}
+.sch-med > .sch-med-art {
+  position: absolute;
+  left: -6%;
+  top: -9%;
+  width: 112%;
+  height: 112%;
+  max-width: none;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
+}
+.sch-med[data-state="now"] > .sch-med-ring { border-color: var(--sch-bright); box-shadow: 0 0 16px rgba(217, 164, 65, 0.45); }
+.sch-med[data-state="past"] > .sch-med-art { filter: grayscale(0.7) brightness(0.75); }
+.sch-med[data-dashed] > .sch-med-ring { border-style: dashed; }
+
+/* Timeline rail and its diamond markers. */
+.sch-rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(217, 164, 65, 0), rgba(217, 164, 65, 0.5) 4%, rgba(217, 164, 65, 0.5) 96%, rgba(217, 164, 65, 0));
+}
+.sch-node {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  transform: rotate(45deg);
+  border: 1px solid #d9a441;
+  background: var(--sch-ink);
+}
+.sch-node[data-state="past"] { border-color: rgba(236, 228, 210, 0.4); }
+.sch-node[data-state="now"] {
+  border-color: var(--sch-bright);
+  background: var(--sch-bright);
+  box-shadow: 0 0 0 5px rgba(217, 164, 65, 0.16), 0 0 18px #d9a441;
+}
+.sch-now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(217, 164, 65, 0), var(--sch-bright) 14%, rgba(217, 164, 65, 0.55) 72%, rgba(217, 164, 65, 0));
+  box-shadow: 0 0 10px rgba(217, 164, 65, 0.8);
+}
+
+/* Progress through a live event. */
+.sch-bar { position: relative; height: 2px; background: rgba(236, 228, 210, 0.14); }
+.sch-bar > span:first-child {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, rgba(217, 164, 65, 0.35), var(--sch-bright));
+}
+.sch-bar > span:last-child {
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  transform: rotate(45deg);
+  background: #f8e3b0;
+  box-shadow: 0 0 10px var(--sch-bright);
+}
+
+/* Day dials: chakra ring around a dimmed medallion. The ring's opening is
+   off-centre in its canvas; same normalisation as the mobile events page. */
+.sch-dial-art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 103.349%;
+  max-width: none;
+  transform: translate(-49.874%, -48.771%);
+}
+.sch-dial-btn { transition: opacity 300ms; }
+.sch-dial-btn:hover,
+.sch-dial-btn:focus-visible { opacity: 1 !important; }
+
+/* Venue filter: one line, scrolls sideways; fades + arrows show what's hidden. */
+.sch-strip { scrollbar-width: none; }
+.sch-strip::-webkit-scrollbar { display: none; }
+.sch-strip-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 88px;
+  pointer-events: none;
+}
+.sch-strip-fade[data-side="left"] { left: 0; background: linear-gradient(90deg, rgba(4, 12, 16, 0.98) 40%, rgba(4, 12, 16, 0)); }
+.sch-strip-fade[data-side="right"] { right: 0; background: linear-gradient(270deg, rgba(4, 12, 16, 0.98) 40%, rgba(4, 12, 16, 0)); }
+.sch-strip-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  border: 1px solid rgba(217, 164, 65, 0.55);
+  background: rgba(4, 12, 16, 0.92);
+  color: #d9a441;
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.6);
+  transition: border-color 200ms;
+}
+.sch-strip-arrow:hover { border-color: var(--sch-bright); }
+
+/* By venue: one row per venue, time runs across. --hw is one hour. */
+.sch-grid { --hw: 84px; --label: 104px; }
+@media (min-width: 768px) {
+  .sch-grid { --hw: 80px; --label: 168px; }
+}
+.sch-grid-scroll { overflow-x: auto; scrollbar-width: thin; scrollbar-color: #a27a3c transparent; }
+.sch-grid-label {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  flex: 0 0 var(--label);
+  box-sizing: border-box;
+  background: #081419;
+  border-right: 1px solid rgba(217, 164, 65, 0.22);
+  box-shadow: 6px 0 12px rgba(0, 0, 0, 0.4);
+}
+.sch-grid-track {
+  position: relative;
+  flex: 1;
+  background-image: repeating-linear-gradient(to right, rgba(236, 228, 210, 0.07) 0, rgba(236, 228, 210, 0.07) 1px, transparent 1px, transparent var(--hw));
+}
+.sch-block {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 9px;
+  border: 1px solid rgba(217, 164, 65, 0.3);
+  background: linear-gradient(160deg, rgba(20, 36, 42, 0.95), rgba(6, 14, 18, 0.96));
+  transition: border-color 300ms;
+}
+.sch-block:hover,
+.sch-block:focus-visible { border-color: var(--sch-bright); }
+.sch-block[data-state="next"] { border-color: rgba(217, 164, 65, 0.6); background: linear-gradient(160deg, rgba(22, 40, 46, 0.96), rgba(6, 14, 18, 0.96)); }
+.sch-block[data-state="now"] {
+  border-color: var(--sch-bright);
+  background: linear-gradient(160deg, rgba(124, 32, 27, 0.55), rgba(14, 24, 28, 0.95) 65%);
+  box-shadow: 0 0 22px rgba(217, 164, 65, 0.28);
+}
+.sch-block[data-state="past"] { opacity: 0.5; }
+.sch-block-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sch-grid-now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 1px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--sch-bright), rgba(217, 164, 65, 0.55));
+  box-shadow: 0 0 10px rgba(217, 164, 65, 0.8);
+}
+
+/* The worlds on a turning ring (WorldCarousel). Each card sits --off places
+   from the front: further out, pushed back, turned away, dimmer. */
+.sch-ring {
+  --card-w: min(78vw, 300px);
+  --step: 58vw;
+  --tilt: 32deg;
+  --depth: 160px;
+}
+@media (min-width: 768px) {
+  .sch-ring { --card-w: 290px; --step: min(19vw, 250px); --tilt: 28deg; --depth: 140px; }
+}
+.sch-ring-stage {
+  position: relative;
+  height: 570px;
+  perspective: 1400px;
+  touch-action: pan-y;
+  user-select: none;
+}
+@media (min-width: 768px) {
+  .sch-ring-stage { height: 600px; }
+}
+.sch-ring-card {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: var(--card-w);
+  height: 100%;
+  margin-left: calc(var(--card-w) / -2);
+  padding: 0 20px 20px;
+  box-sizing: border-box;
+  transform:
+    translateX(calc(var(--off) * var(--step)))
+    translateZ(calc(var(--abs) * var(--depth) * -1))
+    rotateY(calc(var(--off) * var(--tilt) * -1));
+  filter: brightness(calc(1 - var(--abs) * 0.22));
+  opacity: clamp(0, calc(1.6 - var(--abs) * 0.42), 1);
+  transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1), filter 800ms, opacity 800ms, border-color 300ms;
+  /* Glass: the sky and the cards behind show through, softened. */
+  border-color: rgba(236, 220, 180, 0.22);
+  background:
+    linear-gradient(160deg, rgba(255, 244, 214, 0.1) 0%, rgba(255, 244, 214, 0.02) 22%, rgba(255, 244, 214, 0) 45%),
+    linear-gradient(180deg, rgba(14, 30, 36, 0.38), rgba(4, 12, 16, 0.5));
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: inset 0 1px 0 rgba(255, 240, 205, 0.18), 0 24px 50px rgba(0, 0, 0, 0.45);
+}
+.sch-ring-card::after { border-color: rgba(236, 220, 180, 0.1); }
+.sch-ring-card[data-front] {
+  /* Still glass, but dense enough that cards behind don't read through the list. */
+  background:
+    linear-gradient(160deg, rgba(255, 244, 214, 0.12) 0%, rgba(255, 244, 214, 0.03) 22%, rgba(255, 244, 214, 0) 45%),
+    linear-gradient(180deg, rgba(14, 30, 36, 0.66), rgba(4, 12, 16, 0.78));
+  transform: translateY(-10px) scale(1.04);
+  border-color: rgba(240, 201, 109, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 240, 205, 0.28), 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(217, 164, 65, 0.16);
+}
+.sch-ring-arrow {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid rgba(217, 164, 65, 0.5);
+  background: rgba(4, 12, 16, 0.85);
+  color: #d9a441;
+  transition: border-color 200ms, background 200ms;
+}
+.sch-ring-arrow:hover,
+.sch-ring-arrow:focus-visible { border-color: var(--sch-bright); background: rgba(217, 164, 65, 0.1); }
+.sch-ring-dot {
+  width: 34px;
+  height: 34px;
+  padding: 4px;
+  border-radius: 50%;
+  border: 1px solid rgba(155, 122, 56, 0.35);
+  background: rgba(4, 12, 16, 0.6);
+  transition: border-color 300ms, transform 400ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 300ms;
+}
+.sch-ring-dot img { width: 100%; height: 100%; object-fit: contain; opacity: 0.6; transition: opacity 300ms; }
+.sch-ring-dot:hover { border-color: #d9a441; transform: translateY(-3px); }
+.sch-ring-dot[aria-current="true"] { border-color: #d9a441; box-shadow: 0 0 18px rgba(217, 164, 65, 0.3); transform: translateY(-3px) scale(1.12); }
+.sch-ring-dot:hover img,
+.sch-ring-dot[aria-current="true"] img { opacity: 1; }
+@media (min-width: 768px) {
+  .sch-ring-dot { width: 43px; height: 43px; padding: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sch-ring-card { transition: none; }
+}
+
+/* Opening stage (nothing announced yet): as you scroll, the banners part like
+   curtains, the eclipse sinks and brightens, the title lags behind a little.
+   --sp is scroll progress 0..1, set by Lineup's useStageScroll. */
+.sch-stage { --sp: 0; }
+.sch-curtain { display: block; will-change: auto; }
+.sch-curtain[data-side="left"] {
+  transform: translateX(calc(var(--sp) * -170px)) rotate(calc(var(--sp) * -7deg));
+  opacity: calc(1 - var(--sp) * 0.9);
+}
+.sch-curtain[data-side="right"] {
+  transform: translateX(calc(var(--sp) * 170px)) rotate(calc(var(--sp) * 7deg));
+  opacity: calc(1 - var(--sp) * 0.9);
+}
+.sch-stage-eclipse { transform: translateY(calc(var(--sp) * 110px)) scale(calc(1 + var(--sp) * 0.16)); opacity: calc(1 - var(--sp) * 0.45); }
+/* The date fades first, so it never runs into the header as it scrolls up. */
+.sch-stage-text { opacity: clamp(0, calc(1 - var(--sp) * 2.2), 1); }
+.sch-stage-glow { opacity: calc(0.15 + var(--sp) * 0.75); }
+.sch-stage-title { transform: translateY(calc(var(--sp) * 60px)); }
+
+/* Rises and fades in on first view. */
+.sch-reveal { opacity: 0; transform: translateY(32px); transition: opacity 900ms ease, transform 1000ms cubic-bezier(0.22, 1, 0.36, 1); }
+.sch-reveal[data-shown] { opacity: 1; transform: none; }
+
+/* Day cards before timings exist: glass like the world ring. */
+.sch-daycard {
+  position: relative;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(236, 220, 180, 0.24);
+  background:
+    linear-gradient(160deg, rgba(255, 244, 214, 0.1) 0%, rgba(255, 244, 214, 0.02) 24%, rgba(255, 244, 214, 0) 45%),
+    linear-gradient(180deg, rgba(14, 30, 36, 0.5), rgba(4, 12, 16, 0.66));
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+  box-shadow: inset 0 1px 0 rgba(255, 240, 205, 0.18), 0 24px 50px rgba(0, 0, 0, 0.5);
+}
+.sch-daycard::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(236, 220, 180, 0.1);
+  pointer-events: none;
+}
+.sch-daycard-glow { opacity: 0.2; }
+/* Placeholder bars where timings will go. */
+.sch-skel {
+  display: block;
+  background: linear-gradient(90deg, rgba(217, 164, 65, 0.22), rgba(217, 164, 65, 0.08));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sch-curtain, .sch-stage-eclipse, .sch-stage-title, .sch-stage-text { transform: none; opacity: 1; }
+  .sch-reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* Motion: slow and quiet, off for reduced motion. */
+.sch-pulse { animation: sch-pulse 1.8s ease-in-out infinite; }
+@keyframes sch-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.sch-spin { animation: sch-spin 240s linear infinite; }
+@keyframes sch-spin { to { transform: rotate(360deg); } }
+.sch-breathe { animation: sch-breathe 6.5s ease-in-out infinite alternate; }
+@keyframes sch-breathe { from { opacity: 0.82; transform: scale(0.985); } to { opacity: 1; transform: scale(1.02); } }
+.sch-sway { transform-origin: 50% 0; animation: sch-sway 9s ease-in-out infinite alternate; }
+@keyframes sch-sway { from { rotate: -1.2deg; } to { rotate: 1.2deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .sch-pulse, .sch-spin, .sch-breathe, .sch-sway { animation: none; }
+  a:hover > .sch-card, a:focus-visible > .sch-card { transform: none; }
+}

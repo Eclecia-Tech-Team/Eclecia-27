@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { EVENT_CATEGORIES } from "@/constants/event-categories";
+import { TIME_RE, clockLabel, durationLabel, isFestDate, longDate, minutesOf, venueById } from "@/constants/schedule";
 
 const text = (max: number) => z.string().trim().max(max);
 const url = z
@@ -25,6 +26,11 @@ export const eventInput = z
     time: text(60),
     duration: text(60),
     venue: text(120),
+    // Structured schedule; "" = to be announced.
+    scheduleDate: z.string().refine((v) => v === "" || isFestDate(v), "Pick one of the fest days"),
+    startTime: z.string().refine((v) => v === "" || TIME_RE.test(v), "Times look like 14:30"),
+    endTime: z.string().refine((v) => v === "" || TIME_RE.test(v), "Times look like 14:30"),
+    venueId: z.string().refine((v) => v === "" || Boolean(venueById(v)), "Pick a venue from the list"),
     banner: url,
     doc: url,
     rules: z.array(text(800)).max(40, "Keep it to 40 rules"),
@@ -43,13 +49,31 @@ export const eventInput = z
     isFoodProvided: z.boolean(),
     maxFoodServingsPerParticipant: z.number().int().min(1).max(10),
   })
+  .refine((e) => !e.startTime || e.scheduleDate, "Pick the day before setting a time")
+  .refine((e) => !e.endTime || e.startTime, "Set a start time before the end time")
+  .refine((e) => !e.startTime || !e.endTime || minutesOf(e.endTime) > minutesOf(e.startTime), "The end time must be after the start time")
+  .transform((e) => {
+    const venue = venueById(e.venueId);
+    const start = e.startTime ? minutesOf(e.startTime) : null;
+    const end = e.endTime ? minutesOf(e.endTime) : null;
+    return {
+      ...e,
+      scheduleDate: e.scheduleDate || null,
+      startTime: e.startTime || null,
+      endTime: e.endTime || null,
+      venueId: venue?.id ?? null,
+      // Display text the rest of the site reads. Once a day is picked it follows
+      // the structured fields; before that, older free text is kept as it was.
+      // Required by the schema; "TBA" reads as "To be announced" on the site.
+      date: e.scheduleDate ? longDate(e.scheduleDate) : e.date || "TBA",
+      time:
+        start !== null ? (end !== null ? `${clockLabel(start)} – ${clockLabel(end)}` : clockLabel(start)) : e.scheduleDate ? "TBA" : e.time || "TBA",
+      duration: start !== null && end !== null ? durationLabel(end - start) : e.duration || "TBA",
+      venue: venue?.name ?? (e.venue || "TBA"),
+    };
+  })
   .transform((e) => ({
     ...e,
-    // Required by the schema; "TBA" reads as "To be announced" on the site.
-    date: e.date || "TBA",
-    time: e.time || "TBA",
-    duration: e.duration || "TBA",
-    venue: e.venue || "TBA",
     prizePool: e.prizePool || "TBD",
     rules: e.rules.filter(Boolean),
     clubs: e.clubs.filter(Boolean),

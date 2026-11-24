@@ -56,6 +56,13 @@ export interface IEvent {
   time: string;
   duration: string;
   venue: string;
+  /** Fest day "2027-01-16" (IST); null until announced. */
+  scheduleDate?: string | null;
+  /** "14:30", 24-hour IST. */
+  startTime?: string | null;
+  endTime?: string | null;
+  /** Id from VENUES in constants/schedule.ts. */
+  venueId?: string | null;
   description: string;
   banner?: string | null;
   rules: string[];

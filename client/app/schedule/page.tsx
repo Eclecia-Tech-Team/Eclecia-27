@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/common/ComingSoon";
+import { ScheduleView } from "@/components/schedule/ScheduleView";
 import { getBreadcrumbJsonLd, ROUTES } from "@/constants/seo";
+import { getSchedule } from "@/lib/schedule";
 
 const route = ROUTES.find((r) => r.path === "/schedule")!;
 
@@ -18,22 +19,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SchedulePage() {
-  const breadcrumbJsonLd = getBreadcrumbJsonLd(
-    "/schedule",
-    process.env.NEXT_PUBLIC_SITE_URL,
-  );
+export default async function SchedulePage() {
+  const data = await getSchedule();
+  const breadcrumbJsonLd = getBreadcrumbJsonLd("/schedule", process.env.NEXT_PUBLIC_SITE_URL);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
-      <ComingSoon
-        eyebrow="Schedule"
-        note="Day-wise event timings, performance slots and stage schedules are coming soon."
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <ScheduleView data={data} nowMs={data.readAt} />
     </>
   );
 }

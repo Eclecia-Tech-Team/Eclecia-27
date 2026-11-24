@@ -173,6 +173,10 @@ export async function getEventForEdit(id: string): Promise<(EventInput & { id: s
     time: str("time"),
     duration: str("duration"),
     venue: str("venue"),
+    scheduleDate: str("scheduleDate"),
+    startTime: str("startTime"),
+    endTime: str("endTime"),
+    venueId: str("venueId"),
     banner: str("banner"),
     doc: str("doc"),
     rules: (e.rules as string[]) ?? [],
@@ -500,4 +504,25 @@ export async function listActivity(limit = 100) {
   await connect();
   const rows = await AdminAction.find().sort({ createdAt: -1 }).limit(limit).lean<{ _id: mongoose.Types.ObjectId; by: string; action: string; target: string; detail: string; createdAt: Date }[]>();
   return rows.map((r) => ({ id: r._id.toString(), by: r.by, action: r.action, target: r.target, detail: r.detail, at: r.createdAt.toISOString() }));
+}
+
+/**
+ * Venue names already typed on events, for the editor's suggestions while
+ * there is no fixed venue list. Spellings that differ only in case or spacing
+ * count as one; the most used spelling wins.
+ */
+export async function venueSuggestions(): Promise<string[]> {
+  await connect();
+  const rows = await Event.aggregate<{ _id: string; n: number }>([
+    { $match: { venue: { $exists: true, $nin: ["", "TBA"] } } },
+    { $group: { _id: { $trim: { input: "$venue" } }, n: { $sum: 1 } } },
+  ]);
+  const groups = new Map<string, { name: string; top: number }>();
+  for (const r of rows) {
+    if (!r._id || r._id.toUpperCase() === "TBA") continue;
+    const key = r._id.toLowerCase().replace(/\s+/g, " ");
+    const seen = groups.get(key);
+    if (!seen || r.n > seen.top) groups.set(key, { name: r._id, top: r.n });
+  }
+  return [...groups.values()].map((v) => v.name).sort((a, b) => a.localeCompare(b));
 }
