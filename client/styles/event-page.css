@@ -1,21 +1,18 @@
 /* === Event page (/events/[id], components/events/detail) =====================
-   Same chamber-card language as the profile: dark glass, gold hairline frame.
+   Built from the site's own pieces: the atlas's planet, chakra and corona for
+   the hero, the festival pass's foil and tear line for the ticket, the auth
+   card's foil for registration, chamber panels with corner brackets for the
+   reading, and the landing's closing landscape at the end.
    ============================================================================ */
 
-.ev-card {
-  position: relative;
-  background: radial-gradient(circle at 50% 0%, rgba(20, 26, 32, 0.9), rgba(6, 9, 12, 0.94) 75%);
-  border: 1px solid rgba(217, 164, 65, 0.38);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), inset 0 0 40px rgba(217, 164, 65, 0.03);
-  backdrop-filter: blur(14px);
+.ev-page {
+  --foil: linear-gradient(155deg, rgba(255, 220, 140, 0.85), rgba(217, 164, 65, 0.25) 30%, rgba(217, 164, 65, 0.1) 55%, rgba(255, 216, 117, 0.6) 100%);
+  --foil-soft: linear-gradient(155deg, rgba(255, 220, 140, 0.5), rgba(217, 164, 65, 0.16) 30%, rgba(217, 164, 65, 0.06) 60%, rgba(255, 216, 117, 0.34) 100%);
+  --night: linear-gradient(170deg, #12100c 0%, #0a0b0d 46%, #070808 100%);
+  --hair: rgba(217, 164, 65, 0.16);
 }
-.ev-card::after {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  border: 1px solid rgba(217, 164, 65, 0.14);
-  pointer-events: none;
-}
+
+/* ---- Type ---- */
 
 .ev-eyebrow {
   font-family: var(--font-taiganja), Georgia, serif;
@@ -24,58 +21,503 @@
   text-transform: uppercase;
   color: var(--gold);
 }
+.ev-label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(236, 228, 210, 0.5);
+}
+.ev-textlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-underline-offset: 6px;
+  transition: color 0.25s;
+}
+.ev-textlink:hover { color: var(--parchment); text-decoration: underline; text-decoration-color: rgba(217, 164, 65, 0.5); }
 
-/* Event artwork medallion: the atlas planet, lit from behind. */
-.ev-medallion {
-  position: relative;
-  aspect-ratio: 1;
-  border-radius: 50%;
-}
-.ev-medallion::before {
-  content: "";
-  position: absolute;
-  inset: -14%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(217, 164, 65, 0.22) 0%, rgba(217, 164, 65, 0.06) 45%, transparent 70%);
-}
-.ev-medallion img {
-  position: relative;
+/* ---- Sky: drifting dust ---- */
+
+.ev-dust {
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.6));
+  object-fit: cover;
+  opacity: 0.5;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: ev-drift 30s ease-in-out infinite alternate;
+}
+@keyframes ev-drift {
+  from { transform: scale(1.04) translateY(0); }
+  to { transform: scale(1.04) translateY(-14px); }
 }
 
-/* Facts grid: hairline cells. */
-.ev-facts {
+/* ---- Hero: the first screen ----
+   Everything needed to decide, at a glance: the event's planet as the atlas
+   draws it, the name and story, the way in, and the ticket along the bottom.
+   Phones: the phone atlas's chakra world, the copy, then the ticket.
+   Tablet (768+): copy and planet side by side, the ticket below, filling the screen.
+   Desktop (1024+): the same, the planet sized to the space the screen's height leaves. */
+
+.ev-hero-wrap { position: relative; }
+.ev-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 88px 24px 8px;
+}
+/* The atlas's immersive corona, low on the left. */
+.ev-hero-corona {
+  position: absolute;
+  left: -110vw;
+  bottom: -60vw;
+  width: 160vw;
+  max-width: none;
+  opacity: 0.3;
+  rotate: -15deg;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.ev-crumb {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #c1af8c;
+}
+.ev-crumb-back {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 0;
+  font-family: Georgia, serif;
+  letter-spacing: 0.1em;
+  color: var(--parchment);
+  transition: color 0.25s;
+}
+.ev-crumb-back span { margin-right: 12px; font-size: 20px; color: var(--gold); }
+.ev-crumb-back:hover { color: var(--gold); }
+.ev-crumb-rule { width: 1px; height: 18px; background: rgba(217, 164, 65, 0.41); }
+.ev-crumb-world {
+  font-family: var(--font-taiganja), Georgia, serif;
+  font-size: 11px;
+  color: var(--gold);
+  transition: color 0.25s;
+}
+.ev-crumb-world:hover { color: var(--parchment); }
+
+/* Phone world: the chakra frame around the planet. */
+.ev-hero-world {
+  align-self: center;
+  width: min(70vw, 40svh, 300px);
+  margin: 46px 0 40px;
+}
+.ev-hero-planet { display: none; }
+
+.ev-hero-copy {
+  position: relative;
+  z-index: 3;
+  text-shadow: 0 1px 2px #020a0f, 0 2px 18px #020a0f;
+}
+/* Soft dark pool behind the copy, as in the atlas, so it reads over any sky. */
+.ev-hero-copy::before {
+  content: "";
+  position: absolute;
+  inset: -22% -35% -26% -45%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(2, 9, 12, 0.85), rgba(2, 9, 12, 0.6) 55%, transparent);
+}
+.ev-hero-title {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(40px, 11vw, 56px);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  color: var(--parchment);
+}
+.ev-hero-desc {
+  max-width: 46ch;
+  margin: 16px 0 18px;
+  font-family: Georgia, serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #e6dece;
+}
+/* Kind and club stacked at every width: side by side, a long club name wraps and leaves the divider dangling. */
+.ev-hero-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: #e3cf9c;
+}
+
+/* The way in. The left padding leaves room for the button's lotus finial (as .atlas-cta does). */
+.ev-hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 30px;
+  margin-top: 28px;
+  padding-left: 14px;
+}
+/* The hero copy's dark text shadow (for legibility over the art) would smudge the button label. */
+.ev-hero-cta .gold-btn { text-shadow: none; }
+/* Closed: a line in the display italic, not a button that does nothing. */
+.ev-soon {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 22px;
+  font-style: italic;
+  color: rgba(217, 164, 65, 0.9);
+}
+.ev-hero-ticket { position: relative; z-index: 3; margin-top: 34px; }
+
+@media (min-width: 768px) {
+  .ev-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    column-gap: 3vw;
+    max-width: 1640px;
+    margin: 0 auto;
+    padding: 100px 5.5vw 44px;
+  }
+  .ev-hero-corona { left: -57vw; bottom: -64vw; width: 109vw; opacity: 0.42; }
+  .ev-crumb { grid-column: 1 / -1; gap: 20px; font-size: 11px; }
+  .ev-crumb-world { font-size: 12px; }
+  .ev-hero-world { display: none; }
+  .ev-hero-planet {
+    display: block;
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    justify-self: center;
+    /* The ring is 144% of the planet's width: keep it inside the column plus the page's side padding. */
+    width: min(calc((100% + 8vw) / 1.44), 420px);
+    aspect-ratio: 1;
+    z-index: 1;
+  }
+  .ev-hero-copy { grid-column: 1; grid-row: 2; align-self: center; padding: 28px 0; }
+  .ev-hero-ticket { grid-column: 1 / -1; grid-row: 3; margin-top: 12px; }
+  .ev-hero-cta { margin-top: 32px; }
+  .ev-hero-title { font-size: clamp(46px, 6.4vw, 88px); }
+  .ev-hero-desc { margin: 18px 0 22px; font-size: 17px; }
+  .ev-hero-meta { font-size: 11.5px; }
+}
+@media (min-width: 1024px) {
+  .ev-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 4vw; padding-top: 105px; }
+  /* As large as the room between the breadcrumb and the ticket allows, ring included. */
+  .ev-hero-planet { width: min(calc((100% + 8vw) / 1.44), calc(min(100svh, 920px) - 380px), 640px); min-width: 300px; }
+  .ev-hero-cta { margin-top: 36px; }
+  .ev-hero-desc { margin: 22px 0 26px; font-size: 19px; }
+  .ev-hero-meta { font-size: 12px; }
+}
+/* Landscape screens: the hero fills the first screen with the ticket on its bottom edge (capped,
+   so very tall screens don't open gaps). Portrait tablets are taller than the content, so the hero
+   takes its natural height and the registration card follows right after. */
+@media (min-width: 768px) and (orientation: landscape) {
+  .ev-hero { min-height: clamp(600px, 100svh, 920px); }
+}
+
+/* The atlas planet's layers, with the atlas's insets. */
+.ev-op { position: relative; width: 100%; height: 100%; isolation: isolate; }
+.ev-op > img { position: absolute; max-width: none; pointer-events: none; user-select: none; }
+.ev-op-halo { inset: -8%; width: 116%; height: 116%; object-fit: contain; opacity: 0.68; }
+.ev-op-ring { left: -22%; top: -4%; width: 144%; height: 111%; object-fit: contain; opacity: 0.67; }
+.ev-op-ring[data-half="rear"] { clip-path: inset(0 0 50% 0); }
+.ev-op-ring[data-half="front"] { clip-path: inset(50% 0 0 0); }
+.ev-op-base { inset: 4%; width: 92%; height: 92%; object-fit: contain; filter: brightness(0.77); }
+.ev-op-art { inset: 7%; width: 86%; height: 86%; object-fit: contain; filter: drop-shadow(0 10px 15px rgba(1, 8, 13, 0.31)); }
+
+/* Page body below the hero: the same 5.5vw gutter as the hero copy. */
+.ev-body {
+  width: 100%;
+  max-width: 1640px;
+  margin: 0 auto;
+  padding: 8px 24px 40px;
+}
+@media (min-width: 768px) { .ev-body { padding: 0 5.5vw 40px; } }
+
+/* Phone chakra world (EventWorld). */
+.ev-world {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  isolation: isolate;
+}
+.ev-world > * {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+.ev-world-corona {
+  inset: -19%;
+  width: 138%;
+  height: 138%;
+  max-width: none;
+  object-fit: contain;
+  opacity: 0.5;
+  z-index: -3;
+}
+/* The chakra's painted opening is off-centre in its canvas: same correction as the phone atlas. */
+.ev-world-chakra {
+  inset: -9%;
+  z-index: -2;
+  animation: ev-turn 180s linear infinite;
+}
+.ev-world-chakra img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 103.349%;
+  max-width: none;
+  object-fit: fill;
+  transform: translate(-49.874%, -48.771%);
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.7));
+}
+.ev-world-base {
+  inset: 6%;
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  filter: brightness(0.7);
+  z-index: -1;
+}
+.ev-world-art {
+  inset: 5%;
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.6));
+  animation: ev-float 7s ease-in-out infinite;
+}
+
+@keyframes ev-turn { to { rotate: 360deg; } }
+@keyframes ev-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -7px; }
+}
+
+/* ---- Ticket: printed like the festival pass ---- */
+
+.ev-ticket {
+  --notch: 12px;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border: 1px solid transparent;
+  background: var(--night) padding-box, var(--foil) border-box;
+  box-shadow:
+    0 40px 90px -30px rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 0 60px -20px rgba(217, 164, 65, 0.2);
+}
+/* Fine inner rule, like a printed invitation. */
+.ev-ticket::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(217, 164, 65, 0.14);
+  pointer-events: none;
+  z-index: -1;
+}
+/* Paper grain. */
+.ev-ticket::after,
+.ev-card::after,
+.ev-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 236, 190, 0.035) 1px, transparent 1px);
+  background-size: 3px 3px;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: -1;
+}
+/* Hairlines between cells: every cell draws its left and top edge and the
+   container clips the outer ones, so spanning cells need nothing special. */
+.ev-ticket-facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-top: 1px solid rgba(217, 164, 65, 0.22);
-  border-left: 1px solid rgba(217, 164, 65, 0.22);
+  overflow: hidden;
+  padding: 6px;
 }
-@media (min-width: 768px) {
-  .ev-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ev-fact {
+  min-width: 0;
+  margin: -1px 0 0 -1px;
+  padding: 16px 16px 18px;
+  border-left: 1px solid var(--hair);
+  border-top: 1px solid var(--hair);
 }
-.ev-facts > div {
-  padding: 16px 18px;
-  border-right: 1px solid rgba(217, 164, 65, 0.22);
-  border-bottom: 1px solid rgba(217, 164, 65, 0.22);
-  background: rgba(4, 8, 11, 0.55);
+.ev-fact-wide { grid-column: span 2; }
+.ev-fact-value {
+  margin-top: 10px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.12;
+  color: var(--parchment);
+  overflow-wrap: break-word;
+}
+.ev-fact-value[data-tba] {
+  font-size: 19px;
+  font-weight: 500;
+  font-style: italic;
+  color: rgba(236, 228, 210, 0.5);
+}
+.ev-fact-note { margin-top: 3px; font-size: 12px; color: rgba(236, 228, 210, 0.55); }
+
+/* Stub: under the facts on phones. The tear line runs across, with half-moon
+   notches cut from both edges (the same cut as the pass's .pf-perf). */
+.ev-ticket-stub {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px 20px;
+  background:
+    linear-gradient(90deg, rgba(217, 164, 65, 0.5) 50%, transparent 0) 0 0 / 9px 1px repeat-x,
+    radial-gradient(ellipse at 20% 50%, rgba(217, 164, 65, 0.16), transparent 70%);
+}
+.ev-ticket-stub::before,
+.ev-ticket-stub::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--notch) * -1);
+  width: calc(var(--notch) * 2);
+  height: calc(var(--notch) * 2);
+  border-radius: 50%;
+  background: #030405;
+  box-shadow: inset 0 0 0 1px rgba(217, 164, 65, 0.45);
+  pointer-events: none;
+}
+.ev-ticket-stub::before { left: calc(var(--notch) * -1 - 1px); clip-path: inset(0 0 0 50%); }
+.ev-ticket-stub::after { right: calc(var(--notch) * -1 - 1px); clip-path: inset(0 50% 0 0); }
+.ev-stub-sun {
+  width: 30px;
+  flex: none;
+  filter: drop-shadow(0 0 12px rgba(217, 164, 65, 0.45));
+}
+.ev-ticket-stub > div { display: flex; flex-direction: column; gap: 6px; }
+.ev-ticket-prize {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--gold);
+  text-shadow: 0 0 26px rgba(217, 164, 65, 0.3);
 }
 
-.ev-notice { border-left: 2px solid rgba(217, 164, 65, 0.35); }
-.ev-notice[data-tone="update"] { border-left-color: #8fb7c9; }
-.ev-notice[data-tone="important"] {
-  border-left-color: var(--gold);
-  background: linear-gradient(90deg, rgba(217, 164, 65, 0.1), transparent 70%);
+/* Tablet: still 2 x 2 (four cells and the stub in one row don't fit), with more room. */
+@media (min-width: 640px) {
+  .ev-ticket-facts { padding: 8px; }
+  .ev-fact { padding: 18px 22px 20px; }
+  .ev-fact-value { font-size: 24px; }
 }
+/* Desktop: one row, the four facts and the prize stub at the right end, so the
+   whole ticket fits on the first screen even at 1024 x 768. Compact up to 1280. */
+@media (min-width: 1024px) {
+  .ev-ticket { grid-template-columns: minmax(0, 1fr) auto; }
+  .ev-ticket-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ev-fact { padding: 16px 16px 18px; }
+  .ev-fact-value { font-size: 20px; }
+  .ev-ticket-prize { font-size: 28px; }
+  .ev-ticket-stub { min-width: 180px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 10px; padding: 16px 22px 16px 26px; }
+  /* Tear line turns vertical; the notches move to the top and bottom edges. */
+  .ev-ticket-stub {
+    background:
+      linear-gradient(180deg, rgba(217, 164, 65, 0.5) 50%, transparent 0) 0 0 / 1px 9px repeat-y,
+      radial-gradient(ellipse at 30% 50%, rgba(217, 164, 65, 0.16), transparent 70%);
+  }
+  .ev-ticket-stub::before,
+  .ev-ticket-stub::after { left: calc(var(--notch) * -1); right: auto; }
+  .ev-ticket-stub::before { top: calc(var(--notch) * -1 - 1px); clip-path: inset(50% 0 0 0); }
+  .ev-ticket-stub::after { top: auto; bottom: calc(var(--notch) * -1 - 1px); clip-path: inset(0 0 50% 0); }
+}
+@media (min-width: 1280px) {
+  .ev-fact { padding: 20px 22px 22px; }
+  .ev-fact-value { font-size: 25px; }
+  .ev-ticket-prize { font-size: 34px; }
+  .ev-ticket-stub { min-width: 230px; flex-direction: row; align-items: center; gap: 16px; padding: 20px 30px 20px 34px; }
+}
+
+/* ---- Registration: the auth card's foil, an eclipse crest in the top edge ---- */
+
+.ev-card {
+  position: relative;
+  isolation: isolate;
+  margin-top: 36px;
+  border: 1px solid transparent;
+  background:
+    /* Watermark eclipse glow behind the crest, as on the pass. */
+    radial-gradient(ellipse 70% 42% at 50% 0%, rgba(217, 164, 65, 0.16), rgba(217, 164, 65, 0.04) 55%, transparent 75%) padding-box,
+    linear-gradient(165deg, rgba(19, 17, 13, 0.97) 0%, rgba(8, 9, 11, 0.98) 55%, rgba(6, 7, 8, 0.99) 100%) padding-box,
+    linear-gradient(150deg, rgba(255, 220, 140, 0.9), rgba(217, 164, 65, 0.22) 32%, rgba(217, 164, 65, 0.1) 60%, rgba(255, 216, 117, 0.65)) border-box;
+  box-shadow:
+    0 50px 120px -40px rgba(0, 0, 0, 0.95),
+    0 0 90px -30px rgba(217, 164, 65, 0.32);
+  backdrop-filter: blur(14px);
+  scroll-margin-top: 120px;
+}
+.ev-card::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px solid rgba(217, 164, 65, 0.14);
+  pointer-events: none;
+  z-index: -1;
+}
+.ev-crest {
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  width: 72px;
+  height: 72px;
+  translate: -50% 0;
+  border-radius: 50%;
+  padding: 4px;
+  background: conic-gradient(from 210deg, rgba(255, 220, 140, 0.95), rgba(217, 164, 65, 0.18), rgba(255, 216, 117, 0.8), rgba(217, 164, 65, 0.18), rgba(255, 220, 140, 0.95));
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85), 0 0 34px rgba(217, 164, 65, 0.3);
+}
+.ev-crest-inner {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #050505;
+  box-shadow: inset 0 0 0 3px #0b0b0b;
+}
+.ev-crest-inner img { width: 100%; height: 100%; object-fit: cover; scale: 1.18; }
 
 .ev-input {
   width: 100%;
   border: 1px solid rgba(217, 164, 65, 0.35);
   background: rgba(0, 0, 0, 0.45);
   padding: 11px 14px;
-  font-size: 15px;
+  font-size: 16px; /* 16px: iOS doesn't zoom the page on focus */
   color: var(--parchment);
   outline: none;
   transition: border-color 0.2s;
@@ -84,3 +526,378 @@
 .ev-input:focus { border-color: var(--gold); }
 
 .ev-tab[aria-selected="true"] { color: var(--gold); border-color: var(--gold); }
+
+/* ---- Chamber panels: soft foil edge, inner rule, filigree corners ---- */
+
+.ev-panel {
+  position: relative;
+  isolation: isolate;
+  padding: 30px 22px 30px;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(170deg, rgba(17, 15, 12, 0.9) 0%, rgba(9, 10, 12, 0.9) 50%, rgba(6, 7, 8, 0.92) 100%) padding-box,
+    var(--foil-soft) border-box;
+  box-shadow: 0 34px 80px -34px rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(8px);
+  scroll-margin-top: 110px;
+}
+/* (::before is the paper grain, shared above) */
+/* Gold filigree in each corner: a double frame, a diamond, a pin of light at each tip. */
+.ev-panel::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  pointer-events: none;
+  border: 1px solid rgba(217, 164, 65, 0.08);
+  background:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none' stroke='%23d9a441' stroke-width='1'><g transform=''><path d='M1 31V1h30' opacity='.6'/><path d='M6 21V6h15' opacity='.35'/><path d='M1 1l7 7' opacity='.5'/><path d='M12 7.5l4.5 4.5-4.5 4.5-4.5-4.5z' fill='%23d9a441' stroke='none' opacity='.85'/><circle cx='31' cy='1' r='1.3' fill='%23d9a441' stroke='none'/><circle cx='1' cy='31' r='1.3' fill='%23d9a441' stroke='none'/></g></svg>") top left / 32px 32px no-repeat,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none' stroke='%23d9a441' stroke-width='1'><g transform='translate(32 0) scale(-1 1)'><path d='M1 31V1h30' opacity='.6'/><path d='M6 21V6h15' opacity='.35'/><path d='M1 1l7 7' opacity='.5'/><path d='M12 7.5l4.5 4.5-4.5 4.5-4.5-4.5z' fill='%23d9a441' stroke='none' opacity='.85'/><circle cx='31' cy='1' r='1.3' fill='%23d9a441' stroke='none'/><circle cx='1' cy='31' r='1.3' fill='%23d9a441' stroke='none'/></g></svg>") top right / 32px 32px no-repeat,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none' stroke='%23d9a441' stroke-width='1'><g transform='translate(0 32) scale(1 -1)'><path d='M1 31V1h30' opacity='.6'/><path d='M6 21V6h15' opacity='.35'/><path d='M1 1l7 7' opacity='.5'/><path d='M12 7.5l4.5 4.5-4.5 4.5-4.5-4.5z' fill='%23d9a441' stroke='none' opacity='.85'/><circle cx='31' cy='1' r='1.3' fill='%23d9a441' stroke='none'/><circle cx='1' cy='31' r='1.3' fill='%23d9a441' stroke='none'/></g></svg>") bottom left / 32px 32px no-repeat,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none' stroke='%23d9a441' stroke-width='1'><g transform='translate(32 32) scale(-1 -1)'><path d='M1 31V1h30' opacity='.6'/><path d='M6 21V6h15' opacity='.35'/><path d='M1 1l7 7' opacity='.5'/><path d='M12 7.5l4.5 4.5-4.5 4.5-4.5-4.5z' fill='%23d9a441' stroke='none' opacity='.85'/><circle cx='31' cy='1' r='1.3' fill='%23d9a441' stroke='none'/><circle cx='1' cy='31' r='1.3' fill='%23d9a441' stroke='none'/></g></svg>") bottom right / 32px 32px no-repeat;
+}
+@media (min-width: 640px) {
+  .ev-panel { padding: 36px 36px 34px; }
+}
+.ev-panel-title {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--parchment);
+}
+/* Ornament under a panel title: a lotus bud on a gold rule that fades out. */
+.ev-orn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 210px;
+  margin: 16px 0 24px;
+}
+.ev-orn::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(217, 164, 65, 0.8), rgba(217, 164, 65, 0.25) 60%, transparent);
+}
+.ev-orn svg { flex: none; filter: drop-shadow(0 0 6px rgba(217, 164, 65, 0.35)); }
+
+/* The lotus divider between the first screen and the rest of the page. */
+.ev-divider {
+  display: block;
+  width: min(80vw, 340px);
+  max-width: none;
+  margin: -6px auto -34px;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ---- Notices: a dated column ---- */
+
+.ev-notice {
+  position: relative;
+  padding: 0 0 0 24px;
+}
+.ev-notice::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 6px;
+  bottom: -26px;
+  width: 1px;
+  background: linear-gradient(rgba(217, 164, 65, 0.35), rgba(217, 164, 65, 0.1));
+}
+.ev-notice:last-child::before { bottom: 0; }
+.ev-notice::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 9px;
+  height: 9px;
+  rotate: 45deg;
+  background: #06080a;
+  border: 1px solid rgba(217, 164, 65, 0.75);
+}
+.ev-notice[data-tone="update"]::after { border-color: #8fb7c9; }
+.ev-notice[data-tone="important"]::after { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 12px rgba(217, 164, 65, 0.7); }
+.ev-notice-body { margin-top: 8px; }
+.ev-notice[data-tone="important"] .ev-notice-body {
+  padding: 14px 16px;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(100deg, rgba(42, 33, 16, 0.9), rgba(12, 12, 12, 0.85) 70%) padding-box,
+    linear-gradient(120deg, rgba(255, 220, 140, 0.7), rgba(217, 164, 65, 0.15) 50%, rgba(217, 164, 65, 0.05)) border-box;
+}
+
+/* ---- Rules: numbers in small gold medallions ---- */
+
+.ev-rule {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  column-gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid rgba(217, 164, 65, 0.1);
+}
+.ev-rule:first-child { border-top: 0; padding-top: 2px; }
+.ev-rule-num {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(217, 164, 65, 0.5);
+  background: radial-gradient(circle at 50% 30%, rgba(217, 164, 65, 0.18), rgba(6, 8, 10, 0.95) 70%);
+  box-shadow: inset 0 0 0 3px rgba(6, 8, 10, 0.95), inset 0 0 0 4px rgba(217, 164, 65, 0.2);
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 17px;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--gold);
+}
+.ev-rule p { padding-top: 5px; }
+/* Collapsed list: the last visible rule fades into the "read all" button. */
+.ev-rules[data-collapsed] {
+  mask-image: linear-gradient(to bottom, black calc(100% - 100px), transparent);
+}
+
+/* ---- Results: rank medallions, the winner lit by the corona ---- */
+
+.ev-result {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid rgba(217, 164, 65, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+}
+.ev-result-winner {
+  padding: 24px;
+  border: 1px solid transparent;
+  background:
+    radial-gradient(circle at 8% 50%, rgba(217, 164, 65, 0.18), transparent 55%) padding-box,
+    linear-gradient(170deg, rgba(24, 20, 12, 0.95), rgba(8, 9, 10, 0.95)) padding-box,
+    var(--foil) border-box;
+}
+.ev-rank {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+}
+.ev-rank-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid rgba(217, 164, 65, 0.55);
+  background: radial-gradient(circle at 50% 30%, rgba(217, 164, 65, 0.2), rgba(6, 8, 10, 0.95) 70%);
+  box-shadow: inset 0 0 0 3px rgba(6, 8, 10, 0.95), inset 0 0 0 4px rgba(217, 164, 65, 0.22);
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gold);
+}
+.ev-result-winner .ev-rank { width: 66px; height: 66px; }
+.ev-result-winner .ev-rank-mark { font-size: 26px; }
+.ev-rank-halo {
+  position: absolute;
+  inset: -55%;
+  width: 210%;
+  height: 210%;
+  max-width: none;
+  object-fit: contain;
+  opacity: 0.8;
+}
+
+/* ---- Coordinators ---- */
+
+.ev-initials {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  padding: 3px;
+  background: conic-gradient(from 210deg, rgba(255, 220, 140, 0.8), rgba(217, 164, 65, 0.15), rgba(255, 216, 117, 0.6), rgba(217, 164, 65, 0.15), rgba(255, 220, 140, 0.8));
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gold);
+  position: relative;
+  isolation: isolate;
+}
+.ev-initials::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: #08090b;
+  z-index: -1;
+}
+.ev-call {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  rotate: 45deg;
+  border: 1px solid rgba(217, 164, 65, 0.45);
+  color: var(--gold);
+  transition: background 0.25s, border-color 0.25s;
+}
+.ev-call > svg { rotate: -45deg; }
+a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--gold); }
+
+/* ---- More from this world: planets on an orbit ---- */
+
+.ev-more { position: relative; margin-top: 110px; }
+/* Mirrored banners either side of the heading (wide screens; the heading is centred and narrow). */
+.ev-more-banner {
+  display: none;
+  position: absolute;
+  top: -40px;
+  width: 128px;
+  max-width: none;
+  opacity: 0.9;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.8));
+  pointer-events: none;
+}
+.ev-more-banner[data-side="left"] { right: calc(50% + 260px); }
+.ev-more-banner[data-side="right"] { left: calc(50% + 260px); scale: -1 1; }
+@media (min-width: 768px) { .ev-more-banner { display: block; } }
+.ev-orbit-row {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 44px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 34px auto 0;
+  padding: 26px 70px 10px;
+}
+/* The orbit the planets sit on: as wide as the row, not the page. */
+.ev-orbit-row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 22%;
+  height: 40%;
+  border: 1px dashed rgba(217, 164, 65, 0.28);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.ev-orbit-row > li { position: relative; flex: 0 1 200px; }
+.ev-planet {
+  position: relative;
+  display: block;
+  width: min(36vw, 190px);
+  aspect-ratio: 1;
+  isolation: isolate;
+  transition: translate 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.ev-planet > img { position: absolute; max-width: none; pointer-events: none; }
+.ev-planet-halo { inset: -18%; width: 136%; height: 136%; object-fit: contain; opacity: 0.35; z-index: -2; transition: opacity 0.4s; }
+.ev-planet-base { inset: 6%; width: 88%; height: 88%; object-fit: contain; filter: brightness(0.62); z-index: -1; }
+.ev-planet-art { inset: 4%; width: 92%; height: 92%; object-fit: contain; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.6)); }
+/* A pool of gold light under each planet. */
+.ev-planet::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: -9%;
+  height: 10%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(217, 164, 65, 0.35), transparent 70%);
+  filter: blur(4px);
+  z-index: -3;
+}
+.ev-planet-name {
+  margin-top: 6px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--parchment);
+  transition: color 0.25s;
+}
+.group:hover .ev-planet-name { color: var(--gold); }
+.group:hover .ev-planet { translate: 0 -8px; }
+.group:hover .ev-planet-halo { opacity: 0.75; }
+@media (max-width: 639px) {
+  .ev-orbit-row { justify-content: flex-start; width: auto; max-width: none; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 30px -24px 0; padding: 26px 24px 10px; gap: 18px; }
+  .ev-orbit-row::-webkit-scrollbar { display: none; }
+  .ev-orbit-row > li { flex: 0 0 132px; scroll-snap-align: center; }
+  .ev-orbit-row::before { left: 0; right: 0; }
+  .ev-planet { width: 132px; }
+  .ev-planet-name { font-size: 20px; }
+}
+
+/* ---- Finale: the landing's closing landscape ---- */
+
+.ev-finale {
+  position: relative;
+  z-index: 1;
+  height: clamp(170px, 24vw, 350px);
+  margin-top: -10px;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ev-finale-hills {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 70%;
+}
+.ev-finale-veena,
+.ev-finale-hand {
+  position: absolute;
+  bottom: 4%;
+  max-width: none;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.75));
+}
+.ev-finale-veena { left: 2%; width: clamp(150px, 24vw, 360px); }
+.ev-finale-hand { right: 4%; width: clamp(96px, 14vw, 220px); }
+
+/* ---- Phones: register bar pinned to the bottom while the card is off screen ---- */
+
+.ev-regbar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 80;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(217, 164, 65, 0.4);
+  background: linear-gradient(180deg, rgba(14, 12, 9, 0.94), rgba(5, 6, 8, 0.96));
+  backdrop-filter: blur(14px);
+  box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.6);
+  transition: translate 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.35s;
+}
+.ev-regbar .ev-label { letter-spacing: 0.16em; }
+.ev-regbar[data-hidden] {
+  translate: 0 110%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- Entrance: hero pieces rise in once ---- */
+
+.ev-rise { animation: ev-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes ev-rise { from { opacity: 0; translate: 0 14px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ev-dust,
+  .ev-world-chakra,
+  .ev-world-art,
+  .ev-rise { animation: none; }
+  .ev-regbar,
+  .ev-planet { transition: none; }
+}
