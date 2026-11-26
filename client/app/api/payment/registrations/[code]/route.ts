@@ -33,7 +33,6 @@ type Populated = {
  * Auth: `x-api-key: <PAYMENT_API_KEY>`.
  */
 export async function GET(request: Request, { params }: { params: Promise<{ code: string }> }) {
-  console.log(process.env.PAYMENT_API_KEY);
   if (!process.env.PAYMENT_API_KEY) return fail(503, "UNAVAILABLE", "Payment lookup isn't configured.");
   if (!authorised(request)) return fail(401, "UNAUTHORIZED", "Missing or invalid API key.");
 
