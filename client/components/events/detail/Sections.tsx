@@ -5,7 +5,7 @@ import { ASSETS } from "@/constants/assets";
 import { atlasArt } from "@/constants/events";
 import { PLACE_LABEL } from "@/lib/admin/result-places";
 import type { EventPageData } from "@/lib/event-page";
-import { EventPlanet } from "./EventWorld";
+import { EventNiche } from "./EventWorld";
 import { WorldButton } from "./PageActions";
 import { initials, known, phone, postedOn, prizeOf, type PageEvent } from "@/lib/event-format";
 
@@ -228,13 +228,14 @@ export function MoreFromWorld({
         </h2>
         <img src={ASSETS.cloudinary.divider} alt="" aria-hidden draggable={false} className="pointer-events-none -my-5 w-64 max-w-none select-none" />
       </div>
-      <ul className="ev-orbit-row" role="list">
+      {/* An arcade of small stages, one per event; swipeable on phones. */}
+      <ul className="ev-arcade" role="list">
         {siblings.map((s) => (
           <li key={s.slug}>
-            <TransitionLink href={`/events/${s.slug}`} className="group flex flex-col items-center gap-3 text-center">
-              <EventPlanet art={s.art} />
-              <span className="ev-planet-name">{s.name}</span>
-              <span className="ev-label -mt-2 text-gold/75">{s.kind}</span>
+            <TransitionLink href={`/events/${s.slug}`} className="group flex flex-col items-center text-center">
+              <EventNiche art={s.art} />
+              <span className="ev-niche-name">{s.name}</span>
+              <span className="ev-label mt-1.5 text-gold/75">{s.kind}</span>
             </TransitionLink>
           </li>
         ))}

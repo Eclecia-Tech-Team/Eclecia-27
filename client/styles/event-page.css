@@ -1,8 +1,9 @@
 /* === Event page (/events/[id], components/events/detail) =====================
-   Built from the site's own pieces: the atlas's planet, chakra and corona for
-   the hero, the festival pass's foil and tear line for the ticket, the auth
-   card's foil for registration, chamber panels with corner brackets for the
-   reading, and the landing's closing landscape at the end.
+   Built from the site's own pieces: the eclipse and the hills in an arched
+   stage for the hero, the festival pass's foil and tear line for the ticket,
+   the auth card's foil for registration, chamber panels with filigree corners
+   for the reading, an arcade of small stages for the rest of the world, and
+   the landing's closing landscape at the end.
    ============================================================================ */
 
 .ev-page {
@@ -62,30 +63,22 @@
 }
 
 /* ---- Hero: the first screen ----
-   Everything needed to decide, at a glance: the event's planet as the atlas
-   draws it, the name and story, the way in, and the ticket along the bottom.
-   Phones: the phone atlas's chakra world, the copy, then the ticket.
-   Tablet (768+): copy and planet side by side, the ticket below, filling the screen.
-   Desktop (1024+): the same, the planet sized to the space the screen's height leaves. */
+   Everything needed to decide, at a glance. On the left the event on stage:
+   an arched window with the eclipse at its crown, the hills at its foot and
+   the event's art in front (not the atlas's planet: this page should feel
+   like arriving, not like the atlas again). On the right the kind, the name,
+   the story and the way in, with the essentials on the ticket.
+   Phones: stage, copy (centred) and ticket, stacked.
+   Tablet (768+): stage and copy side by side, the ticket across the bottom.
+   Wide (1280+): the ticket sits under the copy, level with the foot of the arch.
+   --stage-w is the arch's width; on landscape screens it is worked out from
+   the screen's height so the whole hero fits the first screen. */
 
-.ev-hero-wrap { position: relative; }
 .ev-hero {
   position: relative;
   display: flex;
   flex-direction: column;
   padding: 88px 24px 8px;
-}
-/* The atlas's immersive corona, low on the left. */
-.ev-hero-corona {
-  position: absolute;
-  left: -110vw;
-  bottom: -60vw;
-  width: 160vw;
-  max-width: none;
-  opacity: 0.3;
-  rotate: -15deg;
-  pointer-events: none;
-  z-index: -1;
 }
 
 .ev-crumb {
@@ -120,27 +113,28 @@
 }
 .ev-crumb-world:hover { color: var(--parchment); }
 
-/* Phone world: the chakra frame around the planet. */
-.ev-hero-world {
+/* Phones: the stage is sized from the screen so the name and the button still land on the first screen. */
+.ev-hero-stage {
   align-self: center;
-  width: min(70vw, 40svh, 300px);
-  margin: 46px 0 40px;
+  width: min(58vw, 32svh, 270px);
+  margin: 34px 0 30px;
 }
-.ev-hero-planet { display: none; }
 
 .ev-hero-copy {
   position: relative;
   z-index: 3;
+  text-align: center;
   text-shadow: 0 1px 2px #020a0f, 0 2px 18px #020a0f;
 }
-/* Soft dark pool behind the copy, as in the atlas, so it reads over any sky. */
-.ev-hero-copy::before {
-  content: "";
-  position: absolute;
-  inset: -22% -35% -26% -45%;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(closest-side, rgba(2, 9, 12, 0.85), rgba(2, 9, 12, 0.6) 55%, transparent);
+/* The kind, as the gold line every page sets above its title. */
+.ev-hero-kicker {
+  margin-bottom: 12px;
+  font-family: var(--font-taiganja), var(--font-cormorant), Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--gold);
 }
 .ev-hero-title {
   font-family: var(--font-cormorant), Georgia, serif;
@@ -151,35 +145,47 @@
   text-wrap: balance;
   color: var(--parchment);
 }
+/* The divider's file has generous transparent padding, hence the negative margins. */
+.ev-hero-divider {
+  display: block;
+  width: min(72vw, 290px);
+  max-width: none;
+  aspect-ratio: 1100 / 367;
+  margin: -22px auto -30px;
+  pointer-events: none;
+  user-select: none;
+}
 .ev-hero-desc {
-  max-width: 46ch;
-  margin: 16px 0 18px;
+  max-width: 52ch;
+  margin: 0 auto 18px;
   font-family: Georgia, serif;
   font-size: 15px;
   line-height: 1.6;
   color: #e6dece;
 }
-/* Kind and club stacked at every width: side by side, a long club name wraps and leaves the divider dangling. */
+/* "Hosted by" and the club(s). */
 .ev-hero-meta {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 12px;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 10.5px;
   letter-spacing: 0.17em;
+  line-height: 1.6;
   text-transform: uppercase;
   color: #e3cf9c;
 }
+.ev-hero-meta > span { color: rgba(236, 228, 210, 0.5); }
 
-/* The way in. The left padding leaves room for the button's lotus finial (as .atlas-cta does). */
+/* The way in. */
 .ev-hero-cta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 18px 30px;
   margin-top: 28px;
-  padding-left: 14px;
 }
 /* The hero copy's dark text shadow (for legibility over the art) would smudge the button label. */
 .ev-hero-cta .gold-btn { text-shadow: none; }
@@ -194,60 +200,190 @@
 
 @media (min-width: 768px) {
   .ev-hero {
+    --stage-w: min(38vw, 340px);
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-columns: var(--stage-w) minmax(0, 1fr);
     grid-template-rows: auto 1fr auto;
-    column-gap: 3vw;
+    grid-template-areas:
+      "crumb crumb"
+      "stage copy"
+      "ticket ticket";
+    column-gap: 5vw;
+    align-items: center;
     max-width: 1640px;
     margin: 0 auto;
     padding: 100px 5.5vw 44px;
   }
-  .ev-hero-corona { left: -57vw; bottom: -64vw; width: 109vw; opacity: 0.42; }
-  .ev-crumb { grid-column: 1 / -1; gap: 20px; font-size: 11px; }
+  .ev-crumb { grid-area: crumb; align-self: start; gap: 20px; font-size: 11px; }
   .ev-crumb-world { font-size: 12px; }
-  .ev-hero-world { display: none; }
-  .ev-hero-planet {
-    display: block;
-    grid-column: 2;
-    grid-row: 2;
-    align-self: center;
-    justify-self: center;
-    /* The ring is 144% of the planet's width: keep it inside the column plus the page's side padding. */
-    width: min(calc((100% + 8vw) / 1.44), 420px);
-    aspect-ratio: 1;
-    z-index: 1;
-  }
-  .ev-hero-copy { grid-column: 1; grid-row: 2; align-self: center; padding: 28px 0; }
-  .ev-hero-ticket { grid-column: 1 / -1; grid-row: 3; margin-top: 12px; }
-  .ev-hero-cta { margin-top: 32px; }
-  .ev-hero-title { font-size: clamp(46px, 6.4vw, 88px); }
-  .ev-hero-desc { margin: 18px 0 22px; font-size: 17px; }
-  .ev-hero-meta { font-size: 11.5px; }
+  .ev-hero-stage { grid-area: stage; width: 100%; margin: 28px 0 26px; }
+  .ev-hero-copy { grid-area: copy; padding: 20px 0; text-align: left; }
+  .ev-hero-ticket { grid-area: ticket; margin-top: 14px; }
+  .ev-hero-kicker { margin-bottom: 14px; font-size: 12px; }
+  .ev-hero-title { font-size: clamp(44px, 5.2vw, 82px); }
+  .ev-hero-divider { width: 300px; margin: -22px 0 -32px -16px; }
+  .ev-hero-desc { margin: 0 0 20px; font-size: 17px; }
+  .ev-hero-meta { justify-content: flex-start; font-size: 11.5px; }
+  /* The left padding leaves room for the button's lotus finial (as .atlas-cta does). */
+  .ev-hero-cta { justify-content: flex-start; margin-top: 30px; padding-left: 14px; }
 }
 @media (min-width: 1024px) {
-  .ev-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 4vw; padding-top: 105px; }
-  /* As large as the room between the breadcrumb and the ticket allows, ring included. */
-  .ev-hero-planet { width: min(calc((100% + 8vw) / 1.44), calc(min(100svh, 920px) - 380px), 640px); min-width: 300px; }
-  .ev-hero-cta { margin-top: 36px; }
-  .ev-hero-desc { margin: 22px 0 26px; font-size: 19px; }
+  .ev-hero { --stage-w: min(36vw, 420px); padding-top: 105px; }
+  .ev-hero-divider { width: 340px; margin: -26px 0 -36px -18px; }
+  .ev-hero-desc { margin-bottom: 24px; font-size: 18.5px; }
   .ev-hero-meta { font-size: 12px; }
+  .ev-hero-cta { margin-top: 34px; }
 }
-/* Landscape screens: the hero fills the first screen with the ticket on its bottom edge (capped,
-   so very tall screens don't open gaps). Portrait tablets are taller than the content, so the hero
-   takes its natural height and the registration card follows right after. */
+/* Wide: the stage runs the full height of the hero; the ticket sits under the copy. */
+@media (min-width: 1280px) {
+  .ev-hero {
+    --stage-w: min(40vw, 560px);
+    grid-template-areas:
+      "crumb crumb"
+      "stage copy"
+      "stage ticket";
+    column-gap: clamp(48px, 5.5vw, 96px);
+  }
+  .ev-hero-stage { align-self: end; margin: 24px 0 0; }
+  .ev-hero-copy { padding: 26px 0 30px; }
+  .ev-hero-ticket { align-self: end; margin-top: 0; }
+}
+/* Landscape screens: the hero fills the first screen (capped, so very tall screens don't open
+   gaps) and the arch takes whatever height the screen leaves it. Portrait tablets are taller than
+   the content, so there the hero takes its natural height and the page carries straight on. */
 @media (min-width: 768px) and (orientation: landscape) {
   .ev-hero { min-height: clamp(600px, 100svh, 920px); }
 }
+@media (min-width: 1024px) and (orientation: landscape) {
+  /* 375px: top padding, breadcrumb, margins, the ticket row and bottom padding. 0.8: the arch is 4:5. */
+  .ev-hero { --stage-w: min(36vw, calc((clamp(600px, 100svh, 920px) - 375px) * 0.8), 460px); }
+}
+@media (min-width: 1280px) and (orientation: landscape) {
+  /* 210px: the same, without the ticket row. */
+  .ev-hero { --stage-w: min(40vw, calc((clamp(600px, 100svh, 920px) - 210px) * 0.8), 560px); }
+}
 
-/* The atlas planet's layers, with the atlas's insets. */
-.ev-op { position: relative; width: 100%; height: 100%; isolation: isolate; }
-.ev-op > img { position: absolute; max-width: none; pointer-events: none; user-select: none; }
-.ev-op-halo { inset: -8%; width: 116%; height: 116%; object-fit: contain; opacity: 0.68; }
-.ev-op-ring { left: -22%; top: -4%; width: 144%; height: 111%; object-fit: contain; opacity: 0.67; }
-.ev-op-ring[data-half="rear"] { clip-path: inset(0 0 50% 0); }
-.ev-op-ring[data-half="front"] { clip-path: inset(50% 0 0 0); }
-.ev-op-base { inset: 4%; width: 92%; height: 92%; object-fit: contain; filter: brightness(0.77); }
-.ev-op-art { inset: 7%; width: 86%; height: 86%; object-fit: contain; filter: drop-shadow(0 10px 15px rgba(1, 8, 13, 0.31)); }
+/* ---- The stage (EventStage): arch, eclipse, hills, figure ---- */
+
+.ev-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  isolation: isolate;
+}
+/* Warm light spilling out from behind the arch. */
+.ev-stage::before {
+  content: "";
+  position: absolute;
+  inset: -18% -30% -10%;
+  z-index: -1;
+  pointer-events: none;
+  /* closest-side: fully clear by the box's edges, so the glow never shows as a rectangle. */
+  background: radial-gradient(closest-side, rgba(217, 164, 65, 0.22), rgba(217, 164, 65, 0.07) 55%, transparent);
+}
+/* The floor line the arch stands on, running a little past its feet. */
+.ev-stage::after {
+  content: "";
+  position: absolute;
+  left: -9%;
+  right: -9%;
+  bottom: 0;
+  height: 1px;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 220, 140, 0.85) 18%, rgba(255, 220, 140, 0.85) 82%, transparent);
+}
+/* The arch: a half-circle crown (50% of the width = 40% of the 4:5 height) on straight sides. */
+.ev-stage-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 50% 50% 0 0 / 40% 40% 0 0;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  background:
+    radial-gradient(ellipse at 50% 36%, rgba(217, 164, 65, 0.22), transparent 62%) padding-box,
+    linear-gradient(180deg, #0b0d11 0%, #07080a 58%, #0b0a08 100%) padding-box,
+    linear-gradient(170deg, rgba(255, 220, 140, 0.95), rgba(217, 164, 65, 0.32) 34%, rgba(217, 164, 65, 0.16) 62%, rgba(255, 216, 117, 0.75)) border-box;
+  box-shadow:
+    0 50px 120px -40px rgba(0, 0, 0, 0.95),
+    0 0 90px -30px rgba(217, 164, 65, 0.3);
+}
+/* Fine inner rule following the arch, as on the pass and the sign-in card. */
+.ev-stage-frame::after {
+  content: "";
+  position: absolute;
+  inset: 9px 9px 0;
+  z-index: 3;
+  pointer-events: none;
+  border: 1px solid rgba(217, 164, 65, 0.24);
+  border-bottom: 0;
+  border-radius: inherit;
+}
+/* Shade at the foot so the figure stands on something. */
+.ev-stage-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(3, 4, 5, 0.42), transparent 16%);
+}
+.ev-stage-frame > img,
+.ev-stage-eclipse > img { position: absolute; max-width: none; pointer-events: none; user-select: none; }
+.ev-stage-dust {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.6;
+  mix-blend-mode: screen;
+  animation: ev-drift 30s ease-in-out infinite alternate;
+}
+/* The eclipse sits in the crown of the arch; the figure stands in front of its lower half. */
+.ev-stage-eclipse {
+  position: absolute;
+  left: 8%;
+  top: 2%;
+  width: 84%;
+  aspect-ratio: 1;
+}
+.ev-stage-rays { inset: 0; width: 100%; height: 100%; animation: ev-breathe 6.5s ease-in-out infinite alternate; }
+.ev-stage-disc { left: -1%; top: -1%; width: 102%; height: 102%; animation: ev-turn 240s linear infinite; }
+/* The landing's hills, cropped to their tops along the foot of the arch (as on the sign-in card). */
+.ev-stage-ground {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 36%;
+  object-fit: cover;
+  object-position: 50% 0;
+  filter: brightness(1.15) saturate(1.1);
+}
+.ev-stage-figure {
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  bottom: 6%;
+  aspect-ratio: 1;
+  z-index: 2;
+}
+.ev-stage-art {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.7));
+  animation: ev-float 7s ease-in-out infinite;
+}
+.ev-stage-finial {
+  position: absolute;
+  left: 50%;
+  top: -15px;
+  z-index: 3;
+  translate: -50% 0;
+  filter: drop-shadow(0 0 8px rgba(217, 164, 65, 0.5));
+}
 
 /* Page body below the hero: the same 5.5vw gutter as the hero copy. */
 .ev-body {
@@ -258,62 +394,13 @@
 }
 @media (min-width: 768px) { .ev-body { padding: 0 5.5vw 40px; } }
 
-/* Phone chakra world (EventWorld). */
-.ev-world {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  isolation: isolate;
-}
-.ev-world > * {
-  position: absolute;
-  pointer-events: none;
-  user-select: none;
-}
-.ev-world-corona {
-  inset: -19%;
-  width: 138%;
-  height: 138%;
-  max-width: none;
-  object-fit: contain;
-  opacity: 0.5;
-  z-index: -3;
-}
-/* The chakra's painted opening is off-centre in its canvas: same correction as the phone atlas. */
-.ev-world-chakra {
-  inset: -9%;
-  z-index: -2;
-  animation: ev-turn 180s linear infinite;
-}
-.ev-world-chakra img {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 100%;
-  height: 103.349%;
-  max-width: none;
-  object-fit: fill;
-  transform: translate(-49.874%, -48.771%);
-  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.7));
-}
-.ev-world-base {
-  inset: 6%;
-  width: 88%;
-  height: 88%;
-  object-fit: contain;
-  filter: brightness(0.7);
-  z-index: -1;
-}
-.ev-world-art {
-  inset: 5%;
-  width: 90%;
-  height: 90%;
-  object-fit: contain;
-  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.6));
-  animation: ev-float 7s ease-in-out infinite;
-}
-
+/* The stage's motion, slow and quiet (the schedule's eclipse does the same): the corona breathes,
+   the disc turns, the figure floats. */
 @keyframes ev-turn { to { rotate: 360deg; } }
+@keyframes ev-breathe {
+  from { opacity: 0.82; scale: 0.985; }
+  to { opacity: 1; scale: 1.02; }
+}
 @keyframes ev-float {
   0%, 100% { translate: 0 0; }
   50% { translate: 0 -7px; }
@@ -436,8 +523,9 @@
   .ev-fact { padding: 18px 22px 20px; }
   .ev-fact-value { font-size: 24px; }
 }
-/* Desktop: one row, the four facts and the prize stub at the right end, so the
-   whole ticket fits on the first screen even at 1024 x 768. Compact up to 1280. */
+/* Desktop: the prize stub moves to the right end. 1024 to 1279 the ticket runs
+   across the bottom of the hero as one compact row of four facts; from 1280 it
+   sits under the copy, two facts by two, with room to breathe. */
 @media (min-width: 1024px) {
   .ev-ticket { grid-template-columns: minmax(0, 1fr) auto; }
   .ev-ticket-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -457,10 +545,28 @@
   .ev-ticket-stub::after { top: auto; bottom: calc(var(--notch) * -1 - 1px); clip-path: inset(0 0 50% 0); }
 }
 @media (min-width: 1280px) {
-  .ev-fact { padding: 20px 22px 22px; }
+  .ev-ticket-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ev-fact { padding: 18px 24px 20px; }
   .ev-fact-value { font-size: 25px; }
-  .ev-ticket-prize { font-size: 34px; }
-  .ev-ticket-stub { min-width: 230px; flex-direction: row; align-items: center; gap: 16px; padding: 20px 30px 20px 34px; }
+  .ev-ticket-prize { font-size: 38px; }
+  .ev-ticket-stub { min-width: 210px; gap: 14px; padding: 20px 30px 20px 34px; }
+  .ev-stub-sun { width: 34px; }
+}
+/* Wide but short (most laptops, once the browser's own bars are counted): two rows of facts
+   under the copy would push the ticket off the first screen, so it goes back to one compact row
+   and the copy tightens up. */
+@media (min-width: 1280px) and (max-height: 799px) {
+  .ev-ticket-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ev-fact { padding: 14px 16px 16px; }
+  .ev-fact-value { font-size: 20px; }
+  .ev-ticket-prize { font-size: 28px; }
+  .ev-ticket-stub { min-width: 168px; gap: 8px; padding: 14px 22px 14px 26px; }
+  .ev-stub-sun { width: 26px; }
+  .ev-hero-copy { padding: 6px 0 22px; }
+  .ev-hero-title { font-size: clamp(44px, 4.7vw, 68px); }
+  .ev-hero-divider { width: 300px; margin: -22px 0 -32px -16px; }
+  .ev-hero-desc { margin-bottom: 18px; font-size: 17px; }
+  .ev-hero-cta { margin-top: 24px; }
 }
 
 /* ---- Registration: the auth card's foil, an eclipse crest in the top edge ---- */
@@ -754,7 +860,7 @@
 .ev-call > svg { rotate: -45deg; }
 a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--gold); }
 
-/* ---- More from this world: planets on an orbit ---- */
+/* ---- More from this world: an arcade of small stages ---- */
 
 .ev-more { position: relative; margin-top: 110px; }
 /* Mirrored banners either side of the heading (wide screens; the heading is centred and narrow). */
@@ -771,56 +877,73 @@ a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--g
 .ev-more-banner[data-side="left"] { right: calc(50% + 260px); }
 .ev-more-banner[data-side="right"] { left: calc(50% + 260px); scale: -1 1; }
 @media (min-width: 768px) { .ev-more-banner { display: block; } }
-.ev-orbit-row {
-  position: relative;
+/* The arcade: small arched niches (the hero's stage in miniature), one per event. They wrap
+   onto more rows when a world has many events; on phones the row swipes. --niche-w sets their size. */
+.ev-arcade {
+  --niche-w: 176px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 44px;
-  width: fit-content;
-  max-width: 100%;
-  margin: 34px auto 0;
-  padding: 26px 70px 10px;
+  gap: 44px 40px;
+  margin: 40px 0 0;
 }
-/* The orbit the planets sit on: as wide as the row, not the page. */
-.ev-orbit-row::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 22%;
-  height: 40%;
-  border: 1px dashed rgba(217, 164, 65, 0.28);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.ev-orbit-row > li { position: relative; flex: 0 1 200px; }
-.ev-planet {
+.ev-arcade > li { flex: 0 0 var(--niche-w); }
+.ev-niche {
   position: relative;
   display: block;
-  width: min(36vw, 190px);
-  aspect-ratio: 1;
+  width: var(--niche-w);
+  aspect-ratio: 4 / 5;
   isolation: isolate;
   transition: translate 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.ev-planet > img { position: absolute; max-width: none; pointer-events: none; }
-.ev-planet-halo { inset: -18%; width: 136%; height: 136%; object-fit: contain; opacity: 0.35; z-index: -2; transition: opacity 0.4s; }
-.ev-planet-base { inset: 6%; width: 88%; height: 88%; object-fit: contain; filter: brightness(0.62); z-index: -1; }
-.ev-planet-art { inset: 4%; width: 92%; height: 92%; object-fit: contain; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.6)); }
-/* A pool of gold light under each planet. */
-.ev-planet::after {
+/* The floor line each niche stands on, running a little past its feet (as under the hero's arch). */
+.ev-niche::after {
   content: "";
   position: absolute;
-  left: 18%;
-  right: 18%;
-  bottom: -9%;
-  height: 10%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(217, 164, 65, 0.35), transparent 70%);
-  filter: blur(4px);
-  z-index: -3;
+  left: -12%;
+  right: -12%;
+  bottom: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 220, 140, 0.75) 20%, rgba(255, 220, 140, 0.75) 80%, transparent);
 }
-.ev-planet-name {
-  margin-top: 6px;
+.ev-niche-frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 50% 50% 0 0 / 40% 40% 0 0;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  background:
+    linear-gradient(180deg, #0b0d11 0%, #07080a 58%, #0b0a08 100%) padding-box,
+    linear-gradient(170deg, rgba(255, 220, 140, 0.85), rgba(217, 164, 65, 0.28) 34%, rgba(217, 164, 65, 0.14) 62%, rgba(255, 216, 117, 0.65)) border-box;
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.95);
+  transition: box-shadow 0.4s;
+}
+.ev-niche-frame::after {
+  content: "";
+  position: absolute;
+  inset: 5px 5px 0;
+  pointer-events: none;
+  border: 1px solid rgba(217, 164, 65, 0.2);
+  border-bottom: 0;
+  border-radius: inherit;
+}
+.ev-niche-frame > img { position: absolute; max-width: none; pointer-events: none; }
+.ev-niche-eclipse { left: 6%; top: 1%; width: 88%; opacity: 0.9; transition: opacity 0.4s; }
+.ev-niche-ground { left: 0; bottom: 0; width: 100%; height: 34%; object-fit: cover; object-position: 50% 0; }
+.ev-niche-art {
+  position: absolute;
+  left: 7%;
+  bottom: 5%;
+  width: 86%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.7));
+}
+.ev-niche-name {
+  margin-top: 18px;
   font-family: var(--font-cormorant), Georgia, serif;
   font-size: 23px;
   font-weight: 600;
@@ -828,16 +951,17 @@ a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--g
   color: var(--parchment);
   transition: color 0.25s;
 }
-.group:hover .ev-planet-name { color: var(--gold); }
-.group:hover .ev-planet { translate: 0 -8px; }
-.group:hover .ev-planet-halo { opacity: 0.75; }
+.group:hover .ev-niche-name { color: var(--gold); }
+.group:hover .ev-niche { translate: 0 -8px; }
+.group:hover .ev-niche-frame { box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.95), 0 0 46px -10px rgba(217, 164, 65, 0.55); }
+.group:hover .ev-niche-eclipse { opacity: 1; }
 @media (max-width: 639px) {
-  .ev-orbit-row { justify-content: flex-start; width: auto; max-width: none; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 30px -24px 0; padding: 26px 24px 10px; gap: 18px; }
-  .ev-orbit-row::-webkit-scrollbar { display: none; }
-  .ev-orbit-row > li { flex: 0 0 132px; scroll-snap-align: center; }
-  .ev-orbit-row::before { left: 0; right: 0; }
-  .ev-planet { width: 132px; }
-  .ev-planet-name { font-size: 20px; }
+  .ev-arcade { --niche-w: 132px; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 32px -24px 0; padding: 10px 28px; gap: 24px; }
+  .ev-arcade::-webkit-scrollbar { display: none; }
+  .ev-arcade > li { scroll-snap-align: center; }
+  /* One or two events fit the screen: centre them instead of leaving them against the left edge. */
+  .ev-arcade:has(> li:nth-last-child(-n + 2):first-child) { justify-content: center; }
+  .ev-niche-name { font-size: 20px; }
 }
 
 /* ---- Finale: the landing's closing landscape ---- */
@@ -895,9 +1019,11 @@ a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--g
 
 @media (prefers-reduced-motion: reduce) {
   .ev-dust,
-  .ev-world-chakra,
-  .ev-world-art,
+  .ev-stage-dust,
+  .ev-stage-rays,
+  .ev-stage-disc,
+  .ev-stage-art,
   .ev-rise { animation: none; }
   .ev-regbar,
-  .ev-planet { transition: none; }
+  .ev-niche { transition: none; }
 }

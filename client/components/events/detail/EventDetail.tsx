@@ -11,7 +11,7 @@ import { depth } from "@/lib/depth";
 import type { EventPageData } from "@/lib/event-page";
 import { entryOf, formatOf } from "@/lib/event-format";
 import { GoldButton } from "@/components/common/GoldButton";
-import { EventOrbitPlanet, EventWorld } from "./EventWorld";
+import { EventStage } from "./EventWorld";
 import { JumpButton, MobileRegisterBar, WorldLink } from "./PageActions";
 import { RegistrationCard } from "./RegistrationCard";
 import { RulesList } from "./RulesList";
@@ -20,12 +20,13 @@ import "@/styles/event-page.css";
 
 /**
  * /events/[id]: one event's page. The first screen is about taking part and
- * fits everything needed to decide: the event's planet, name and story, a
- * Register now button, and the essentials (when, where, format, entry, prize)
- * on a pass-style ticket along the bottom. Below it: the registration card
- * (sticky on desktop, first on phones), results, rules, coordinators, notices
- * (usually empty, so last), the rest of the world, and the landing's closing
- * landscape.
+ * fits everything needed to decide: the event on stage (its art before the
+ * eclipse, in an arched window; not the atlas's planet, so arriving from the
+ * atlas feels like arriving somewhere), its name and story, a Register now
+ * button, and the essentials (when, where, format, entry, prize) on a
+ * pass-style ticket. Below it: the registration card (sticky on desktop,
+ * first on phones), results, rules, coordinators, notices (usually empty, so
+ * last), the rest of the world, and the landing's closing landscape.
  */
 export function EventDetail({ data }: { data: EventPageData }) {
   const { event, category, siblings, notices, results, viewer } = data;
@@ -40,7 +41,7 @@ export function EventDetail({ data }: { data: EventPageData }) {
     : !viewer.profileComplete
       ? { label: "Finish profile", href: `/profile?returnTo=${encodeURIComponent(here)}` }
       : { label: event.isTeamEvent ? "Register team" : "Register" };
-  const meta = [event.kind, event.clubs.join(" × ")].filter(Boolean);
+  const hosts = event.clubs.join(" × ");
 
   return (
     <PageFade className="min-h-dvh">
@@ -61,11 +62,9 @@ export function EventDetail({ data }: { data: EventPageData }) {
         <SiteHeader />
 
         <main className="relative z-10 flex-1">
-          {/* First screen: everything needed to decide, at a glance. The event's world and
-              name, the way in, and the essentials on the ticket along the bottom. */}
-          <header className="ev-hero-wrap">
-            <img src={atlasArt.shared("corona-halo")} alt="" aria-hidden className="ev-hero-corona" />
-            <div className="ev-hero">
+          {/* First screen: everything needed to decide, at a glance. The event on stage,
+              its name and story, the way in, and the essentials on the ticket. */}
+          <header className="ev-hero">
             <nav aria-label="Breadcrumb" className="ev-crumb">
               <TransitionLink href="/events" className="ev-crumb-back">
                 <span aria-hidden>←</span> All events
@@ -80,25 +79,20 @@ export function EventDetail({ data }: { data: EventPageData }) {
               )}
             </nav>
 
-            {event.art && (
-              <>
-                <div className="ev-hero-planet ev-rise">
-                  <EventOrbitPlanet art={event.art} />
-                </div>
-                <div className="ev-hero-world ev-rise">
-                  <EventWorld art={event.art} />
-                </div>
-              </>
-            )}
+            <div className="ev-hero-stage ev-rise">
+              <EventStage art={event.art || undefined} />
+            </div>
 
             <div className="ev-hero-copy ev-rise" style={{ animationDelay: "120ms" }}>
+              {event.kind && <p className="ev-hero-kicker">{event.kind}</p>}
               <h1 className="ev-hero-title">{event.name}</h1>
+              {/* The lotus divider that sits under every title on the site. */}
+              <img src={ASSETS.cloudinary.divider} alt="" aria-hidden draggable={false} className="ev-hero-divider" />
               <p className="ev-hero-desc">{event.description}</p>
-              {meta.length > 0 && (
+              {hosts && (
                 <p className="ev-hero-meta">
-                  {meta.map((m) => (
-                    <span key={m}>{m}</span>
-                  ))}
+                  <span>Hosted by</span>
+                  {hosts}
                 </p>
               )}
 
@@ -120,7 +114,6 @@ export function EventDetail({ data }: { data: EventPageData }) {
 
             <div className="ev-hero-ticket">
               <Ticket event={event} format={format} entry={entry} />
-            </div>
             </div>
           </header>
 
