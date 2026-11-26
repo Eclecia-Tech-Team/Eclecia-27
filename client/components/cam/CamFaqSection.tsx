@@ -13,6 +13,11 @@ const FAQS: FAQItem[] = [
     answer:
       "Any undergraduate or postgraduate student from any college or university can apply! If you have an active social media presence, strong networking skills, and the enthusiasm to represent Eclecia'27 on your campus, you're a great fit; no prior experience required.",
   },
+  // {
+  //   question: "What will be my responsibilities?",
+  //   answer:
+  //     "Your primary goal is to maximize event registrations from your college. You will act as the official bridge between Eclecia'27 and your campus by sharing event updates, promoting competitions, and guiding fellow students through the registration process.",
+  // },
   {
     question: "What will be my responsibilities?",
     answer:
@@ -129,7 +134,7 @@ export function CamFaqSection() {
           return (
             <div
               key={idx}
-              className="group py-1 transition-colors hover:bg-gold/2"
+              className="group py-1"
               data-open={isOpen ? "true" : "false"}
             >
               <button
@@ -151,8 +156,8 @@ export function CamFaqSection() {
                 <span
                   className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300 ${
                     isOpen
-                      ? "rotate-45 border-gold bg-gold/20 text-gold shadow-[0_0_12px_rgba(217,164,65,0.3)]"
-                      : "border-gold/30 bg-black/40 text-gold/70 group-hover:border-gold/60 group-hover:text-gold"
+                      ? "rotate-45 border-gold/50"
+                      : "border-gold/30 bg-black/40 text-gold/70"
                   }`}
                   aria-hidden
                 >
