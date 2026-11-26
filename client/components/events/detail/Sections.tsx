@@ -1,12 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { GoldButton } from "@/components/common/GoldButton";
 import { TransitionLink } from "@/components/common/TransitionLink";
 import { ASSETS } from "@/constants/assets";
 import { atlasArt } from "@/constants/events";
 import { PLACE_LABEL } from "@/lib/admin/result-places";
+import { depth } from "@/lib/depth";
 import type { EventPageData } from "@/lib/event-page";
 import { EventNiche } from "./EventWorld";
-import { WorldButton } from "./PageActions";
+import { JumpButton, WorldButton } from "./PageActions";
 import { initials, known, phone, postedOn, prizeOf, type PageEvent } from "@/lib/event-format";
 
 /* ---- Ticket ---------------------------------------------------------------- */
@@ -21,7 +23,9 @@ export function Ticket({ event, format, entry }: { event: PageEvent; format: str
   const prize = prizeOf(event);
 
   return (
-    <div className="ev-ticket ev-rise" style={{ animationDelay: "240ms" }}>
+    <div className="ev-ticket">
+      {/* One sweep of light across the foil once the ticket has landed, and again on hover. */}
+      <span aria-hidden className="ev-ticket-sheen" />
       <dl className="ev-ticket-facts">
         {/* Nothing fixed yet: one honest line instead of two empty cells. */}
         {!date && !where ? (
@@ -217,21 +221,22 @@ export function MoreFromWorld({
   siblings: EventPageData["siblings"];
 }) {
   return (
-    <section className="ev-more" aria-labelledby="more-heading">
-      {/* The mask-and-sitar banners frame the heading, mirrored, as they frame the eclipse at dusk on the landing. */}
+    <section className="ev-more" aria-labelledby="more-heading" data-reveal="">
+      {/* The mask-and-sitar banners frame the heading, mirrored, as they frame the eclipse at dusk on the
+          landing; they part like curtains as the section arrives and sway a little after. */}
       <img src={ASSETS.cloudinary.banner} alt="" aria-hidden loading="lazy" draggable={false} className="ev-more-banner" data-side="left" />
       <img src={ASSETS.cloudinary.banner} alt="" aria-hidden loading="lazy" draggable={false} className="ev-more-banner" data-side="right" />
-      <div className="relative flex flex-col items-center text-center">
+      <div className="ev-more-head relative flex flex-col items-center text-center">
         <p className="ev-eyebrow">The rest of {category.name}</p>
-        <h2 id="more-heading" className="mt-3 font-display text-[34px] font-semibold leading-tight text-parchment md:text-[44px]">
-          More from this world
+        <h2 id="more-heading" className="ev-section-title mt-3">
+          More from <span className="ev-script">this world</span>
         </h2>
         <img src={ASSETS.cloudinary.divider} alt="" aria-hidden draggable={false} className="pointer-events-none -my-5 w-64 max-w-none select-none" />
       </div>
       {/* An arcade of small stages, one per event; swipeable on phones. */}
       <ul className="ev-arcade" role="list">
-        {siblings.map((s) => (
-          <li key={s.slug}>
+        {siblings.map((s, i) => (
+          <li key={s.slug} style={{ "--i": i } as CSSProperties}>
             <TransitionLink href={`/events/${s.slug}`} className="group flex flex-col items-center text-center">
               <EventNiche art={s.art} />
               <span className="ev-niche-name">{s.name}</span>
@@ -249,14 +254,69 @@ export function MoreFromWorld({
   );
 }
 
-/** The landing's closing landscape: the hills and the road, with the veena and the mudra hand in front. */
-export function Finale() {
+/* ---- The way in, and the closing scene --------------------------------------- */
+
+/** Where a visitor stands with this event; decides the button and the closing line. */
+export type Standing = "results" | "registered" | "soon" | "signin" | "open";
+
+/**
+ * The one next step for this visitor: a gold button, or a line of text while
+ * registration is closed (never a button that does nothing). Used by the hero
+ * and the closing scene, so the two always agree with the registration card.
+ */
+export function WayIn({ standing, loginHref }: { standing: Standing; loginHref: string }) {
+  switch (standing) {
+    case "results":
+      return <JumpButton to="results" variant="ghost">See the results</JumpButton>;
+    case "registered":
+      return <JumpButton to="register" variant="ghost">View your registration</JumpButton>;
+    case "soon":
+      return <p className="ev-soon">Registrations open soon</p>;
+    case "signin":
+      return <GoldButton href={loginHref}>Register now</GoldButton>;
+    default:
+      return <JumpButton to="register">Register now</JumpButton>;
+  }
+}
+
+/** The closing line: a plain half and a half in the gold script. */
+const CLOSING: Record<Standing, [string, string]> = {
+  open: ["The stage is set,", "take your place"],
+  signin: ["The stage is set,", "take your place"],
+  soon: ["The stage is being set,", "see you soon"],
+  registered: ["Your place is saved,", "see you on stage"],
+  results: ["The curtain has fallen,", "until next time"],
+};
+
+/**
+ * How the page ends, as the landing does: the eclipse setting behind the hills
+ * and the road, the veena and the mudra hand in front, one closing line and
+ * the way in once more for whoever read all the way down.
+ */
+export function Closing({ standing, loginHref }: { standing: Standing; loginHref: string }) {
+  const [line, script] = CLOSING[standing];
   return (
-    <div className="ev-finale" aria-hidden>
-      <img className="ev-finale-hills" src={ASSETS.cloudinary.bottom} alt="" loading="lazy" draggable={false} />
-      <img className="ev-finale-veena" src={ASSETS.cloudinary.veena} alt="" loading="lazy" draggable={false} />
-      <img className="ev-finale-hand" src={ASSETS.cloudinary.hand} alt="" loading="lazy" draggable={false} />
-    </div>
+    <section className="ev-closing" aria-labelledby="closing-heading" data-reveal="">
+      <div className="ev-closing-copy">
+        <h2 id="closing-heading" className="ev-section-title">
+          {line} <span className="ev-script block">{script}</span>
+        </h2>
+        {standing !== "soon" && (
+          <div id="closing-cta" className="ev-closing-cta">
+            <WayIn standing={standing} loginHref={loginHref} />
+          </div>
+        )}
+      </div>
+      <div className="ev-closing-scene" aria-hidden>
+        <div className="ev-closing-eclipse">
+          <img className="ev-closing-rays" src={ASSETS.cloudinary.blacksun} alt="" loading="lazy" draggable={false} />
+          <img className="ev-closing-disc" src={ASSETS.cloudinary.blacksun2} alt="" loading="lazy" draggable={false} />
+        </div>
+        <img className="ev-closing-hills" src={ASSETS.cloudinary.bottom} alt="" loading="lazy" draggable={false} style={depth(6, 1.04)} />
+        <img className="ev-closing-veena" src={ASSETS.cloudinary.veena} alt="" loading="lazy" draggable={false} style={depth(-12)} />
+        <img className="ev-closing-hand" src={ASSETS.cloudinary.hand} alt="" loading="lazy" draggable={false} style={depth(-16)} />
+      </div>
+    </section>
   );
 }
 

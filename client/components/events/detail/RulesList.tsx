@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, type CSSProperties } from "react";
 
 /** Rules shown before "Read all": events carry up to 15, which is a wall of text on a phone. */
 const PREVIEW = 5;
@@ -36,11 +36,14 @@ export function RulesList({ rules }: { rules: string[] }) {
         role="list"
         className="ev-rules scroll-mt-28"
         data-collapsed={collapsed ? "" : undefined}
+        // Rows rise one after another when the panel first scrolls in; not again after "Read all".
+        data-stagger={open ? undefined : ""}
       >
         {shown.map((rule, i) => {
           const { label, text } = split(rule);
           return (
-            <li key={i} className="ev-rule">
+            // --i: the row's turn when the list first rises into view.
+            <li key={i} className="ev-rule" style={{ "--i": i } as CSSProperties}>
               <span aria-hidden className="ev-rule-num">
                 {i + 1}
               </span>

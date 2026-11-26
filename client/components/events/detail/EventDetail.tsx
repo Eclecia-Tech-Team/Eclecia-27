@@ -10,12 +10,11 @@ import { atlasArt } from "@/constants/events";
 import { depth } from "@/lib/depth";
 import type { EventPageData } from "@/lib/event-page";
 import { entryOf, formatOf } from "@/lib/event-format";
-import { GoldButton } from "@/components/common/GoldButton";
 import { EventStage } from "./EventWorld";
-import { JumpButton, MobileRegisterBar, WorldLink } from "./PageActions";
+import { MobileRegisterBar, RevealOnScroll, WorldLink } from "./PageActions";
 import { RegistrationCard } from "./RegistrationCard";
 import { RulesList } from "./RulesList";
-import { Coordinators, Finale, MoreFromWorld, Notices, Panel, Results, Ticket } from "./Sections";
+import { Closing, Coordinators, MoreFromWorld, Notices, Panel, Results, Ticket, WayIn, type Standing } from "./Sections";
 import "@/styles/event-page.css";
 
 /**
@@ -26,7 +25,8 @@ import "@/styles/event-page.css";
  * button, and the essentials (when, where, format, entry, prize) on a
  * pass-style ticket. Below it: the registration card (sticky on desktop,
  * first on phones), results, rules, coordinators, notices (usually empty, so
- * last), the rest of the world, and the landing's closing landscape.
+ * last), the rest of the world, and a closing scene (the eclipse setting
+ * behind the landing's hills, with the way in once more).
  */
 export function EventDetail({ data }: { data: EventPageData }) {
   const { event, category, siblings, notices, results, viewer } = data;
@@ -35,12 +35,15 @@ export function EventDetail({ data }: { data: EventPageData }) {
   const format = formatOf(event);
   const entry = entryOf(event);
   const here = `/events/${event.slug}`;
+  const loginHref = `/login?callbackUrl=${encodeURIComponent(here)}`;
   // Phone bar: the visitor's next step, matching what the registration card asks for.
   const nextStep: { label: string; href?: string } = !viewer.signedIn
-    ? { label: "Sign in", href: `/login?callbackUrl=${encodeURIComponent(here)}` }
+    ? { label: "Sign in", href: loginHref }
     : !viewer.profileComplete
       ? { label: "Finish profile", href: `/profile?returnTo=${encodeURIComponent(here)}` }
       : { label: event.isTeamEvent ? "Register team" : "Register" };
+  // Where this visitor stands: decides the hero's button and the closing scene's line.
+  const standing: Standing = results ? "results" : registered ? "registered" : !event.isActive ? "soon" : !viewer.signedIn ? "signin" : "open";
   const hosts = event.clubs.join(" × ");
 
   return (
@@ -79,13 +82,14 @@ export function EventDetail({ data }: { data: EventPageData }) {
               )}
             </nav>
 
-            <div className="ev-hero-stage ev-rise">
+            <div className="ev-hero-stage">
               <EventStage art={event.art || undefined} />
             </div>
 
-            <div className="ev-hero-copy ev-rise" style={{ animationDelay: "120ms" }}>
-              {event.kind && <p className="ev-hero-kicker">{event.kind}</p>}
+            <div className="ev-hero-copy">
               <h1 className="ev-hero-title">{event.name}</h1>
+              {/* The kind in the gold script the schedule and atlas set under their titles. */}
+              {event.kind && <p className="ev-hero-kind">{event.kind}</p>}
               {/* The lotus divider that sits under every title on the site. */}
               <img src={ASSETS.cloudinary.divider} alt="" aria-hidden draggable={false} className="ev-hero-divider" />
               <p className="ev-hero-desc">{event.description}</p>
@@ -98,17 +102,7 @@ export function EventDetail({ data }: { data: EventPageData }) {
 
               {/* The way in, on the first screen. */}
               <div id="hero-cta" className="ev-hero-cta">
-                {results ? (
-                  <JumpButton to="results" variant="ghost">See the results</JumpButton>
-                ) : registered ? (
-                  <JumpButton to="register" variant="ghost">View your registration</JumpButton>
-                ) : !event.isActive ? (
-                  <p className="ev-soon">Registrations open soon</p>
-                ) : !viewer.signedIn ? (
-                  <GoldButton href={`/login?callbackUrl=${encodeURIComponent(here)}`}>Register now</GoldButton>
-                ) : (
-                  <JumpButton to="register">Register now</JumpButton>
-                )}
+                <WayIn standing={standing} loginHref={loginHref} />
               </div>
             </div>
 
@@ -119,18 +113,19 @@ export function EventDetail({ data }: { data: EventPageData }) {
 
           <div className="ev-body">
             {/* The lotus divider (as under every title on the landing) between the first screen and the reading. */}
-            <img src={ASSETS.cloudinary.divider} alt="" aria-hidden draggable={false} className="ev-divider" />
+            <img src={ASSETS.cloudinary.divider} alt="" aria-hidden draggable={false} className="ev-divider" data-reveal="" />
             {/* Phones: one column ordered registration → results → rules → coordinators → notices
                 (notices are usually empty, so they go last). Desktop: reading on the left
-                (results, rules, notices), registration + coordinators sticky on the right. */}
+                (results, rules, notices), registration + coordinators sticky on the right.
+                Blocks marked data-reveal rise in as they scroll into view (RevealOnScroll). */}
             <div className="mt-6 flex flex-col gap-7 lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start lg:gap-12">
               <div className="contents lg:flex lg:flex-col lg:gap-9">
                 {results && (
-                  <div className="order-2">
+                  <div className="order-2" data-reveal="">
                     <Results results={results} />
                   </div>
                 )}
-                <div className="order-3">
+                <div className="order-3" data-reveal="">
                   <Panel id="rules" kicker="Before you register" title="Rules" meta={event.rules.length ? `${event.rules.length} in all` : undefined}>
                     {event.rules.length ? (
                       <RulesList rules={event.rules} />
@@ -144,19 +139,19 @@ export function EventDetail({ data }: { data: EventPageData }) {
                     )}
                   </Panel>
                 </div>
-                <div className="order-5">
+                <div className="order-5" data-reveal="">
                   <Notices notices={notices} />
                 </div>
               </div>
 
               <div className="contents lg:sticky lg:top-28 lg:flex lg:flex-col lg:gap-7">
-                <div className="order-1">
+                <div className="order-1" data-reveal="" data-late="">
                   <Suspense fallback={null}>
                     <RegistrationCard event={event} viewer={viewer} ended={Boolean(results)} />
                   </Suspense>
                 </div>
                 {event.pocs.length > 0 && (
-                  <div className="order-4">
+                  <div className="order-4" data-reveal="" data-late="">
                     <Coordinators pocs={event.pocs} />
                   </div>
                 )}
@@ -167,7 +162,8 @@ export function EventDetail({ data }: { data: EventPageData }) {
           </div>
         </main>
 
-        <Finale />
+        <Closing standing={standing} loginHref={loginHref} />
+        <RevealOnScroll />
         {canSignUp && <MobileRegisterBar name={event.name} detail={`${format} · ${entry.value}`} label={nextStep.label} href={nextStep.href} />}
         <SiteFooter />
       </div>

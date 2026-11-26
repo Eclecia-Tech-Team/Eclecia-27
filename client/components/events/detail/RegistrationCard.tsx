@@ -155,13 +155,13 @@ export function RegistrationCard({ event, viewer, ended = false }: Props) {
   }
 
   return (
-    <section id="register" className="ev-card px-6 pb-8 pt-14 sm:px-8" aria-labelledby="register-heading">
-      {/* Eclipse crest set into the top edge, like the crest on the festival pass. */}
+    <section id="register" className="ev-card px-6 pb-8 pt-[78px] sm:px-8" aria-labelledby="register-heading">
+      {/* The fest's eclipse set into the top edge (the schedule's: the corona breathes, the disc turns). */}
       <span className="ev-crest" aria-hidden>
-        <span className="ev-crest-inner">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={ASSETS.cloudinary.blacksun} alt="" draggable={false} />
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="ev-crest-rays" src={ASSETS.cloudinary.blacksun} alt="" draggable={false} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="ev-crest-disc" src={ASSETS.cloudinary.blacksun2} alt="" draggable={false} />
       </span>
       <div className="mb-7 flex flex-col items-center text-center">
         <h2 id="register-heading" className="font-display text-[32px] font-semibold leading-none text-parchment">

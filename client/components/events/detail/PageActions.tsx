@@ -54,8 +54,56 @@ export function WorldButton({ category, event, children }: { category: string; e
 }
 
 /**
+ * Scroll reveals, the way the schedule page does them: blocks marked
+ * `data-reveal` rise and fade in the first time they scroll into view.
+ *
+ * Nothing is hidden by the markup or the stylesheet alone. Only blocks that
+ * are below the fold when the page mounts are set to "wait" (they are off
+ * screen, so nothing blinks) and they switch to "in" as they arrive; a check
+ * at the end of every scroll shows any block the observer somehow missed.
+ * Reduced motion: does nothing at all, everything simply stays visible.
+ */
+export function RevealOnScroll() {
+  useEffect(() => {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    const blocks = [...document.querySelectorAll<HTMLElement>(".ev-page [data-reveal]")];
+    const fold = window.innerHeight * 0.95;
+    const show = (el: HTMLElement) => {
+      el.dataset.reveal = "in";
+    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          show(entry.target as HTMLElement);
+          observer.unobserve(entry.target);
+        }
+      },
+      { rootMargin: "0px 0px -8% 0px" },
+    );
+    const waiting: HTMLElement[] = [];
+    for (const el of blocks) {
+      if (el.getBoundingClientRect().top < fold) continue;
+      el.dataset.reveal = "wait";
+      waiting.push(el);
+      observer.observe(el);
+    }
+    // Belt and braces: jumping to an anchor inside a waiting block must never leave it hidden.
+    const onJump = () => waiting.filter((el) => el.dataset.reveal === "wait" && el.getBoundingClientRect().top < window.innerHeight).forEach(show);
+    window.addEventListener("scrollend", onJump);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scrollend", onJump);
+      waiting.forEach(show);
+    };
+  }, []);
+  return null;
+}
+
+/**
  * Phones only: a slim bar pinned to the bottom with a Register button while the
- * registration card is off screen. Hides when the hero's button, the card or the footer is in view.
+ * registration card is off screen. Hides when the hero's button, the card, the
+ * closing scene's button or the footer is in view.
  */
 export function MobileRegisterBar({ name, detail, label, href }: { name: string; detail: string; label: string; href?: string }) {
   const [hidden, setHidden] = useState(true);
@@ -63,8 +111,10 @@ export function MobileRegisterBar({ name, detail, label, href }: { name: string;
   useEffect(() => {
     const card = document.getElementById("register");
     if (!card) return;
-    // Any other way in on screen (the hero's button, the card) or the footer: stay out of the way.
-    const watched = [card, document.getElementById("hero-cta"), document.querySelector("footer")].filter((el): el is HTMLElement => Boolean(el));
+    // Any other way in on screen (the hero's button, the card, the closing scene's button) or the footer: stay out of the way.
+    const watched = [card, document.getElementById("hero-cta"), document.getElementById("closing-cta"), document.querySelector("footer")].filter(
+      (el): el is HTMLElement => Boolean(el),
+    );
     const inView = new Map<Element, boolean>();
     const observer = new IntersectionObserver(
       (entries) => {
