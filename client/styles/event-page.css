@@ -348,7 +348,8 @@
   background: linear-gradient(to top, rgba(3, 4, 5, 0.42), transparent 16%);
 }
 .ev-stage-frame > img,
-.ev-stage-eclipse > img { position: absolute; max-width: none; pointer-events: none; user-select: none; }
+.ev-stage-eclipse > img,
+.ev-arrival-body > img { position: absolute; max-width: none; pointer-events: none; user-select: none; }
 .ev-stage-dust {
   inset: 0;
   width: 100%;
@@ -375,6 +376,29 @@
   top: 20.2%;
   width: 21.4%;
   height: auto;
+  filter: drop-shadow(0 0 12px rgba(217, 164, 65, 0.5));
+}
+/* The arriving eclipse (see "Arrival" below): a second copy laid exactly over the one in the arch
+   (whose box is the frame's, inside its 1px border), outside the frame so the arch does not clip
+   it on its way in. Hidden, but turning and breathing in step, unless an arrival is playing. */
+.ev-stage-arrival {
+  position: absolute;
+  left: calc(1px + (100% - 2px) * 0.08);
+  top: calc(1px + (100% - 1px) * 0.02);
+  z-index: 1;
+  width: calc((100% - 2px) * 0.84);
+  aspect-ratio: 1;
+  visibility: hidden;
+  pointer-events: none;
+}
+.ev-arrival-path,
+.ev-arrival-body { position: absolute; inset: 0; }
+.ev-arrival-flower {
+  left: 39.3%;
+  top: 20.2%;
+  width: 21.4%;
+  height: auto;
+  transform-origin: 0 0;
   filter: drop-shadow(0 0 12px rgba(217, 164, 65, 0.5));
 }
 /* The landing's hills, cropped to their tops along the foot of the arch (as on the sign-in card). */
@@ -1136,15 +1160,16 @@ a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--g
 .ev-stage-figure { animation: ev-figure-in 1.3s cubic-bezier(0.2, 0.7, 0.2, 1) 0.85s both; }
 .ev-stage-finial { animation: ev-pop 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 1.5s both; }
 
-/* The copy, line by line, then the ticket. */
-.ev-crumb { animation: ev-fade 0.9s ease both; }
-.ev-hero-title { animation: ev-title-in 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s both; }
-.ev-hero-kind { animation: ev-ink 1.5s cubic-bezier(0.65, 0, 0.25, 1) 0.75s both; }
-.ev-hero-divider { animation: ev-open 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) 0.95s both; }
-.ev-hero-desc { animation: ev-rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) 1.05s both; }
-.ev-hero-meta { animation: ev-rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) 1.17s both; }
-.ev-hero-cta { animation: ev-rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) 1.3s both; }
-.ev-hero-ticket { animation: ev-rise 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) 1.45s both; }
+/* The copy, line by line, then the ticket. --ev-t0 holds it all back while the eclipse is still
+   arriving (see "Arrival" below); otherwise it is 0. */
+.ev-crumb { animation: ev-fade 0.9s ease var(--ev-t0, 0s) both; }
+.ev-hero-title { animation: ev-title-in 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--ev-t0, 0s) + 0.3s) both; }
+.ev-hero-kind { animation: ev-ink 1.5s cubic-bezier(0.65, 0, 0.25, 1) calc(var(--ev-t0, 0s) + 0.75s) both; }
+.ev-hero-divider { animation: ev-open 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--ev-t0, 0s) + 0.95s) both; }
+.ev-hero-desc { animation: ev-rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--ev-t0, 0s) + 1.05s) both; }
+.ev-hero-meta { animation: ev-rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--ev-t0, 0s) + 1.17s) both; }
+.ev-hero-cta { animation: ev-rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--ev-t0, 0s) + 1.3s) both; }
+.ev-hero-ticket { animation: ev-rise 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--ev-t0, 0s) + 1.45s) both; }
 @media (min-width: 768px) { .ev-hero-divider { transform-origin: 18% 50%; } }
 
 /* The ticket's foil: one sweep of light once it has landed, again on hover; the prize sun glows. */
@@ -1159,10 +1184,64 @@ a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--g
   background: linear-gradient(100deg, transparent, rgba(255, 226, 160, 0.07) 36%, rgba(255, 238, 196, 0.2) 50%, rgba(255, 226, 160, 0.07) 64%, transparent);
   mix-blend-mode: screen;
   transform: translateX(-140%) skewX(-14deg);
-  animation: ev-sheen 1.8s cubic-bezier(0.45, 0, 0.2, 1) 2.5s both;
+  animation: ev-sheen 1.8s cubic-bezier(0.45, 0, 0.2, 1) calc(var(--ev-t0, 0s) + 2.5s) both;
 }
 .ev-ticket:hover .ev-ticket-sheen::before { animation: ev-sheen-again 1.5s cubic-bezier(0.45, 0, 0.2, 1) both; }
 .ev-stub-sun { animation: ev-glow 4.5s ease-in-out infinite; }
+
+/* ---- Arrival (StageArrival in PageActions.tsx) ----
+   Coming from another page, the route curtain shows the fest's eclipse turning in the middle of
+   the screen while this page loads (the opening loader ends on the same eclipse). Here that
+   eclipse does not just fade away: it flies to its place in the arch, the arch forms around it,
+   the event's art steps in front of it, and then the copy reads in, line by line.
+     wait  still covered: the hero is held back and the arriving eclipse sits exactly under the
+           cover's (--ax / --ay: how far that is from its place; --as: its size there, as a scale)
+     play  the cover is opening: after --ev-hold (the cover's own eclipse fading out) it flies,
+           bowing off the straight line by --abx / --aby, as the landing's moon does
+   Reduced motion, or no StageArrival: none of this applies and the entrance above plays as is. */
+
+@keyframes ev-arrive-move { from { translate: var(--ax, 0px) var(--ay, 0px); } }
+@keyframes ev-arrive-bow { 50% { transform: translate(var(--abx, 0px), var(--aby, 0px)); } }
+@keyframes ev-arrive-grow { from { scale: var(--as, 1); } }
+/* The sun-flower starts where the landing (and so the curtain) wears it, in the middle of the disc. */
+@keyframes ev-arrive-flower { from { transform: translate(-22.43%, 45.28%) scale(1.4486); } }
+@keyframes ev-arrive-gone { to { opacity: 0; visibility: hidden; } }
+
+.ev-hero[data-arrive] .ev-stage-arrival { visibility: visible; }
+
+.ev-hero[data-arrive="wait"] :is(.ev-crumb, .ev-hero-title, .ev-hero-kind, .ev-hero-divider, .ev-hero-desc, .ev-hero-meta, .ev-hero-cta, .ev-hero-ticket, .ev-stage-frame, .ev-stage-figure, .ev-stage-finial),
+.ev-hero[data-arrive="wait"] .ev-stage::before,
+.ev-hero[data-arrive="wait"] .ev-stage::after { animation: none; opacity: 0; }
+/* These play once too: stopped here so they start over when the arrival does. */
+.ev-hero[data-arrive="wait"] :is(.ev-stage-ground, .ev-stage-eclipse, .ev-stage-flower),
+.ev-hero[data-arrive="wait"] .ev-ticket-sheen::before { animation: none; }
+.ev-hero[data-arrive="wait"] .ev-arrival-path { translate: var(--ax, 0px) var(--ay, 0px); }
+.ev-hero[data-arrive="wait"] .ev-arrival-body { scale: var(--as, 1); }
+.ev-hero[data-arrive="wait"] .ev-arrival-flower { transform: translate(-22.43%, 45.28%) scale(1.4486); }
+
+.ev-hero[data-arrive="play"] {
+  /* When the flight starts, and when the copy does (the eclipse lands 1.2s after it sets off). */
+  --ev-go: var(--ev-hold, 0.42s);
+  --ev-t0: calc(var(--ev-hold, 0.42s) + 1.05s);
+}
+.ev-hero[data-arrive="play"] .ev-arrival-path {
+  animation:
+    ev-arrive-move 1.2s cubic-bezier(0.6, 0, 0.2, 1) var(--ev-go) both,
+    ev-arrive-bow 1.2s ease-in-out var(--ev-go) both;
+}
+.ev-hero[data-arrive="play"] .ev-arrival-body { animation: ev-arrive-grow 1.2s cubic-bezier(0.6, 0, 0.2, 1) var(--ev-go) both; }
+.ev-hero[data-arrive="play"] .ev-arrival-flower { animation: ev-arrive-flower 1.2s cubic-bezier(0.6, 0, 0.2, 1) var(--ev-go) both; }
+/* The arch forms around it as it comes in (a plain fade: the eclipse inside must not move)... */
+.ev-hero[data-arrive="play"] .ev-stage-frame { animation: ev-fade 0.8s ease calc(var(--ev-go) + 0.6s) both; }
+.ev-hero[data-arrive="play"] .ev-stage::before { animation: ev-fade 1.8s ease calc(var(--ev-go) + 0.9s) both; }
+.ev-hero[data-arrive="play"] .ev-stage::after { animation: ev-line-in 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--ev-go) + 0.7s) both; }
+.ev-hero[data-arrive="play"] .ev-stage-ground { animation: ev-ground-in 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--ev-go) + 0.7s) both; }
+/* ...and once it has landed the arch's own eclipse takes over: same art, same place, same turn. */
+.ev-hero[data-arrive="play"] .ev-stage-eclipse { animation: ev-fade 0.02s linear calc(var(--ev-go) + 1.5s) both; }
+.ev-hero[data-arrive="play"] .ev-stage-arrival { animation: ev-arrive-gone 0.02s linear calc(var(--ev-go) + 1.5s) both; }
+.ev-hero[data-arrive="play"] .ev-stage-flower { animation: none; }
+.ev-hero[data-arrive="play"] .ev-stage-figure { animation: ev-figure-in 1.3s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--ev-go) + 1.1s) both; }
+.ev-hero[data-arrive="play"] .ev-stage-finial { animation: ev-pop 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--ev-go) + 1.6s) both; }
 
 /* Rules: the number lights up under the cursor. */
 .ev-rule-num { transition: background 0.3s, color 0.3s, border-color 0.3s; }

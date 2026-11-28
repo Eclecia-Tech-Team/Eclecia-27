@@ -26,6 +26,18 @@ export function EventStage({ art }: { art?: string }) {
         </div>
         <img className="ev-stage-ground" src={ASSETS.cloudinary.bottom} alt="" draggable={false} />
       </div>
+      {/* Arrival only (StageArrival): the eclipse the visitor was watching on the route curtain or
+          the loader, flying from there to its place in the arch, where the one above takes over.
+          Laid out exactly over that one; hidden unless an arrival is playing. */}
+      <div className="ev-stage-arrival" style={depth(5)}>
+        <div className="ev-arrival-path">
+          <div className="ev-arrival-body">
+            <img className="ev-stage-rays" src={ASSETS.cloudinary.blacksun} alt="" draggable={false} />
+            <img className="ev-stage-disc" src={ASSETS.cloudinary.blacksun2} alt="" draggable={false} />
+            <img className="ev-arrival-flower" src={ASSETS.cloudinary.minisun} alt="" draggable={false} />
+          </div>
+        </div>
+      </div>
       {art && (
         <div className="ev-stage-figure" style={depth(-9)}>
           <img className="ev-stage-art" src={art} alt="" draggable={false} fetchPriority="high" />

@@ -11,7 +11,7 @@ import { depth } from "@/lib/depth";
 import type { EventPageData } from "@/lib/event-page";
 import { entryOf, formatOf } from "@/lib/event-format";
 import { EventStage } from "./EventWorld";
-import { MobileRegisterBar, RevealOnScroll, WorldLink } from "./PageActions";
+import { MobileRegisterBar, RevealOnScroll, StageArrival, WorldLink } from "./PageActions";
 import { RegistrationCard } from "./RegistrationCard";
 import { RulesList } from "./RulesList";
 import { Closing, Coordinators, MoreFromWorld, Notices, Panel, Results, Ticket, WayIn, type Standing } from "./Sections";
@@ -164,6 +164,7 @@ export function EventDetail({ data }: { data: EventPageData }) {
 
         <Closing standing={standing} loginHref={loginHref} />
         <RevealOnScroll />
+        <StageArrival />
         {canSignUp && <MobileRegisterBar name={event.name} detail={`${format} · ${entry.value}`} label={nextStep.label} href={nextStep.href} />}
         <SiteFooter />
       </div>

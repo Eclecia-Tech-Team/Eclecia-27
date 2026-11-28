@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { GoldActionButton, GoldButton } from "@/components/common/GoldButton";
 import { TransitionLink } from "@/components/common/TransitionLink";
 import { saveAtlasSpot } from "@/components/events/atlas/atlas-spot";
@@ -95,6 +95,94 @@ export function RevealOnScroll() {
       observer.disconnect();
       window.removeEventListener("scrollend", onJump);
       waiting.forEach(show);
+    };
+  }, []);
+  return null;
+}
+
+/**
+ * Arrival. Whoever lands here has just been watching the fest's eclipse turn in the middle of the
+ * screen (the route curtain's, or the opening loader's). Rather than that one fading out and
+ * another appearing in the arch, the same eclipse flies to its place there, and the arch, the
+ * event's art and the copy follow (the timeline is "Arrival" in styles/event-page.css).
+ *
+ * This only measures and gives the cue. While the page is covered it keeps the arriving eclipse
+ * (EventStage's .ev-stage-arrival) exactly under the cover's, and it starts the flight the moment
+ * the cover begins to open. With nothing covering the page (a refresh, a shared link) the eclipse
+ * starts where the curtain would have shown it, after a short beat. Reduced motion, or the stage
+ * off screen: it does nothing, and the plain entrance plays.
+ */
+export function StageArrival() {
+  useLayoutEffect(() => {
+    const hero = document.querySelector<HTMLElement>(".ev-hero");
+    const flyer = hero?.querySelector<HTMLElement>(".ev-stage-arrival");
+    if (!hero || !flyer || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    /** The eclipse on whatever still covers the page: the curtain's, else the loader's. */
+    const coverEclipse = () =>
+      document.querySelector<HTMLElement>('.route-curtain:not([data-state="opening"]) .rc-eclipse') ??
+      (document.documentElement.dataset.loaderSkip ? null : document.querySelector<HTMLElement>(".site-loader:not(.is-exit) .ld-moon"));
+
+    /** Sets the flyer on `from`; with no cover, where and how big the curtain shows its eclipse. */
+    const place = (from: HTMLElement | null) => {
+      const to = flyer.getBoundingClientRect();
+      if (!to.width) return;
+      const box = from?.getBoundingClientRect();
+      // The cover's box is its moon's; the flyer's disc is 102% of its own box.
+      const size = (from ? from.offsetWidth : Math.min(250, Math.max(150, Math.min(innerWidth, innerHeight) * 0.24))) / 1.02;
+      const x = (box ? box.left + box.width / 2 : innerWidth / 2) - (to.left + to.width / 2);
+      const y = (box ? box.top + box.height / 2 : innerHeight * 0.46) - (to.top + to.height / 2);
+      // The flight bows off the straight line (upwards, when it runs across the screen).
+      const far = Math.hypot(x, y) || 1;
+      const bow = Math.min(70, far * 0.16) * (x < 0 ? 1 : -1);
+      flyer.style.setProperty("--ax", `${x.toFixed(1)}px`);
+      flyer.style.setProperty("--ay", `${y.toFixed(1)}px`);
+      flyer.style.setProperty("--as", (size / to.width).toFixed(4));
+      flyer.style.setProperty("--abx", `${((-y / far) * bow).toFixed(1)}px`);
+      flyer.style.setProperty("--aby", `${((x / far) * bow).toFixed(1)}px`);
+    };
+
+    let frame = 0;
+    let timer = 0;
+    const play = () => {
+      const at = flyer.getBoundingClientRect();
+      // Not on screen (a restored scroll position, a link to a section further down): no flight.
+      if (at.bottom <= 0 || at.top >= innerHeight) {
+        delete hero.dataset.arrive;
+        return;
+      }
+      hero.dataset.arrive = "play";
+      // Landed and handed over by now (the stylesheet has already hidden it): take the copy out.
+      timer = window.setTimeout(() => {
+        flyer.hidden = true;
+      }, 3000);
+    };
+
+    const cover = coverEclipse();
+    flyer.hidden = false;
+    place(cover);
+    hero.dataset.arrive = "wait";
+    if (cover) {
+      // Follow the cover until it starts to open (or 12s, so the hero can never stay held back).
+      const giveUp = performance.now() + 12000;
+      const watch = () => {
+        const still = coverEclipse();
+        if (!still || performance.now() > giveUp) return play();
+        place(still);
+        frame = requestAnimationFrame(watch);
+      };
+      frame = requestAnimationFrame(watch);
+    } else {
+      // Nothing to take over from: the page fades in around the eclipse, then it sets off at once.
+      hero.style.setProperty("--ev-hold", "0.1s");
+      timer = window.setTimeout(() => {
+        place(null);
+        play();
+      }, 520);
+    }
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
     };
   }, []);
   return null;
