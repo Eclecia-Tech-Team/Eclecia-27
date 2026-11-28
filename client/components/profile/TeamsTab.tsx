@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Crown, Drama, Users } from "lucide-react";
 import ConfirmationModal from "./ConfirmationModal";
+import CopyCode from "./CopyCode";
+import TabHeading from "./TabHeading";
 import type { Team } from "@/types/interface";
-import { TransitionLink } from "@/components/common/TransitionLink";
+import { GoldButton } from "@/components/common/GoldButton";
 
 export default function TeamsTab() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [openTeamId, setOpenTeamId] = useState<string | null>(null);
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [newTeamName, setNewTeamName] = useState("");
@@ -141,12 +143,6 @@ export default function TeamsTab() {
     }
   };
 
-  const copyTeamCode = (teamCode: string, registrationId: string) => {
-    navigator.clipboard.writeText(teamCode);
-    setCopiedId(registrationId);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
   const getTeamSize = (team: Team) =>
     team.teamSize ?? team.members?.length ?? team.team.length;
 
@@ -175,16 +171,20 @@ export default function TeamsTab() {
         )}
 
         {loading ? (
-          <div aria-busy="true">
+          <div className="pf-list mt-6" aria-busy="true">
             {[0, 1].map((i) => (
-              <div key={i} className="border-b border-parchment/[0.08] py-6">
-                <div className="h-5 w-44 animate-pulse bg-parchment/10" />
-                <div className="mt-2 h-3 w-64 animate-pulse bg-parchment/5" />
+              <div key={i} className="pf-row" data-team>
+                <div className="space-y-2">
+                  <div className="h-5 w-44 animate-pulse bg-parchment/10" />
+                  <div className="h-3 w-64 max-w-full animate-pulse bg-parchment/5" />
+                </div>
               </div>
             ))}
           </div>
         ) : teams.length > 0 ? (
-          <ul>
+          <>
+          <TabHeading kicker="Teams you're a part of" count={teams.length} title="Your constellations" />
+          <ul className="pf-list">
             {teams.map((team) => {
               const isOpen = openTeamId === team._id;
               const teamSize = getTeamSize(team);
@@ -203,127 +203,137 @@ export default function TeamsTab() {
               const leader = team.members?.find((m) => m.isLeader);
               const viewerIsLeader = Boolean(currentUserId) && leader?._id === currentUserId;
               const locked = paid && team.paymentStatus === "completed";
+              // Beside the name on narrow screens, under the details otherwise; CSS shows one.
+              const seal = (place: "title" | "side") => (
+                <span className={`pf-seal ${place === "side" ? "mt-2.5" : ""}`} data-place={place} data-tone={status.tone}>
+                  {status.text}
+                </span>
+              );
 
               return (
-                <li key={team._id} className="border-b border-parchment/[0.08]">
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-3 py-6">
+                <li key={team._id} className="pf-team">
+                  <div className="pf-row" data-team>
                     <button
                       type="button"
                       onClick={() => setOpenTeamId(isOpen ? null : team._id)}
                       aria-expanded={isOpen}
-                      className="group min-w-0 flex-1 text-left"
+                      className="group min-w-0 text-left"
                     >
-                      <span className="flex items-center gap-3">
-                        <span className="font-display text-[24px] font-semibold leading-tight text-parchment transition-colors group-hover:text-gold">
-                          {team.teamName || "Unnamed team"}
+                      <span className="pf-row-title block">
+                        <span className="flex items-center gap-2.5">
+                          <span className="pf-row-name wrap-anywhere group-hover:text-[#f0c96d]">{team.teamName || "Unnamed team"}</span>
+                          <svg viewBox="0 0 24 24" className={`h-4 w-4 shrink-0 text-gold transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
                         </span>
-                        <svg viewBox="0 0 24 24" className={`h-4 w-4 shrink-0 text-gold/60 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        {seal("title")}
                       </span>
-                      <span className="mt-1 block text-[13.5px] text-parchment/55">
-                        {team.eventId.eventName} · {teamSize}
-                        {max ? ` of ${max}` : ""} member{teamSize === 1 ? "" : "s"}
-                        {viewerIsLeader && " · You lead"}
+                      <span className="pf-row-meta">
+                        <span className="pf-meta-item">
+                          <Drama aria-hidden />
+                          {team.eventId.eventName}
+                        </span>
+                        <span className="pf-meta-item">
+                          <Users aria-hidden />
+                          {teamSize}
+                          {max ? ` of ${max}` : ""} member{teamSize === 1 ? "" : "s"}
+                        </span>
+                        {viewerIsLeader && (
+                          <span className="pf-meta-item">
+                            <Crown aria-hidden />
+                            You lead
+                          </span>
+                        )}
                       </span>
+                      {seal("side")}
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={() => copyTeamCode(team.teamCode, team._id)}
-                      className="group flex items-center gap-3 border border-gold/25 px-3.5 py-2 transition-colors hover:border-gold/60"
-                      aria-label={`Copy team code ${team.teamCode}`}
-                    >
-                      <span className="font-mono text-[14px] tracking-[0.16em] text-gold">{team.teamCode}</span>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-parchment/45 group-hover:text-parchment/80">
-                        {copiedId === team._id ? "Copied" : "Copy"}
-                      </span>
-                    </button>
-
-                    <span className="pf-status w-[9.5rem] max-sm:w-auto" data-tone={status.tone}>
-                      {status.text}
-                    </span>
+                    <div className="pf-row-side">
+                      {viewerIsLeader && paid && !locked && team.registrationCode && (
+                        <CopyCode code={team.registrationCode} label="Pay with this registration ID" />
+                      )}
+                      <CopyCode code={team.teamCode} label="Team code" />
+                    </div>
                   </div>
 
                   {isOpen && (
-                    <div className="profile-tab-pane grid gap-8 pb-8 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                      <div>
-                        <p className="pf-label">Members</p>
-                        <ul className="mt-3">
-                          {(team.members ?? []).map((member) => {
-                            const name = member.fullName || member.username || "Member";
-                            const canRemove = !member.isLeader && viewerIsLeader && !locked;
-                            return (
-                              <li key={member._id} className="flex items-center justify-between gap-4 border-b border-parchment/[0.06] py-2.5">
-                                <span className="flex min-w-0 items-center gap-3">
-                                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gold/30 font-display text-[15px] text-gold">
-                                    {name.charAt(0).toUpperCase()}
-                                  </span>
-                                  <span className="truncate text-[15px] text-parchment/90">{name}</span>
-                                  {member.isLeader && <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-gold/80">Leader</span>}
-                                  {member._id === currentUserId && !member.isLeader && (
-                                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-parchment/40">You</span>
-                                  )}
+                    <div className="profile-tab-pane pf-crew">
+                      <p className="pf-crew-title">Members</p>
+                      <ol className="pf-roster">
+                        {(team.members ?? []).map((member, i) => {
+                          const name = member.fullName || member.username || "Member";
+                          const isViewer = member._id === currentUserId;
+                          const canRemove = !member.isLeader && viewerIsLeader && !locked;
+                          return (
+                            <li key={member._id} className="pf-member" data-leader={member.isLeader}>
+                              <span className="pf-member-no" aria-hidden>
+                                {i + 1}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-[15px] text-parchment/90" title={name}>
+                                  {name}
                                 </span>
-                                {canRemove && (
-                                  <button
-                                    type="button"
-                                    className="pf-link"
-                                    data-tone="danger"
-                                    disabled={updating}
-                                    onClick={() => setMemberToRemove({ teamId: team._id, memberId: member._id, name })}
-                                  >
-                                    {removingMemberId === member._id ? "Removing…" : "Remove"}
-                                  </button>
+                                {(member.isLeader || isViewer) && (
+                                  <span className="block font-mono text-[9.5px] uppercase tracking-[0.2em] text-gold/75">
+                                    {[member.isLeader && "Leader", isViewer && "You"].filter(Boolean).join(" · ")}
+                                  </span>
                                 )}
-                              </li>
-                            );
-                          })}
-                        </ul>
-                        {teamSize < min && (
-                          <p className="mt-3 text-[13.5px] text-[#e6c06a]">
-                            Share the code: {team.eventId.eventName} needs at least {min} members.
-                          </p>
-                        )}
-                      </div>
+                              </span>
+                              {canRemove && (
+                                <button
+                                  type="button"
+                                  className="pf-member-remove"
+                                  disabled={updating}
+                                  aria-label={`Remove ${name}`}
+                                  onClick={() => setMemberToRemove({ teamId: team._id, memberId: member._id, name })}
+                                >
+                                  {removingMemberId === member._id ? "Removing…" : "Remove"}
+                                </button>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ol>
+                      {teamSize < min && (
+                        <p className="mt-4 text-[13.5px] text-[#e6c06a]">
+                          Share the code: {team.eventId.eventName} needs at least {min} members.
+                        </p>
+                      )}
 
-                      <div className="flex flex-col gap-6">
-                        {viewerIsLeader && (
-                          <div>
-                            <p className="pf-label">Team name</p>
-                            {editingTeamId === team._id ? (
-                              <form
-                                className="mt-1 flex items-end gap-4"
-                                onSubmit={(e) => {
-                                  e.preventDefault();
-                                  void updateTeamName(team._id);
-                                }}
-                              >
-                                <input className="pf-input" value={newTeamName} maxLength={40} autoFocus onChange={(e) => setNewTeamName(e.target.value)} />
-                                <button type="submit" className="pf-link text-gold" disabled={updating || newTeamName.trim().length < 2}>
-                                  {updating ? "Saving…" : "Save"}
-                                </button>
-                                <button type="button" className="pf-link" onClick={() => setEditingTeamId(null)}>
-                                  Cancel
-                                </button>
-                              </form>
-                            ) : (
-                              <button
-                                type="button"
-                                className="pf-add mt-2"
-                                onClick={() => {
-                                  setEditingTeamId(team._id);
-                                  setNewTeamName(team.teamName || "");
-                                }}
-                              >
-                                Rename team
+                      <div className="pf-crew-actions">
+                        {viewerIsLeader &&
+                          (editingTeamId === team._id ? (
+                            <form
+                              className="flex w-full max-w-md flex-wrap items-end gap-4"
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                void updateTeamName(team._id);
+                              }}
+                            >
+                              <input className="pf-input" aria-label="Team name" value={newTeamName} maxLength={40} autoFocus onChange={(e) => setNewTeamName(e.target.value)} />
+                              <button type="submit" className="pf-link text-gold" disabled={updating || newTeamName.trim().length < 2}>
+                                {updating ? "Saving…" : "Save"}
                               </button>
-                            )}
-                          </div>
-                        )}
-                        <TransitionLink href={`/events/${team.eventId.slug ?? team.eventId._id}`} className="pf-link self-start text-gold">
-                          Open event page →
-                        </TransitionLink>
+                              <button type="button" className="pf-link" onClick={() => setEditingTeamId(null)}>
+                                Cancel
+                              </button>
+                            </form>
+                          ) : (
+                            <button
+                              type="button"
+                              className="pf-add"
+                              onClick={() => {
+                                setEditingTeamId(team._id);
+                                setNewTeamName(team.teamName || "");
+                              }}
+                            >
+                              Rename team
+                            </button>
+                          ))}
+                        <div className="pf-crew-event">
+                          <GoldButton href={`/events/${team.eventId.slug ?? team.eventId._id}`} size="sm" variant="ghost">
+                            Event page
+                          </GoldButton>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -331,15 +341,18 @@ export default function TeamsTab() {
               );
             })}
           </ul>
+          </>
         ) : (
-          <div className="py-14">
-            <p className="font-display text-[26px] text-parchment">No teams yet.</p>
-            <p className="mt-2 max-w-md text-[15px] leading-relaxed text-parchment/55">
-              Start one from a team event&apos;s page and share the code, or join a friend&apos;s with theirs.
+          <div className="pb-10">
+            <TabHeading kicker="Teams you're a part of" title="No stars aligned yet" />
+            <p className="mt-3 max-w-md text-[15px] leading-relaxed text-parchment/60">
+              Start a team from a team event&apos;s page and share the code, or join a friend&apos;s with theirs.
             </p>
-            <TransitionLink href="/events" className="pf-link mt-6 inline-block text-gold">
-              Find a team event →
-            </TransitionLink>
+            <div className="mt-7 flex justify-end pr-2.5">
+              <GoldButton href="/events" size="sm" variant="ghost">
+                Find a team event
+              </GoldButton>
+            </div>
           </div>
         )}
       </div>
