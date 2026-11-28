@@ -192,7 +192,8 @@ export function Coordinators({ pocs }: { pocs: PageEvent["pocs"] }) {
                   {initials(p.name)}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-display text-[19px] font-semibold leading-tight text-parchment">{p.name}</span>
+                  {/* Long names wrap onto a second line rather than being cut off. */}
+                  <span className="block font-display text-[19px] font-semibold leading-tight text-pretty wrap-break-word text-parchment">{p.name}</span>
                   <span className="mt-0.5 block font-mono text-[12.5px] tracking-[0.04em] text-gold transition-colors group-hover:text-parchment">
                     {tel.label}
                   </span>
