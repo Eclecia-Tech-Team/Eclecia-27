@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import Registration from "@/lib/models/Registrations";
 import Team from "@/lib/models/Team";
 import connect from "@/lib/mongoose";
 import { NextResponse } from "next/server";
@@ -24,6 +25,12 @@ export async function GET() {
       .populate("team", "username fullName")
       .lean();
 
+    // Only a leader pays, so only their own registration IDs are needed.
+    const own = await Registration.find({ participant: session.user.id, isInTeam: true })
+      .select("teamId registrationCode")
+      .lean<{ teamId?: mongoose.Types.ObjectId; registrationCode?: string }[]>();
+    const codeByTeam = new Map(own.map((r) => [String(r.teamId), r.registrationCode]));
+
     type Member = { _id: mongoose.Types.ObjectId; username?: string; fullName?: string };
     const serializedTeams = (teams as unknown as (Record<string, unknown> & { teamLeader: Member; team?: Member[] })[]).map((team) => {
       const teamLeader = team.teamLeader as {
@@ -44,6 +51,8 @@ export async function GET() {
 
       return {
         ...team,
+        registrationCode:
+          String(teamLeader?._id) === session.user!.id ? codeByTeam.get(String(team._id)) : undefined,
         teamSize: normalizedMembersMap.size,
         members: Array.from(normalizedMembersMap.values()).map((member) => ({
           _id: String(member._id),

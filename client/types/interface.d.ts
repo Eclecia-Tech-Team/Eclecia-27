@@ -170,6 +170,8 @@ export interface Team {
       };
   teamCode: string;
   teamName?: string;
+  /** The viewer's registration ID, sent only to the team leader (who pays with it). */
+  registrationCode?: string;
   paymentStatus?: "pending" | "completed" | "failed";
   team: (
     | string

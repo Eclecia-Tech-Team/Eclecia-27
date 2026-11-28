@@ -241,20 +241,17 @@
   letter-spacing: 0.15em;
 }
 
-/* Smooth Tab Content Crossfade/Slide Animation */
+/* Tab panels slide in from the side their tab sits on. "backwards" leaves no
+   transform behind, which would trap the confirm dialogs inside the panel. */
 @keyframes tabFadeSlideIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: translate(calc(var(--pf-dir, 0) * 24px), 6px);
   }
 }
 
 .profile-tab-pane {
-  animation: tabFadeSlideIn 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: tabFadeSlideIn 460ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 /* Archival Dossier Data Cell */
@@ -523,6 +520,7 @@
 .pf-progress > span[data-on="true"] { background: linear-gradient(90deg, #b8862f, #ffd875); }
 
 .pf-tabs {
+  position: relative;
   display: flex;
   gap: 34px;
   border-bottom: 1px solid rgba(217, 164, 65, 0.16);
@@ -538,18 +536,18 @@
 }
 .pf-tab:hover { color: rgba(236, 228, 210, 0.85); }
 .pf-tab[aria-selected="true"] { color: var(--parchment); }
-.pf-tab::after {
-  content: "";
+.pf-tab-line {
   position: absolute;
   left: 0;
-  right: 0;
   bottom: -1px;
   height: 1px;
   background: linear-gradient(90deg, transparent, #ffd875 20%, #ffd875 80%, transparent);
-  transform: scaleX(0);
-  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  opacity: 0;
 }
-.pf-tab[aria-selected="true"]::after { transform: scaleX(1); }
+.pf-tab-line[data-ready="true"] {
+  opacity: 1;
+  transition: translate 0.45s cubic-bezier(0.22, 1, 0.36, 1), width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
 
 /* Details: ruled rows, no boxes. */
 .pf-fields {
@@ -609,26 +607,207 @@
 .pf-link:hover { color: var(--gold); }
 .pf-link[data-tone="danger"]:hover { color: #f0a093; }
 
-/* List rows for events / teams. */
+/* Events and teams: open rows parted by hairlines that fade at the ends. */
+.pf-head { padding: 26px 0 4px; }
+.pf-head-title {
+  margin-top: 8px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 30px;
+  line-height: 1.15;
+  color: #f4d696; /* warm starlight */
+}
+/* Footer note under the pass: what it admits you to, and what it doesn't. */
+.pf-pass-note { margin: 10px auto 0; max-width: 21rem; text-align: center; text-wrap: balance; font-size: 12.5px; line-height: 1.6; color: rgba(236, 228, 210, 0.55); }
+.pf-pass-note-title { margin-bottom: 4px; font-family: var(--font-cormorant), serif; font-style: italic; font-weight: 600; font-size: 19px; line-height: 1.3; color: #f4d696; }
+.pf-list { animation: pf-appear 0.45s ease backwards; }
+@keyframes pf-appear { from { opacity: 0; } }
+.pf-crew-title {
+  font-family: var(--font-taiganja), Georgia, serif;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.pf-list { font-variant-numeric: lining-nums; }
+.pf-list > li { background: linear-gradient(90deg, transparent, rgba(217, 164, 65, 0.24) 15%, rgba(217, 164, 65, 0.24) 85%, transparent) bottom / 100% 1px no-repeat; }
+.pf-list > li:last-child { background: none; }
+.pf-list { container: pf-list / inline-size; }
 .pf-row {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr) auto;
-  gap: 20px;
   align-items: center;
+  column-gap: 20px;
   padding: 20px 0;
-  border-bottom: 1px solid rgba(236, 228, 210, 0.08);
 }
-@media (max-width: 640px) {
-  .pf-row { grid-template-columns: 52px minmax(0, 1fr); gap: 14px; }
-  .pf-row > .pf-row-end { grid-column: 2; justify-self: start; }
+.pf-row[data-team] { grid-template-columns: minmax(0, 1fr) auto; }
+.pf-row-art { display: block; width: 64px; height: 64px; }
+.pf-row-name {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--parchment);
+  transition: color 0.3s;
 }
-.pf-thumb {
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(217, 164, 65, 0.35), 0 10px 24px -10px rgba(0, 0, 0, 0.9);
-  background: radial-gradient(circle, rgba(217, 164, 65, 0.18), #050505 70%);
+a.pf-row-name:hover { color: #f0c96d; }
+.pf-row-meta { margin-top: 4px; font-size: 13.5px; line-height: 1.4; color: rgba(236, 228, 210, 0.58); }
+/* Date, time and venue side by side; on narrow rows whole items wrap, never their text. */
+.pf-row-meta:has(> .pf-meta-item) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 8px; }
+.pf-meta-item { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.pf-meta-item svg { flex: none; width: 14px; height: 14px; color: rgba(240, 201, 109, 0.72); }
+.pf-withdraw {
+  margin-top: 8px;
+  font-family: var(--font-taiganja), Georgia, serif;
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(240, 160, 147, 0.7);
+  transition: color 0.2s;
+}
+.pf-withdraw:hover,
+.pf-withdraw:focus-visible { color: #f0a093; }
+
+/* Status and codes, stacked at the right of the row. */
+.pf-row-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+.pf-seal {
+  display: inline-block;
+  font-family: var(--font-taiganja), Georgia, serif;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+.pf-seal[data-place="title"] { display: none; }
+.pf-seal[data-tone="ok"] { color: #9ccfa6; }
+.pf-seal[data-tone="wait"] { color: #f0c96d; }
+.pf-seal[data-tone="bad"] { color: #f0a093; }
+
+/* Codes (team code, registration ID): gold serif, no box. Click to copy.
+   The generator leaves out look-alikes (0/O, 1/I/L), so the serif stays unambiguous. */
+.pf-code { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 3px; max-width: 100%; }
+.pf-code-label {
+  font-family: var(--font-taiganja), Georgia, serif;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(236, 228, 210, 0.5);
+}
+.pf-code-line { display: flex; align-items: center; gap: 10px; }
+.pf-code-chars {
+  display: inline-flex;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: lining-nums;
+  letter-spacing: 0.07em;
+  line-height: 1.15;
+  white-space: pre;
+  color: #f0c96d;
+}
+.pf-code-chars > span { display: inline-block; }
+.pf-code-chars > span[data-prefix="true"] { color: rgba(201, 168, 106, 0.65); }
+.pf-code-icon { width: 15px; height: 15px; flex: none; color: rgba(217, 164, 65, 0.65); transition: color 0.2s; }
+.pf-code:hover .pf-code-icon,
+.pf-code:focus-visible .pf-code-icon,
+.pf-code[data-copied="true"] .pf-code-icon { color: var(--parchment); }
+@media (prefers-reduced-motion: no-preference) {
+  /* Letters bounce on hover, and again once copied. */
+  .pf-code:hover .pf-code-chars > span { animation: pf-code-wave 0.5s ease both; animation-delay: calc(var(--i) * 35ms); }
+  .pf-code[data-copied="true"] .pf-code-chars > span { animation: pf-code-copied 0.5s ease both; animation-delay: calc(var(--i) * 35ms); }
+}
+@keyframes pf-code-wave { 50% { transform: translateY(-3px); } }
+@keyframes pf-code-copied { 50% { transform: translateY(-4px); } }
+
+/* Team members, two columns so long squads stay short. */
+.pf-crew { --pf-dir: 0; padding: 4px 0 26px; }
+.pf-crew-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; margin-top: 24px; }
+.pf-crew-event { margin: 0 10px 0 auto; }
+.pf-crew-title { display: flex; align-items: center; gap: 14px; }
+.pf-crew-title::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(217, 164, 65, 0.45), transparent); }
+.pf-roster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; margin-top: 8px; }
+.pf-member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 7px 0;
+  background: linear-gradient(90deg, rgba(217, 164, 65, 0.22), transparent) bottom / 100% 1px no-repeat;
+}
+.pf-member-no {
+  width: 22px;
+  flex: none;
+  text-align: center;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: rgba(217, 164, 65, 0.75);
+}
+.pf-member[data-leader="true"] .pf-member-no { color: #f0c96d; }
+.pf-member-remove {
+  flex: none;
+  font-family: var(--font-taiganja), Georgia, serif;
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(240, 160, 147, 0.7);
+  transition: color 0.2s;
+}
+.pf-member-remove:hover,
+.pf-member-remove:focus-visible { color: #f0a093; }
+
+/* Narrow column: status beside the name; codes under small labels at the bottom right. */
+@container pf-list (max-width: 540px) {
+  .pf-row { grid-template-columns: 52px minmax(0, 1fr); column-gap: 14px; row-gap: 10px; align-items: start; padding: 20px 0; }
+  .pf-row-art { width: 52px; height: 52px; }
+  .pf-row[data-team] { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
+  .pf-row[data-team] > button { width: 100%; }
+
+  /* Status centred on the name's first line; a long name wraps in the space beside it. */
+  .pf-row-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .pf-row-title > :first-child { flex: 1 1 0; min-width: 0; overflow-wrap: break-word; }
+  .pf-row[data-team] .pf-row-title > :first-child { align-items: baseline; } /* chevron stays on the first line */
+  .pf-row-title .pf-row-name { font-size: 22px; line-height: 25px; }
+  .pf-row-meta:has(> .pf-meta-item) { gap: 6px 10px; font-size: 12.5px; }
+  .pf-meta-item { gap: 5px; }
+  .pf-meta-item svg { width: 12px; height: 12px; }
+  .pf-seal[data-place="title"] { display: inline-block; flex: none; margin-left: auto; font-size: 8.5px; letter-spacing: 0.14em; line-height: 25px; }
+  .pf-seal[data-place="side"] { display: none; }
+
+  .pf-row-side { grid-column: 1 / -1; align-items: flex-end; gap: 10px; }
+  .pf-row-side:not(:has(.pf-code)) { display: none; }
+  .pf-code { gap: 1px; }
+  .pf-code-label { font-size: 8px; letter-spacing: 0.2em; }
+  .pf-code-line { gap: 8px; }
+  .pf-code-chars { font-size: 17px; }
+  .pf-code-icon { width: 13px; height: 13px; }
+
+  /* Teams: team code on the left, registration ID on the right, codes level with each other. */
+  .pf-row[data-team] > .pf-row-side { display: grid; grid-template-columns: repeat(2, auto); justify-content: space-between; align-items: end; gap: 10px; }
+  .pf-row[data-team] .pf-code { text-align: right; }
+  .pf-row[data-team] .pf-code:last-child { order: -1; align-items: flex-start; text-align: left; }
+  /* Sized to the column so two 8-character codes still fit side by side. */
+  .pf-row[data-team] .pf-code-chars { font-size: min(16px, 4.6cqw); }
+}
+@container pf-list (max-width: 440px) {
+  .pf-roster { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-tab-pane, .pf-list { animation: none; }
+  .pf-tab-line[data-ready="true"] { transition: none; }
+}
+
+/* A call to action stacked under its text sits at the right edge. */
+.pf-cta-end { align-self: flex-end; }
+@media (min-width: 640px) {
+  .pf-cta-end { align-self: auto; }
 }
 
 .pf-toast {
