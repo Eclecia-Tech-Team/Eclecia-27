@@ -162,6 +162,8 @@ export function RegistrationCard({ event, viewer, ended = false }: Props) {
         <img className="ev-crest-rays" src={ASSETS.cloudinary.blacksun} alt="" draggable={false} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="ev-crest-disc" src={ASSETS.cloudinary.blacksun2} alt="" draggable={false} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="ev-crest-flower" src={ASSETS.cloudinary.minisun} alt="" draggable={false} />
       </span>
       <div className="mb-7 flex flex-col items-center text-center">
         <h2 id="register-heading" className="font-display text-[32px] font-semibold leading-none text-parchment">

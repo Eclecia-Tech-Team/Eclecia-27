@@ -368,6 +368,15 @@
 }
 .ev-stage-rays { inset: 0; width: 100%; height: 100%; animation: ev-breathe 6.5s ease-in-out infinite alternate; }
 .ev-stage-disc { left: -1%; top: -1%; width: 102%; height: 102%; animation: ev-turn 240s linear infinite; }
+/* The landing's gold sun-flower, set high in the disc: its head sits in the part of the eclipse
+   that shows above the event's art, and its stem of beads runs down behind the art. */
+.ev-stage-flower {
+  left: 39.3%;
+  top: 20.2%;
+  width: 21.4%;
+  height: auto;
+  filter: drop-shadow(0 0 12px rgba(217, 164, 65, 0.5));
+}
 /* The landing's hills, cropped to their tops along the foot of the arch (as on the sign-in card). */
 .ev-stage-ground {
   left: 0;
@@ -638,6 +647,8 @@
 .ev-crest > img { position: absolute; max-width: none; user-select: none; }
 .ev-crest-rays { inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.8)); animation: ev-breathe 6.5s ease-in-out infinite alternate; }
 .ev-crest-disc { left: -1%; top: -1%; width: 102%; height: 102%; animation: ev-turn 240s linear infinite; }
+/* The sun-flower inside it, placed and sized as in the landing's eclipse. */
+.ev-crest-flower { left: 34.8%; top: 35%; width: 30.4%; height: auto; filter: drop-shadow(0 0 6px rgba(217, 164, 65, 0.5)); }
 
 .ev-input {
   width: 100%;
@@ -1006,11 +1017,24 @@ a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--g
 .ev-closing .ev-script { margin-top: 2px; }
 .ev-closing-cta { display: flex; justify-content: center; margin-top: 30px; }
 .ev-closing-cta .gold-btn { text-shadow: none; }
+/* Laid out as the landing's last screen is (its `finale` in constants/scene.config.ts), where
+   the eclipse is half sunk in the valley: there the frame is 1512 wide, the hills 1672 wide
+   starting 160 to the left, and the eclipse 375 wide with its centre 599 below the hills' top.
+   --u is one hundredth of that frame, so every number below is the landing's own, as a
+   percentage of the frame's width. The eclipse is placed from the hills' top, not from the
+   scene's edges, so it meets the ridge at the same place on every screen. */
 .ev-closing-scene {
-  --e: clamp(180px, 25vw, 400px);
+  /* 1% of the page's width; phones use a 720px page's, so the scene keeps some height. */
+  --u: max(1vw, 7.2px);
+  --e: calc(24.8 * var(--u));
+  /* The scene starts this far below the hills' top: just above their highest crest. */
+  --top: calc(26 * var(--u));
   position: relative;
-  height: clamp(270px, 38vw, 560px);
-  margin-top: 64px;
+  /* Down to the lotuses and the road; very wide screens show a little less of the foreground. */
+  height: min(calc(34.5 * var(--u)), 760px);
+  margin-top: 44px;
+  /* Cuts the hills off at the scene's foot, but not the eclipse while it is still above the scene. */
+  clip-path: inset(-100vh 0 0 0);
   pointer-events: none;
 }
 .ev-closing-scene > img,
@@ -1018,22 +1042,22 @@ a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--g
 .ev-closing-eclipse {
   position: absolute;
   left: calc(50% - var(--e) / 2);
-  bottom: 34%;
+  /* Its centre 39.6u below the hills' top: level with the ridge on either side of it. */
+  top: calc(39.6 * var(--u) - var(--top) - var(--e) / 2);
   width: var(--e);
   aspect-ratio: 1;
 }
 .ev-closing-rays { inset: 0; width: 100%; height: 100%; animation: ev-breathe 6.5s ease-in-out infinite alternate; }
 .ev-closing-disc { left: -1%; top: -1%; width: 102%; height: 102%; animation: ev-turn 240s linear infinite; }
-/* The hills' file is see-through above its ridge line (about 46% down), so the eclipse shows
-   behind the ridge. The box shows the file from just above the ridge down to the lotuses. */
+/* The hills' file is see-through above its ridge line, so the eclipse shows behind the ridge.
+   The valley (55% across the file) sits under the middle of the page. */
 .ev-closing-hills {
-  left: 0;
-  bottom: 0;
+  left: calc(50% - 60.6 * var(--u));
+  top: calc(var(--top) * -1);
   z-index: 1;
-  width: 100%;
-  height: 68%;
-  object-fit: cover;
-  object-position: 50% 78%;
+  width: calc(110.6 * var(--u));
+  height: auto;
+  aspect-ratio: 1672 / 941;
 }
 .ev-closing-veena,
 .ev-closing-hand {
@@ -1097,7 +1121,9 @@ a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--g
   50% { filter: drop-shadow(0 0 17px rgba(217, 164, 65, 0.75)); }
 }
 @keyframes ev-sway { from { rotate: -1.3deg; } to { rotate: 1.3deg; } }
-@keyframes ev-set { from { transform: translateY(-16%); } to { transform: translateY(10%); } }
+/* From above the ridge (its rim level with the scene's top, clear of the button above) down to
+   where it rests, half behind the hills. */
+@keyframes ev-set { from { transform: translateY(-22%); } to { transform: translateY(0); } }
 
 /* The stage. */
 .ev-stage-frame { animation: ev-arch-in 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
@@ -1105,6 +1131,8 @@ a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--g
 .ev-stage::after { animation: ev-line-in 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both; }
 .ev-stage-ground { animation: ev-ground-in 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both; }
 .ev-stage-eclipse { animation: ev-eclipse-rise 2s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both; }
+/* The sun-flower lights up once the eclipse has risen. */
+.ev-stage-flower { animation: ev-fade 1.4s ease 1.5s both; }
 .ev-stage-figure { animation: ev-figure-in 1.3s cubic-bezier(0.2, 0.7, 0.2, 1) 0.85s both; }
 .ev-stage-finial { animation: ev-pop 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 1.5s both; }
 
@@ -1194,6 +1222,7 @@ a:hover > .ev-call { background: rgba(217, 164, 65, 0.14); border-color: var(--g
   .ev-stage-eclipse,
   .ev-stage-rays,
   .ev-stage-disc,
+  .ev-stage-flower,
   .ev-stage-figure,
   .ev-stage-art,
   .ev-stage-finial,

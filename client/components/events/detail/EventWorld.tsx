@@ -21,6 +21,8 @@ export function EventStage({ art }: { art?: string }) {
         <div className="ev-stage-eclipse" style={depth(5)}>
           <img className="ev-stage-rays" src={ASSETS.cloudinary.blacksun} alt="" draggable={false} />
           <img className="ev-stage-disc" src={ASSETS.cloudinary.blacksun2} alt="" draggable={false} />
+          {/* The landing's gold sun-flower: its head shows above the event's art, its stem runs down behind it. */}
+          <img className="ev-stage-flower" src={ASSETS.cloudinary.minisun} alt="" draggable={false} />
         </div>
         <img className="ev-stage-ground" src={ASSETS.cloudinary.bottom} alt="" draggable={false} />
       </div>
